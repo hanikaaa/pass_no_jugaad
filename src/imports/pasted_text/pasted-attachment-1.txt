@@ -1,0 +1,1625 @@
+MASTER PROMPT — PASS NO JUGAAD
+
+Build a complete, mobile-first, production-ready website/web app for:
+
+PASS NO JUGAAD
+Ahmedabad | Navratri 2026
+
+IMPORTANT:
+Use the attached UI reference image as the PRIMARY visual reference for the design language, colour system, typography, cards, navigation, spacing, buttons, icons, photography treatment and overall mobile experience.
+
+Do NOT simply copy the reference as a static image.
+
+Recreate the design as a REAL RESPONSIVE WEBSITE with working navigation, buttons, forms, filters, interactions and page transitions.
+
+==================================================
+1. WHAT IS PASS NO JUGAAD?
+==================================================
+
+Pass No Jugaad is an Ahmedabad-focused Navratri discovery, demand and pass-request platform.
+
+It is NOT a conventional ticketing website.
+
+The core product is:
+
+PEOPLE →
+tell us what kind of Navratri event/pass they want
+
+PASS NO JUGAAD →
+collects and understands this demand
+
+ORGANISERS →
+can list their events and understand what people are actively looking for
+
+JUGAAD DROPS →
+when an organiser-approved deal, allocation, referral opportunity or special offer is available, it can be featured on the platform.
+
+The website should feel like:
+
+"Ahmedabad's Navratri command centre."
+
+It should NOT feel like:
+
+"another generic ticket-booking website."
+
+==================================================
+2. PRIMARY GOALS
+==================================================
+
+There are two main audiences.
+
+BUYERS:
+
+1. Discover Navratri events
+2. Search for events/artists/venues
+3. Browse events by date
+4. Filter events
+5. See event details
+6. Submit a pass request
+7. Tell us their preferences
+8. Track their requests
+9. Discover Jugaad Drops
+10. Join WhatsApp/Instagram updates
+
+ORGANISERS:
+
+1. Understand what Pass No Jugaad does
+2. Submit their event
+3. Provide event details
+4. Provide expected crowd/capacity
+5. Provide pricing and inventory information
+6. Tell us what they need
+7. Submit their Instagram/official event link
+8. Contact Pass No Jugaad through Instagram/WhatsApp
+9. Eventually receive demand insights
+
+==================================================
+3. IMPORTANT MVP RULE
+==================================================
+
+This website must be achievable as a lightweight MVP.
+
+DO NOT build:
+
+- complex ticketing backend
+- payment gateway
+- ticket wallet
+- QR ticket generation
+- complicated authentication
+- complex inventory management
+- full marketplace infrastructure
+- unnecessary user accounts
+
+Instead:
+
+Use forms and lightweight integrations.
+
+Buyer forms can eventually connect to:
+Tally / Google Forms / Airtable / Google Sheets / email / WhatsApp.
+
+Organiser forms can connect to:
+Email + Google Sheets/Airtable + WhatsApp/Instagram.
+
+The website should LOOK like a sophisticated product while the backend can initially be manually managed.
+
+==================================================
+4. BRAND / VISUAL IDENTITY
+==================================================
+
+Brand:
+
+PASS NO JUGAAD
+
+Visual personality:
+
+- Bold
+- Young
+- Ahmedabad-specific
+- Energetic
+- Slightly chaotic
+- Confident
+- FOMO-driven
+- Premium nightlife
+- Underground/event culture
+- Instagram-native
+
+Do NOT make it corporate.
+
+Do NOT make it overly traditional.
+
+Do NOT use excessive mandalas, paisley patterns or generic Indian festival graphics.
+
+Use realistic photography of Ahmedabad Navratri:
+- huge crowds
+- garba
+- dandiya
+- stage lighting
+- night events
+- dancers
+- colourful traditional outfits
+- event atmosphere
+
+Use a cinematic dark treatment.
+
+COLOURS:
+
+Primary background:
+Near-black / black
+
+Primary text:
+White
+
+Primary accent:
+Bright orange
+
+Secondary accents:
+Warm yellow
+Red/orange for demand
+Green for available/confirmed
+Cyan only sparingly for secondary status
+
+Typography:
+Large bold condensed/display typography for headlines.
+
+Body:
+Clean modern sans-serif.
+
+Buttons:
+Rounded but bold.
+
+Cards:
+Dark charcoal backgrounds
+Thin subtle borders
+Small radius
+Subtle glow where appropriate.
+
+==================================================
+5. MOBILE-FIRST
+==================================================
+
+Design primarily for:
+
+390px × 844px mobile viewport.
+
+The website must feel designed FOR mobile, not like a desktop site squeezed into mobile.
+
+Use:
+
+- sticky mobile header
+- fixed bottom navigation
+- horizontal swipe cards
+- large thumb-friendly buttons
+- minimal typing
+- readable text
+- clear hierarchy
+- smooth transitions
+
+Make it responsive for desktop/tablet afterwards.
+
+==================================================
+6. LOGO INTRO ANIMATION
+==================================================
+
+When the website first opens, show a short branded intro animation.
+
+Black screen.
+
+Logo:
+
+PASS NO
+JUGAAD
+
+Animate the logo in using a fast kinetic type/logo reveal.
+
+Keep it under approximately 1–2 seconds.
+
+Then transition smoothly into the homepage.
+
+Provide a way to disable/reduce the animation for repeat visitors if practical.
+
+==================================================
+7. HOMEPAGE
+==================================================
+
+Hero should immediately communicate:
+
+Ahmedabad
+Navratri
+Pass No Jugaad
+
+Use a large cinematic Navratri image/video.
+
+Copy:
+
+AHMEDABAD'S
+NAVRATRI
+STARTS HERE.
+
+Alternative supporting line:
+
+You tell us what you want.
+We find the scene.
+
+Primary CTA:
+
+FIND YOUR JUGAAD →
+
+Secondary CTA:
+
+I'M AN ORGANISER →
+
+Small supporting line:
+
+Ahmedabad's Navratri demand & event discovery board.
+
+Show three small statistics.
+
+Use editable/demo values:
+
+10
+NIGHTS
+
+50+
+EVENTS
+
+10K+
+JUGAAD SEEKERS
+
+Clearly structure these as editable content so they can be replaced with real numbers.
+
+==================================================
+8. WHAT IS PASS NO JUGAAD?
+==================================================
+
+Immediately after the hero, explain the concept.
+
+Heading:
+
+WHAT IS
+PASS NO JUGAAD?
+
+Use two tabs/cards:
+
+FOR PEOPLE
+
+"Can't find the pass you want?
+
+Tell us your date, budget, location, vibe, artist preference and quantity.
+
+We'll track the demand and connect you with relevant options when available."
+
+CTA:
+
+FIND YOUR JUGAAD →
+
+FOR ORGANISERS
+
+"Have an event?
+
+Tell us what you're hosting and what you need.
+
+We help you understand demand and connect your event with the right audience."
+
+CTA:
+
+LIST YOUR EVENT →
+
+Then show:
+
+THE JUGAAD IS SIMPLE.
+
+01 — YOU TELL US
+02 — WE TRACK
+03 — WE CONNECT
+
+==================================================
+9. FIND YOUR JUGAAD
+==================================================
+
+This is the main buyer conversion flow.
+
+Create a beautiful mobile form.
+
+Heading:
+
+WHAT ARE YOU
+LOOKING FOR?
+
+Intro:
+
+Tell us what your ideal Navratri looks like.
+
+ALL FIELDS MUST BE TYPABLE OR SELECTABLE.
+
+FIELD 1:
+
+NAME
+[ Type your name ]
+
+FIELD 2:
+
+WHATSAPP NUMBER
+[ +91 __________ ]
+
+FIELD 3:
+
+PREFERRED DATE
+[ Select date ]
+
+Allow multiple dates if practical.
+
+FIELD 4:
+
+NUMBER OF PASSES
+
+[-] 2 [+]
+
+FIELD 5:
+
+YOUR BUDGET PER PERSON
+
+Allow both selectable ranges and custom typing.
+
+₹500–₹1,000
+₹1,000–₹1,500
+₹1,500–₹2,500
+₹2,500+
+Custom ₹ ______
+
+FIELD 6:
+
+LOCATION
+
+Typable field:
+
+[ Where do you want to go? ]
+
+Suggestions:
+
+SG Highway
+Sindhu Bhavan
+Bopal
+GIFT City
+Shilaj
+SBR
+Anywhere
+
+Allow custom typing.
+
+FIELD 7:
+
+EVENT TYPE
+
+Multi-select:
+
+Full Power
+Pure Garba
+Artist Night
+Premium
+Late Night
+Family
+College
+Other
+
+FIELD 8:
+
+ARTIST / DJ PREFERENCE
+
+Typable:
+
+[ Any artist or DJ? ]
+
+FIELD 9:
+
+SPECIFIC EVENT
+
+Optional typable field:
+
+[ Looking for something specific? ]
+
+FIELD 10:
+
+HOW READY ARE YOU TO BUY?
+
+Options:
+
+🔥 Ready to book
+👀 Exploring
+💸 Take it if it's right
+
+FIELD 11:
+
+ADDITIONAL MESSAGE
+
+Optional.
+
+CTA:
+
+ADD ME TO THE RADAR →
+
+On submit:
+show confirmation screen.
+
+==================================================
+10. REQUEST SUCCESS
+==================================================
+
+Create a beautiful success state.
+
+Large animated check.
+
+Heading:
+
+YOU'RE ON
+THE RADAR. 🔥
+
+Show summary:
+
+12 OCT
+2 PASSES
+₹1,000–₹1,500
+ARTIST NIGHT
+
+Copy:
+
+"We've got your request.
+
+If something relevant becomes available, we'll get in touch."
+
+Buttons:
+
+VIEW EVENTS →
+
+JOIN WHATSAPP UPDATES →
+
+FOLLOW INSTAGRAM →
+
+==================================================
+11. NAVRATRI RADAR
+==================================================
+
+This is the signature feature.
+
+Create a dedicated page/tab:
+
+NAVRATRI
+RADAR
+
+Subtitle:
+
+WHAT AHMEDABAD
+IS LOOKING FOR.
+
+Small description:
+
+Real demand.
+Real people.
+Real Ahmedabad.
+
+Display aggregated demand cards.
+
+Example structure:
+
+12 OCT
+
+🔥 VERY HIGH DEMAND
+
+212
+PEOPLE LOOKING
+
+2–6 PASSES
+
+₹1,500–₹2,500
+
+Premium / Artist Night
+
+CTA:
+
+VIEW DEMAND →
+
+Create additional cards for other dates.
+
+IMPORTANT:
+
+Numbers are DEMO / PLACEHOLDER DATA and must be editable.
+
+Never imply fabricated numbers are real platform-wide statistics.
+
+Include a small label:
+
+COMMUNITY DEMAND SIGNAL
+
+==================================================
+12. NAVRATRI CALENDAR
+==================================================
+
+Create a dedicated calendar page.
+
+Heading:
+
+NAVRATRI
+CALENDAR
+
+Subtitle:
+
+Explore events night by night.
+
+Show all Navratri dates:
+
+10 OCT
+11 OCT
+12 OCT
+13 OCT
+14 OCT
+15 OCT
+16 OCT
+17 OCT
+18 OCT
+19 OCT
+
+Make dates horizontally scrollable on mobile.
+
+When a date is selected, show events for that date.
+
+Each event card should contain:
+
+event image
+event name
+location
+time
+price
+demand indicator
+event type
+bookmark icon
+
+CTA:
+
+VIEW EVENT →
+
+==================================================
+13. EVENTS / EVENT LISTING
+==================================================
+
+Create a dedicated:
+
+EVENTS
+
+page.
+
+Heading:
+
+FIND YOUR
+EVENT
+
+Search bar:
+
+Search events, artists, venues...
+
+Filters must be functional.
+
+FILTERS:
+
+DATE
+
+Select one or multiple dates.
+
+BUDGET
+
+Under ₹1K
+₹1K–₹1.5K
+₹1.5K–₹2.5K
+₹2.5K+
+
+LOCATION
+
+SG Highway
+Sindhu Bhavan
+Bopal
+GIFT City
+Shilaj
+SBR
+Other
+
+EVENT TYPE
+
+Garba
+Artist Night
+Premium
+Youth
+Family
+Late Night
+College
+
+DEMAND
+
+Low
+Medium
+High
+Very High
+
+AVAILABILITY
+
+Available
+Limited
+Request Only
+
+Add:
+
+SORT BY
+
+Recommended
+Lowest Price
+Highest Demand
+Latest Added
+
+Include a prominent:
+
+FILTER
+
+button that opens a mobile bottom sheet/filter panel.
+
+==================================================
+14. EVENT CARD
+==================================================
+
+Every event card should visually show:
+
+DATE
+
+EVENT NAME
+
+LOCATION
+
+PRICE RANGE
+
+EVENT TYPE
+
+DEMAND LEVEL
+
+AVAILABILITY
+
+Bookmark icon
+
+Example:
+
+12 OCT
+
+RAAS RANG 2026
+
+Sindhu Bhavan
+
+₹800–₹1,500
+
+🔥 HIGH DEMAND
+
+Artist Night
+
+REQUEST PASS →
+
+Make cards interactive.
+
+Clicking an event opens Event Details.
+
+==================================================
+15. EVENT DETAILS
+==================================================
+
+Create an event detail page.
+
+Large hero image.
+
+Top:
+
+Back
+Share
+Bookmark
+
+Date:
+
+12
+OCT
+
+Event name:
+
+RAAS RANG 2026
+
+Location:
+
+Sindhu Bhavan, Ahmedabad
+
+Time:
+
+7:00 PM onwards
+
+Categories:
+
+Artist Night
+Premium
+Youth Crowd
+
+ABOUT
+
+Event description.
+
+PRICE RANGE:
+
+₹800–₹1,500
+
+DEMAND:
+
+🔥 HIGH DEMAND
+
+Show:
+
+"200+ people have shown interest"
+
+BUT make this editable/demo content.
+
+Add:
+
+HOW MANY PASSES?
+
+[-] 2 [+]
+
+Then:
+
+REQUEST PASSES →
+
+Secondary:
+
+SHARE EVENT
+
+Important:
+Use REQUEST PASSES rather than BUY NOW unless an actual authorised purchase/booking flow is connected.
+
+==================================================
+16. REQUEST PASS FROM EVENT
+==================================================
+
+When the user clicks:
+
+REQUEST PASSES →
+
+open the request flow.
+
+Pre-fill:
+
+Event
+Date
+Location
+Quantity
+
+Then ask:
+
+Budget
+Priority
+WhatsApp
+Additional message
+
+Priority options:
+
+Best Price
+Premium / VIP
+Any Pass
+
+CTA:
+
+SUBMIT REQUEST →
+
+After submission:
+
+REQUEST SUBMITTED
+
+Show next steps.
+
+==================================================
+17. REQUESTED EVENTS / NO RESULTS
+==================================================
+
+This is important.
+
+If someone searches for an event/artist that isn't listed:
+
+DO NOT simply show:
+
+"No results."
+
+Instead show:
+
+CAN'T FIND IT?
+
+"Tell us what you're looking for."
+
+Fields:
+
+Event / Artist
+Date
+Number of passes
+Budget
+
+CTA:
+
+REQUEST IT →
+
+This request should become part of the internal demand database.
+
+==================================================
+18. JUGAAD DROPS
+==================================================
+
+Create a dedicated:
+
+JUGAAD DROPS
+
+page.
+
+This is for organiser-approved deals, allocations, special offers or referral opportunities.
+
+Heading:
+
+JUGAAD
+DROPS ⚡
+
+Subtitle:
+
+When something good lands,
+you'll know.
+
+Create featured drop cards.
+
+Example:
+
+DROP #01
+
+12 OCT
+
+EXCLUSIVE ARTIST NIGHT
+
+Shilaj, Ahmedabad
+
+₹1,200
+
+Original:
+₹1,800
+
+LIMITED
+
+PASS NO JUGAAD EXCLUSIVE
+
+CTA:
+
+GRAB THIS DROP →
+
+Below:
+
+MORE DROPS
+COMING SOON.
+
+NOTIFY ME
+
+Use countdown UI only when there is a genuine live drop with a real expiry.
+
+Do not fabricate availability or discounts.
+
+==================================================
+19. GALLERY
+==================================================
+
+Create:
+
+THE JUGAAD
+GALLERY
+
+or:
+
+AHMEDABAD
+AFTER DARK
+
+Use an Instagram-inspired masonry/grid gallery.
+
+Content categories:
+
+Garba
+Crowd
+Artists
+Venues
+Outfits
+Nightlife
+Previous Pass No Jugaad moments
+
+Add:
+
+TAG @PASS_NO_JUGAAD
+TO GET FEATURED.
+
+Make images clickable to a lightbox.
+
+==================================================
+20. FOR ORGANISERS
+==================================================
+
+Create a dedicated organiser page.
+
+Hero:
+
+YOU BRING
+THE BEATS.
+
+WE BRING
+THE PEOPLE.
+
+Supporting text:
+
+Tell us about your event and we'll explore how Pass No Jugaad can help you reach the right audience.
+
+Benefits:
+
+01
+REAL DEMAND
+
+Understand what people are actively looking for.
+
+02
+RIGHT AUDIENCE
+
+Reach people based on date, budget, location and vibe.
+
+03
+EVENT DISTRIBUTION
+
+Get your event discovered by relevant audiences.
+
+04
+DEAL OPPORTUNITIES
+
+Explore authorised offers, referral arrangements and special drops.
+
+CTA:
+
+LIST YOUR EVENT →
+
+Secondary:
+
+TALK TO US ON INSTAGRAM →
+
+Secondary:
+
+WHATSAPP US →
+
+==================================================
+21. ORGANISER FORM
+==================================================
+
+Create a fully usable organiser submission form.
+
+Heading:
+
+LIST YOUR
+EVENT
+
+Fields:
+
+ORGANISER NAME
+[ Type here ]
+
+BRAND / ORGANISATION
+[ Type here ]
+
+EMAIL
+[ Type here ]
+
+WHATSAPP NUMBER
+[ Type here ]
+
+EVENT NAME
+[ Type here ]
+
+EVENT DATE
+[ Select date ]
+
+VENUE
+[ Type here ]
+
+CITY
+Default:
+Ahmedabad
+
+EXPECTED CROWD
+[ Type here ]
+
+TOTAL CAPACITY
+[ Type here ]
+
+PASSES AVAILABLE
+[ Type here ]
+
+PASS PRICE
+[ ₹ ______ ]
+
+EVENT TYPE
+
+Garba
+Artist Night
+Premium
+College
+Corporate
+Other
+
+ARTIST / DJ
+
+[ Type here ]
+
+INSTAGRAM LINK
+
+[ Paste link ]
+
+OFFICIAL EVENT / BOOKING LINK
+
+[ Paste link ]
+
+WHAT DO YOU NEED FROM US?
+
+Audience
+Promotion
+Pass Distribution
+Exclusive Offer
+Referral Sales
+Other
+
+ADDITIONAL INFORMATION
+
+[ Type here ]
+
+CTA:
+
+SUBMIT EVENT →
+
+On successful submission:
+
+EVENT RECEIVED 👀
+
+"We've got your details.
+
+We'll review your event and get back to you."
+
+Buttons:
+
+MESSAGE US ON WHATSAPP
+
+DM US ON INSTAGRAM
+
+==================================================
+22. ORGANISER DEMAND PREVIEW
+==================================================
+
+Add a dashboard-style visual on the organiser page.
+
+Heading:
+
+NAVRATRI
+DEMAND INTELLIGENCE
+
+Example/demo metrics:
+
+12 OCT
+212 REQUESTS
+
+TOP BUDGET
+₹1K–₹2.5K
+
+GROUP SIZE
+2–4 PASSES
+
+TOP VIBE
+ARTIST NIGHT
+
+Add:
+
+COMMUNITY DEMAND SIGNALS
+
+Make all metrics editable.
+
+==================================================
+23. MY REQUESTS
+==================================================
+
+Create a My Requests page.
+
+Do not require complicated authentication for MVP.
+
+Display:
+
+ACTIVE
+CONFIRMED
+PAST
+
+Request cards:
+
+RAAS RANG 2026
+12 OCT
+2 PASSES
+₹1,000–₹1,500
+
+STATUS:
+UNDER REVIEW
+
+Message:
+"We'll get back to you soon."
+
+Another:
+
+UNITED GARBA FESTIVAL
+11 OCT
+4 PASSES
+₹1,500–₹2,000
+
+STATUS:
+OPTIONS SENT
+
+CTA:
+
+VIEW OPTIONS →
+
+For MVP, this can use sample/demo states or a simple request ID system.
+
+==================================================
+24. MOBILE BOTTOM NAVIGATION
+==================================================
+
+Create a fixed bottom navigation bar.
+
+HOME
+RADAR
+CALENDAR
+EVENTS
+MY REQUESTS
+
+Use simple outline icons.
+
+Active section:
+Orange.
+
+Inactive:
+White/grey.
+
+Make navigation actually work.
+
+==================================================
+25. HAMBURGER MENU
+==================================================
+
+Create an animated slide-out menu.
+
+Menu:
+
+Home
+Navratri Radar
+Events
+Calendar
+Jugaad Drops
+For Organisers
+Gallery
+About
+Contact
+
+Social:
+
+Instagram
+WhatsApp
+
+CTA:
+
+I WANT PASSES →
+
+The menu should slide in smoothly from the right.
+
+==================================================
+26. ABOUT
+==================================================
+
+Create a small About page.
+
+Heading:
+
+WHY PASS NO JUGAAD?
+
+Copy:
+
+"Ahmedabad doesn't just celebrate Navratri.
+
+It lives it.
+
+Pass No Jugaad exists to make finding the right night, the right crowd and the right pass a little easier."
+
+Keep this concise.
+
+==================================================
+27. CONTACT
+==================================================
+
+Create a simple contact section/page.
+
+Instagram
+WhatsApp
+Email
+
+CTA:
+
+TALK TO US →
+
+==================================================
+28. FOOTER
+==================================================
+
+Logo:
+
+PASS NO
+JUGAAD
+
+Links:
+
+Home
+Radar
+Events
+Calendar
+Jugaad Drops
+Organisers
+Gallery
+Contact
+
+Social icons.
+
+CTA:
+
+JOIN OUR WHATSAPP UPDATES
+
+Footer disclaimer:
+
+"Pass No Jugaad is an independent discovery and community platform. It is not an official ticketing partner unless explicitly stated for a specific event."
+
+==================================================
+29. FUNCTIONALITY
+==================================================
+
+ALL major buttons must work.
+
+Implement:
+
+HOME → FIND YOUR JUGAAD
+HOME → I'M AN ORGANISER
+
+Find Your Jugaad → Buyer form
+
+Buyer form → Success state
+
+Calendar → Date filtering
+
+Events → Event listing
+
+Search → Search/filter event content
+
+Filter → Filter drawer/modal
+
+Event card → Event details
+
+Event details → Request passes
+
+Request → Success
+
+Jugaad Drops → Drop details
+
+Organiser → Organiser form
+
+Organiser form → Success
+
+Instagram buttons → Instagram URL placeholder
+
+WhatsApp buttons → WhatsApp URL placeholder
+
+Gallery → Lightbox
+
+Hamburger → Menu
+
+Bottom navigation → Correct pages
+
+Bookmark → selected/unselected state
+
+Quantity selector → functional +/-
+
+Category chips → selected/unselected
+
+Budget → selectable + custom typing
+
+Location → searchable/selectable
+
+Artist → typable
+
+Date → selectable
+
+==================================================
+30. FORM / DATA HANDLING
+==================================================
+
+Make forms ready to connect to external services.
+
+Where possible, create clear integration placeholders for:
+
+Tally
+Google Forms
+Airtable
+Google Sheets
+Email
+WhatsApp
+
+The front-end should not require a custom backend for the MVP.
+
+Buyer submissions need:
+
+Name
+WhatsApp
+Date
+Quantity
+Budget
+Location
+Event type
+Artist
+Specific event
+Purchase intent
+
+Organiser submissions need:
+
+Name
+Brand
+Email
+WhatsApp
+Event
+Date
+Venue
+Expected crowd
+Capacity
+Available passes
+Price
+Event type
+Artist
+Instagram
+Official event link
+Requirements
+
+==================================================
+31. ADMIN / CONTENT MANAGEMENT APPROACH
+==================================================
+
+The site should be designed so event content can be updated easily.
+
+Event data should conceptually support:
+
+Event name
+Date
+Venue
+Location
+Image
+Description
+Price
+Demand
+Availability
+Category
+Artist
+Official link
+Featured status
+Jugaad Drop status
+
+Make the architecture easy to connect to a CMS or Airtable later.
+
+For MVP, use editable/static content.
+
+==================================================
+32. MICROCOPY
+==================================================
+
+Use this tone throughout:
+
+"Ahmedabad, what's your scene?"
+
+"Can't find a pass?"
+
+"Tell us."
+
+"We'll keep you in the loop."
+
+"What Ahmedabad is looking for."
+
+"The Jugaad is simple."
+
+"You bring the beats.
+We bring the people."
+
+"When something good lands,
+you'll know."
+
+Avoid corporate language such as:
+
+"Seamless ticketing experience"
+
+"Leading event discovery platform"
+
+"Revolutionising event management"
+
+"Best-in-class solution"
+
+==================================================
+33. DESIGN HIERARCHY
+==================================================
+
+The most important parts of the product are:
+
+1. FIND YOUR JUGAAD
+2. NAVRATRI RADAR
+3. EVENTS
+4. REQUEST PASSES
+5. JUGAAD DROPS
+6. FOR ORGANISERS
+
+Make these visually dominant.
+
+Do not make every section equally loud.
+
+==================================================
+34. ANIMATIONS
+==================================================
+
+Use tasteful animations:
+
+Logo reveal
+Hero image parallax
+Scroll reveal
+Card hover/tap
+Filter drawer
+Menu slide
+Button press
+Category selection
+Bookmark animation
+Quantity animation
+Success check animation
+Gallery lightbox
+Page transitions
+
+Animations should feel premium and fast.
+
+Do not over-animate.
+
+==================================================
+35. PERFORMANCE
+==================================================
+
+Because most traffic will come from Instagram:
+
+Prioritise:
+
+Fast loading
+Mobile optimisation
+Compressed images
+Lazy-loaded gallery images
+Simple animations
+Minimal unnecessary scripts
+
+The website should feel fast on mobile data.
+
+==================================================
+36. SEO / SOCIAL SHARING
+==================================================
+
+Set:
+
+Page title:
+Pass No Jugaad | Ahmedabad Navratri 2026
+
+Description:
+Find Ahmedabad Navratri events, tell us what passes you're looking for, discover Jugaad Drops and connect with the right events.
+
+Create an attractive Open Graph/social preview image.
+
+==================================================
+37. FINAL USER JOURNEY
+==================================================
+
+BUYER JOURNEY:
+
+Instagram
+↓
+Landing page
+↓
+Find Your Jugaad
+↓
+Submit preferences
+↓
+You're on the Radar
+↓
+Browse Events
+↓
+Event Details
+↓
+Request Passes
+↓
+Receive relevant options manually/through WhatsApp
+
+OR:
+
+Instagram
+↓
+Landing
+↓
+Navratri Radar
+↓
+Events
+↓
+Event Details
+↓
+Request Pass
+
+ORGANISER JOURNEY:
+
+Instagram
+↓
+Landing
+↓
+For Organisers
+↓
+Understand value
+↓
+List Your Event
+↓
+Submit event
+↓
+Pass No Jugaad receives submission
+↓
+Contact organiser
+↓
+Agree commercial arrangement if applicable
+↓
+Event goes live
+↓
+Demand is collected
+↓
+Potential Jugaad Drop / referral opportunity
+
+==================================================
+38. MOST IMPORTANT DESIGN PRINCIPLE
+==================================================
+
+This should feel like a REAL product.
+
+Not a template.
+Not a generic event website.
+Not a corporate ticketing platform.
+
+It should feel like:
+
+INSTAGRAM
++
+AHMEDABAD NAVRATRI
++
+DEMAND RADAR
++
+EVENT DISCOVERY
++
+JUGAAD
+
+The first 5 seconds should make the visitor understand:
+
+WHAT IS THIS?
+
+WHAT CAN I DO HERE?
+
+WHY SHOULD I USE IT?
+
+The primary CTA must always be obvious:
+
+FIND YOUR JUGAAD →
+
+The secondary business CTA:
+
+I'M AN ORGANISER →
+
+Use the attached reference image as the visual benchmark for the final UI quality.
+
+Build the complete responsive experience with all major interactions and working navigation.

@@ -1,0 +1,10 @@
+{
+  "description": "Automates essential tasks efficiently to save time and streamline workflows, empowering users to focus on high-priority activities.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

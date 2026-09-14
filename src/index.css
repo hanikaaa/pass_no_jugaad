@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@300;400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+body {
+  background-color: #080808;
+  color: #ffffff;
+  font-family: 'Barlow', sans-serif;
+  overflow-x: hidden;
+}
+
+.font-display {
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+::-webkit-scrollbar { width: 0; height: 0; }
+* { scrollbar-width: none; }
+
+@keyframes logoReveal {
+  0% { opacity: 0; transform: scaleY(0.2) translateY(60px); filter: blur(24px); }
+  70% { opacity: 1; transform: scaleY(1) translateY(0); filter: blur(0); }
+  100% { opacity: 1; transform: scaleY(1) translateY(0); }
+}
+
+@keyframes introOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes checkDraw {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes radarPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-logo-reveal {
+  animation: logoReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-logo-reveal-2 {
+  animation: logoReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+  opacity: 0;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.animate-slide-right {
+  animation: slideRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-radar-pulse {
+  animation: radarPulse 1.5s ease-out infinite;
+}
+
+.scroll-x {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-start { scroll-snap-align: start; }
+
+.demand-fire { text-shadow: 0 0 12px rgba(255, 80, 0, 0.7); }
+
+.card-glow:hover {
+  box-shadow: 0 0 0 1px rgba(255, 85, 0, 0.3), 0 8px 32px rgba(255, 85, 0, 0.1);
+}
+
+.orange-glow {
+  box-shadow: 0 0 30px rgba(255, 85, 0, 0.4);
+}
+
+.btn-primary {
+  background: #FF5500;
+  color: white;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.btn-primary:hover {
+  background: #ff6a1a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(255, 85, 0, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background: transparent;
+  color: white;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.btn-outline:hover {
+  border-color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.05);
+}
+
+.chip {
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #111;
+  color: rgba(255,255,255,0.7);
+}
+
+.chip:hover {
+  border-color: #FF5500;
+  color: #FF5500;
+}
+
+.chip.active {
+  background: rgba(255, 85, 0, 0.15);
+  border-color: #FF5500;
+  color: #FF5500;
+}
+
+input, textarea, select {
+  background: #0f0f0f;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: white;
+  font-family: 'Barlow', sans-serif;
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input::placeholder, textarea::placeholder {
+  color: rgba(255,255,255,0.3);
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #FF5500;
+}
+
+select option { background: #111; }
+
+.hero-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(8,8,8,0.4) 0%,
+    rgba(8,8,8,0.2) 40%,
+    rgba(8,8,8,0.7) 75%,
+    rgba(8,8,8,1) 100%
+  );
+}
+
+.check-stroke {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: checkDraw 0.6s ease 0.3s forwards;
+}
