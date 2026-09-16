@@ -6,175 +6,154 @@ export default function Home({ navigate }: NavProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 50);
+    const t = setTimeout(() => setVisible(true), 60);
     return () => clearTimeout(t);
   }, []);
 
   const featuredEvents = EVENTS.filter((e) => e.featured).slice(0, 3);
 
-  const stats = [
-    { value: '10', label: 'NIGHTS' },
-    { value: '50+', label: 'EVENTS' },
-    { value: '10K+', label: 'JUGAAD SEEKERS' },
-  ];
-
-  const steps = [
-    { num: '01', label: 'YOU TELL US', desc: 'Tell us your date, budget, location and vibe.' },
-    { num: '02', label: 'WE TRACK', desc: 'We aggregate demand and monitor what people want.' },
-    { num: '03', label: 'WE CONNECT', desc: 'When something relevant becomes available, we find you.' },
-  ];
-
   return (
-    <div>
+    <div style={{ color: '#1A1612' }}>
       {/* HERO */}
-      <div className="relative min-h-[90vh] flex flex-col justify-end overflow-hidden -mt-[56px]">
-        <div className="absolute inset-0 bg-zinc-900">
+      <div className="relative overflow-hidden -mt-[60px]" style={{ minHeight: '92vh' }}>
+        <div className="absolute inset-0 bg-stone-800">
           <img
-            src="https://images.unsplash.com/photo-1667831617890-458ca443d799?w=1200&h=1000&fit=crop&auto=format"
-            alt="Ahmedabad Navratri crowd"
+            src="https://images.unsplash.com/photo-1667831617890-458ca443d799?w=1400&h=1000&fit=crop&auto=format"
+            alt="Ahmedabad Navratri celebration"
             className="w-full h-full object-cover"
-            style={{ opacity: 0.6 }}
+            style={{ opacity: 0.55 }}
           />
         </div>
         <div className="hero-overlay absolute inset-0" />
 
         <div
-          className="relative z-10 px-4 pb-8 pt-24"
+          className="relative z-10 flex flex-col justify-end px-5 pb-10 pt-[120px]"
           style={{
+            minHeight: '92vh',
             opacity: visible ? 1 : 0,
-            transform: visible ? 'none' : 'translateY(20px)',
-            transition: 'all 0.6s ease',
+            transform: visible ? 'none' : 'translateY(24px)',
+            transition: 'opacity 0.7s ease, transform 0.7s ease',
           }}
         >
-          <div
-            className="font-display font-black text-white leading-none mb-4"
-            style={{ fontSize: 'clamp(52px, 14vw, 88px)', letterSpacing: '-0.02em' }}
+          <div className="eyebrow mb-4" style={{ color: 'rgba(250,247,242,0.75)' }}>
+            Ahmedabad's Event & Jugaad Radar
+          </div>
+
+          <h1
+            className="font-serif leading-[1.05] mb-5"
+            style={{ fontSize: 'clamp(42px, 11vw, 80px)', fontWeight: 500, color: '#FAF7F2', fontStyle: 'italic' }}
           >
-            AHMEDABAD&apos;S<br />
-            NAVRATRI<br />
-            <span style={{ color: '#FF5500' }}>STARTS HERE.</span>
-          </div>
+            Looking for a night<br />worth showing up for?
+          </h1>
 
-          <p className="text-white/60 mb-6 max-w-xs" style={{ fontSize: 16, lineHeight: 1.5 }}>
-            You tell us what you want.<br />We find the scene.
+          <p style={{ fontSize: 16, lineHeight: 1.6, color: 'rgba(250,247,242,0.7)', maxWidth: 380, marginBottom: 28 }}>
+            Discover Navratri events, tell us what {"you're"} looking for, and find the right jugaad.
           </p>
 
-          <div className="flex flex-col gap-3 max-w-xs">
-            <button
-              onClick={() => navigate('find-jugaad')}
-              className="btn-primary py-4 text-lg w-full"
-            >
-              FIND YOUR JUGAAD →
+          <div className="flex flex-col gap-3 max-w-sm">
+            <button onClick={() => navigate('find-jugaad')} className="btn-primary py-4" style={{ fontSize: 16 }}>
+              Find Your Jugaad →
             </button>
-            <button
-              onClick={() => navigate('organisers')}
-              className="btn-outline py-3.5 text-base w-full"
-            >
-              {"I'M AN ORGANISER →"}
+            <button onClick={() => navigate('organisers')} className="py-3.5" style={{ color: '#FAF7F2', borderColor: 'rgba(250,247,242,0.75)', border: '1.5px solid rgba(250,247,242,0.75)', borderRadius: 6, fontWeight: 600, fontSize: 15, background: 'rgba(250,247,242,0.12)', backdropFilter: 'blur(4px)', cursor: 'pointer', transition: 'all 0.2s' }}>
+              {"I'm an Organiser →"}
             </button>
           </div>
-
-          <p className="mt-5 text-white/35 text-xs tracking-wide">
-            {"Ahmedabad's Navratri demand & event discovery board."}
-          </p>
         </div>
 
-        {/* STATS */}
+        {/* Stats strip */}
         <div
-          className="relative z-10 flex border-t border-white/10"
-          style={{ background: 'rgba(8,8,8,0.8)', backdropFilter: 'blur(12px)' }}
+          className="relative z-10 flex"
+          style={{ background: 'rgba(26,22,18,0.75)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(250,247,242,0.08)' }}
         >
-          {stats.map((s, i) => (
+          {[{ value: '10', label: 'Nights' }, { value: '50+', label: 'Events' }, { value: '10K+', label: 'Jugaad seekers' }].map((s, i, arr) => (
             <div
               key={s.label}
               className="flex-1 text-center py-4"
-              style={{ borderRight: i < stats.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}
+              style={{ borderRight: i < arr.length - 1 ? '1px solid rgba(250,247,242,0.08)' : 'none' }}
             >
-              <div className="font-display font-black text-white" style={{ fontSize: 28 }}>
-                {s.value}
-              </div>
-              <div className="font-display font-semibold text-white/40 tracking-widest" style={{ fontSize: 10 }}>
-                {s.label}
-              </div>
+              <div className="font-serif" style={{ fontSize: 26, fontWeight: 500, color: '#FAF7F2' }}>{s.value}</div>
+              <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(250,247,242,0.45)' }}>{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* WHAT IS PASS NO JUGAAD */}
-      <div className="px-4 py-10">
-        <h2 className="font-display font-black leading-none mb-6" style={{ fontSize: 'clamp(36px, 10vw, 56px)', letterSpacing: '-0.02em' }}>
-          WHAT IS<br /><span style={{ color: '#FF5500' }}>PASS NO JUGAAD?</span>
+      <div className="px-5 py-12" style={{ background: '#FAF7F2' }}>
+        <div className="eyebrow mb-3">What is Pass No Jugaad?</div>
+        <h2 className="font-serif mb-3 leading-tight" style={{ fontSize: 'clamp(32px, 9vw, 52px)', fontWeight: 500 }}>
+          Not a ticketing site.<br />
+          <span style={{ color: '#C1440E', fontStyle: 'italic' }}>A demand platform.</span>
         </h2>
+        <p style={{ fontSize: 15, lineHeight: 1.7, color: '#6B5B52', maxWidth: 480, marginBottom: 32 }}>
+          {"Can't"} find the right pass? Tell us what you want and {"we'll"} find it. {"You're"} not browsing — {"you're"} being found.
+        </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          {/* For People */}
-          <div
-            className="rounded-lg p-5"
-            style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}
-          >
-            <div className="font-display font-bold text-xs tracking-widest text-white/40 mb-3">FOR PEOPLE</div>
-            <div className="font-display font-black text-lg mb-3" style={{ color: '#FF5500' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* For people */}
+          <div className="card-light p-5">
+            <div className="eyebrow mb-3">For people</div>
+            <h3 className="font-serif mb-2" style={{ fontSize: 20, fontWeight: 500, color: '#1A1612' }}>
               {"Can't find the pass you want?"}
-            </div>
-            <p className="text-white/60 text-sm mb-4" style={{ lineHeight: 1.6 }}>
-              Tell us your date, budget, location, vibe, artist preference and quantity. {"We'll"} track the demand and connect you with relevant options when available.
+            </h3>
+            <p style={{ fontSize: 14, lineHeight: 1.65, color: '#6B5B52', marginBottom: 16 }}>
+              Tell us your date, budget, vibe and quantity. {"We'll"} track demand and connect you when something relevant comes up.
             </p>
-            <button onClick={() => navigate('find-jugaad')} className="btn-primary py-2.5 px-4 text-sm w-full">
-              FIND YOUR JUGAAD →
+            <button onClick={() => navigate('find-jugaad')} className="btn-primary w-full py-3 text-sm">
+              Find Your Jugaad →
             </button>
           </div>
 
-          {/* For Organisers */}
-          <div
-            className="rounded-lg p-5"
-            style={{ background: '#111', border: '1px solid rgba(255,85,0,0.15)' }}
-          >
-            <div className="font-display font-bold text-xs tracking-widest text-white/40 mb-3">FOR ORGANISERS</div>
-            <div className="font-display font-black text-lg mb-3 text-white">
+          {/* For organisers */}
+          <div className="card-light p-5" style={{ borderColor: 'rgba(193,68,14,0.2)' }}>
+            <div className="eyebrow mb-3">For organisers</div>
+            <h3 className="font-serif mb-2" style={{ fontSize: 20, fontWeight: 500, color: '#1A1612' }}>
               Have an event?
-            </div>
-            <p className="text-white/60 text-sm mb-4" style={{ lineHeight: 1.6 }}>
-              Tell us what {"you're"} hosting and what you need. We help you understand demand and connect your event with the right audience.
+            </h3>
+            <p style={{ fontSize: 14, lineHeight: 1.65, color: '#6B5B52', marginBottom: 16 }}>
+              Get your event in front of people already looking. We help you understand demand and reach the right audience.
             </p>
-            <button onClick={() => navigate('organisers')} className="btn-outline py-2.5 px-4 text-sm w-full">
-              LIST YOUR EVENT →
+            <button onClick={() => navigate('organisers')} className="btn-outline w-full py-3 text-sm">
+              List Your Event →
             </button>
-          </div>
-        </div>
-
-        {/* Steps */}
-        <div
-          className="rounded-lg p-5"
-          style={{ background: 'rgba(255,85,0,0.06)', border: '1px solid rgba(255,85,0,0.15)' }}
-        >
-          <div className="font-display font-black text-center mb-5" style={{ fontSize: 20, letterSpacing: '0.02em' }}>
-            THE JUGAAD IS SIMPLE.
-          </div>
-          <div className="space-y-4">
-            {steps.map((s) => (
-              <div key={s.num} className="flex items-start gap-4">
-                <div className="font-display font-black text-2xl leading-none" style={{ color: '#FF5500', minWidth: 36 }}>
-                  {s.num}
-                </div>
-                <div>
-                  <div className="font-display font-bold tracking-wide text-white text-sm">{s.label}</div>
-                  <div className="text-white/50 text-xs mt-0.5">{s.desc}</div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
+      {/* HOW IT WORKS */}
+      <div className="px-5 py-10" style={{ background: '#F0E8DC' }}>
+        <div className="eyebrow mb-3">The Jugaad is simple</div>
+        <h2 className="font-serif mb-8 leading-tight" style={{ fontSize: 'clamp(28px, 8vw, 40px)', fontWeight: 500 }}>
+          Three steps.
+        </h2>
+        <div className="space-y-6">
+          {[
+            { n: '01', t: 'You tell us', d: 'Your date, budget, vibe and how many passes you need.' },
+            { n: '02', t: 'We track demand', d: "We aggregate what people are looking for across Ahmedabad's Navratri." },
+            { n: '03', t: 'We connect you', d: 'When something relevant is available, you hear it first.' },
+          ].map((s) => (
+            <div key={s.n} className="flex items-start gap-5">
+              <div className="font-serif flex-shrink-0" style={{ fontSize: 32, fontWeight: 300, color: '#C1440E', lineHeight: 1, minWidth: 40 }}>{s.n}</div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1612', marginBottom: 4 }}>{s.t}</div>
+                <div style={{ fontSize: 14, lineHeight: 1.65, color: '#6B5B52' }}>{s.d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* FEATURED EVENTS */}
-      <div className="px-4 pb-10">
-        <div className="flex items-end justify-between mb-4">
-          <h2 className="font-display font-black leading-none" style={{ fontSize: 'clamp(28px, 8vw, 44px)', letterSpacing: '-0.02em' }}>
-            FEATURED<br />EVENTS
-          </h2>
-          <button onClick={() => navigate('events')} className="text-xs font-display font-bold tracking-wide" style={{ color: '#FF5500' }}>
-            VIEW ALL →
+      <div className="px-5 py-12" style={{ background: '#FAF7F2' }}>
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <div className="eyebrow mb-2">Featured this Navratri</div>
+            <h2 className="font-serif leading-tight" style={{ fontSize: 'clamp(26px, 7vw, 38px)', fontWeight: 500 }}>
+              Events worth seeing.
+            </h2>
+          </div>
+          <button onClick={() => navigate('events')} className="btn-ghost text-sm flex-shrink-0">
+            View all →
           </button>
         </div>
 
@@ -186,95 +165,92 @@ export default function Home({ navigate }: NavProps) {
       </div>
 
       {/* RADAR TEASER */}
-      <div className="px-4 pb-10">
-        <div
-          className="rounded-lg p-6 relative overflow-hidden"
-          style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)' }}
-        >
-          <div className="absolute -right-8 -top-8 opacity-5">
-            <svg width="200" height="200" viewBox="0 0 200 200">
-              <circle cx="100" cy="100" r="80" fill="none" stroke="#FF5500" strokeWidth="1" />
-              <circle cx="100" cy="100" r="55" fill="none" stroke="#FF5500" strokeWidth="1" />
-              <circle cx="100" cy="100" r="30" fill="none" stroke="#FF5500" strokeWidth="1" />
-            </svg>
-          </div>
+      <div className="px-5 py-10" style={{ background: '#F0E8DC' }}>
+        <div className="eyebrow mb-3">Navratri Radar</div>
+        <h2 className="font-serif mb-2 leading-tight" style={{ fontSize: 'clamp(26px, 7vw, 38px)', fontWeight: 500 }}>
+          What Ahmedabad is looking for.
+        </h2>
+        <p style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.65, marginBottom: 20 }}>
+          Real demand. Real people. Real Ahmedabad.
+        </p>
 
-          <div className="font-display font-bold text-xs tracking-widest mb-2" style={{ color: '#FF5500' }}>
-            NAVRATRI RADAR
-          </div>
-          <h3 className="font-display font-black leading-tight mb-2" style={{ fontSize: 28 }}>
-            WHAT AHMEDABAD<br />IS LOOKING FOR.
-          </h3>
-          <p className="text-white/50 text-sm mb-4">Real demand. Real people. Real Ahmedabad.</p>
-
-          <div className="flex gap-3 mb-5">
-            {[
-              { label: '12 OCT', value: '212', sub: 'PEOPLE LOOKING' },
-              { label: '15 OCT', value: '318', sub: 'PEOPLE LOOKING' },
-              { label: '19 OCT', value: '445', sub: 'PEOPLE LOOKING' },
-            ].map((d) => (
-              <div
-                key={d.label}
-                className="flex-1 text-center rounded-md py-3"
-                style={{ background: 'rgba(255,85,0,0.08)', border: '1px solid rgba(255,85,0,0.15)' }}
-              >
-                <div className="font-display font-bold text-white/50 text-xs">{d.label}</div>
-                <div className="font-display font-black text-white text-2xl">{d.value}</div>
-                <div className="font-display font-semibold text-white/30 text-[9px] tracking-widest">{d.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          <button onClick={() => navigate('radar')} className="btn-primary w-full py-3">
-            VIEW NAVRATRI RADAR →
-          </button>
+        <div className="flex gap-3 mb-5">
+          {[
+            { label: '12 Oct', value: '212' },
+            { label: '15 Oct', value: '318' },
+            { label: '19 Oct', value: '445' },
+          ].map((d) => (
+            <div
+              key={d.label}
+              className="flex-1 text-center rounded-lg py-4 card-light"
+            >
+              <div style={{ fontSize: 12, color: '#9A8B82', fontWeight: 500, marginBottom: 4 }}>{d.label}</div>
+              <div className="font-serif" style={{ fontSize: 28, fontWeight: 500, color: '#1A1612' }}>{d.value}</div>
+              <div style={{ fontSize: 10, color: '#9A8B82', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>looking</div>
+            </div>
+          ))}
         </div>
+
+        <button onClick={() => navigate('radar')} className="btn-primary w-full py-3.5">
+          View Navratri Radar →
+        </button>
       </div>
 
       {/* JUGAAD DROPS TEASER */}
-      <div className="px-4 pb-10">
-        <div
-          className="rounded-lg overflow-hidden relative"
-          style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.07)' }}
-        >
+      <div className="px-5 py-10" style={{ background: '#FAF7F2' }}>
+        <div className="card-light overflow-hidden">
+          <div className="relative h-[200px] bg-stone-200 overflow-hidden">
+            <img
+              src="https://images.unsplash.com/photo-1504680177321-2e6a879aac86?w=800&h=400&fit=crop&auto=format"
+              alt="Jugaad Drops"
+              className="w-full h-full object-cover"
+              style={{ opacity: 0.75 }}
+            />
+            <div className="absolute inset-0 flex items-end p-5" style={{ background: 'linear-gradient(to top, rgba(26,22,18,0.7) 0%, transparent 60%)' }}>
+              <div>
+                <div className="eyebrow mb-1" style={{ color: 'rgba(250,247,242,0.8)' }}>Jugaad Drops</div>
+                <div className="font-serif" style={{ fontSize: 24, fontWeight: 500, color: '#FAF7F2' }}>
+                  When something good lands, {"you'll"} know.
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="p-5">
-            <div className="font-display font-bold text-xs tracking-widest mb-2 text-yellow-400">⚡ JUGAAD DROPS</div>
-            <h3 className="font-display font-black leading-tight mb-1" style={{ fontSize: 28 }}>
-              WHEN SOMETHING<br />GOOD LANDS,
-            </h3>
-            <h3 className="font-display font-black leading-tight mb-3" style={{ fontSize: 28, color: '#FF5500' }}>
-              {"YOU'LL KNOW."}
-            </h3>
-            <p className="text-white/50 text-sm mb-4">
+            <p style={{ fontSize: 14, lineHeight: 1.65, color: '#6B5B52', marginBottom: 16 }}>
               Organiser-approved deals, allocations and exclusive offers. Pass No Jugaad exclusive.
             </p>
             <button onClick={() => navigate('drops')} className="btn-primary w-full py-3">
-              SEE JUGAAD DROPS ⚡
+              See Jugaad Drops →
             </button>
           </div>
         </div>
       </div>
 
       {/* SOCIAL CTA */}
-      <div className="px-4 pb-20">
+      <div className="px-5 pb-24 py-10" style={{ background: '#F0E8DC', borderTop: '1px solid rgba(26,22,18,0.07)' }}>
         <div className="text-center">
-          <div className="font-display font-black text-white/20 text-sm tracking-widest mb-4">STAY IN THE LOOP</div>
+          <div className="eyebrow mb-3">Stay in the loop</div>
+          <h2 className="font-serif mb-4" style={{ fontSize: 24, fontWeight: 500 }}>Follow for updates.</h2>
           <div className="flex gap-3 justify-center">
             <a
-              href="https://wa.me/919999999999"
+              href="https://www.instagram.com/pass_no_jugaad_?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary flex items-center gap-2 px-5 py-3 text-sm"
+              className="btn-primary flex items-center gap-2 px-6 py-3 text-sm"
             >
-              JOIN WHATSAPP UPDATES
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+              </svg>
+              Instagram
             </a>
             <a
-              href="https://instagram.com/pass_no_jugaad"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-outline flex items-center gap-2 px-5 py-3 text-sm"
+              href="mailto:passnojugaadd@gmail.com"
+              className="btn-outline flex items-center gap-2 px-6 py-3 text-sm"
             >
-              INSTAGRAM
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
+              </svg>
+              Email us
             </a>
           </div>
         </div>

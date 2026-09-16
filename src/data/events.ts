@@ -220,9 +220,69 @@ export type Page =
   | 'organiser-success'
   | 'my-requests'
   | 'about'
-  | 'contact';
+  | 'contact'
+  | 'admin-dashboard'
+  | 'organiser-dashboard'
+  | 'login';
 
 export interface NavProps {
   navigate: (page: Page, opts?: { eventId?: string }) => void;
   currentPage: Page;
+}
+
+// ─── Role & Auth types ────────────────────────────────────────
+export type UserRole = 'buyer' | 'organiser' | 'super_admin';
+
+// ─── Event status (from DB) ───────────────────────────────────
+export type EventStatus = 'pending_review' | 'approved' | 'rejected';
+
+// ─── Pass request status lifecycle ───────────────────────────
+export type PassRequestStatus =
+  | 'request_received'
+  | 'looking_for_options'
+  | 'match_found'
+  | 'offer_available'
+  | 'completed'
+  | 'closed';
+
+// ─── DB-shaped types ──────────────────────────────────────────
+export interface PassRequest {
+  id: string;
+  event_id: string;
+  event_name: string;
+  buyer_id: string;
+  buyer_name: string;
+  buyer_email: string;
+  quantity: number;
+  budget_min: number;
+  budget_max: number;
+  status: PassRequestStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JugaadSignal {
+  id: string;
+  buyer_id: string;
+  buyer_name: string;
+  buyer_email: string;
+  preferred_dates: string[];
+  num_passes: number;
+  budget_min: number;
+  budget_max: number;
+  event_type: string[];
+  artist_preference: string;
+  specific_event: string;
+  readiness: 'ready' | 'exploring' | 'maybe';
+  created_at: string;
+}
+
+export interface OrgAccount {
+  id: string;
+  name: string;
+  email: string;
+  org: string;
+  event_count: number;
+  approved_count: number;
+  joined_at: string;
 }

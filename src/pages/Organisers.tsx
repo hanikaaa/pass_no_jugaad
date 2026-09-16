@@ -1,125 +1,109 @@
 import { type NavProps } from '../data/events';
 
 const BENEFITS = [
-  { num: '01', title: 'REAL DEMAND', desc: 'Understand what people are actively looking for across dates, budgets and vibes.' },
-  { num: '02', title: 'RIGHT AUDIENCE', desc: 'Reach people based on date, budget, location and vibe preference.' },
-  { num: '03', title: 'EVENT DISTRIBUTION', desc: 'Get your event discovered by relevant audiences who are ready to buy.' },
-  { num: '04', title: 'DEAL OPPORTUNITIES', desc: 'Explore authorised offers, referral arrangements and special drops.' },
+  { n: '01', t: 'Real demand signals', d: 'Understand what people are actively looking for — across dates, budgets, and vibes — before you even list.' },
+  { n: '02', t: 'Right audience', d: 'Reach people already searching for events like yours. Not cold reach. Warm intent.' },
+  { n: '03', t: 'Event discovery', d: 'Get your event in front of people who are ready. Discovery that actually converts.' },
+  { n: '04', t: 'Jugaad Drops', d: 'Exclusive deals and approved allocations. Organiser-controlled and audience-trusted.' },
+  { n: '05', t: 'Demand intelligence', d: 'Access aggregated demand data — dates, budgets, group size, vibe preferences — to plan smarter.' },
+  { n: '06', t: 'Community trust', d: "Pass No Jugaad is Ahmedabad's word-of-mouth for Navratri. Your event belongs here." },
 ];
 
-const DEMO_METRICS = [
-  { label: '12 OCT', value: '212', sub: 'REQUESTS' },
-  { label: 'TOP BUDGET', value: '₹1K–₹2.5K', sub: 'PER PERSON' },
-  { label: 'GROUP SIZE', value: '2–4', sub: 'PASSES' },
-  { label: 'TOP VIBE', value: 'Artist Night', sub: 'CATEGORY' },
+const METRICS = [
+  { label: '12 Oct', value: '212', sub: 'Requests' },
+  { label: 'Top budget', value: '₹1K–₹2.5K', sub: 'Per person' },
+  { label: 'Group size', value: '2–4', sub: 'Passes' },
+  { label: 'Top vibe', value: 'Garba', sub: 'Category' },
 ];
 
 export default function Organisers({ navigate }: NavProps) {
   return (
-    <div className="pb-24">
+    <div className="pb-24" style={{ color: '#1A1612' }}>
       {/* Hero */}
-      <div
-        className="relative min-h-[50vh] flex flex-col justify-end px-4 pt-16 pb-8"
-        style={{
-          background: 'linear-gradient(160deg, #0f0808 0%, #180a00 50%, #080808 100%)',
-        }}
-      >
-        <div className="absolute inset-0 overflow-hidden opacity-5">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full border"
-              style={{
-                width: 300 + i * 150,
-                height: 300 + i * 150,
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                borderColor: '#FF5500',
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10">
-          <div className="font-display font-bold text-xs tracking-widest mb-3" style={{ color: '#FF5500' }}>FOR ORGANISERS</div>
-          <h1 className="font-display font-black leading-none mb-3" style={{ fontSize: 'clamp(44px, 12vw, 80px)', letterSpacing: '-0.02em' }}>
-            YOU BRING<br />THE BEATS.
+      <div className="relative overflow-hidden" style={{ background: '#F0E8DC', padding: '60px 20px 48px' }}>
+        <div className="max-w-2xl mx-auto">
+          <div className="eyebrow mb-4">For Organisers</div>
+          <h1 className="font-serif leading-tight mb-4" style={{ fontSize: 'clamp(36px, 10vw, 64px)', fontWeight: 500 }}>
+            Your event deserves<br />
+            <span style={{ color: '#C1440E', fontStyle: 'italic' }}>to be seen by people<br />already looking.</span>
           </h1>
-          <h1 className="font-display font-black leading-none mb-5 text-white/30" style={{ fontSize: 'clamp(44px, 12vw, 80px)', letterSpacing: '-0.02em' }}>
-            WE BRING<br />THE PEOPLE.
-          </h1>
-          <p className="text-white/50 text-sm max-w-sm" style={{ lineHeight: 1.6 }}>
-            Tell us about your event and {"we'll"} explore how Pass No Jugaad can help you reach the right audience.
+          <p style={{ fontSize: 16, lineHeight: 1.7, color: '#6B5B52', maxWidth: 440, marginBottom: 28 }}>
+            Tell us about your event and {"we'll"} explore how Pass No Jugaad can help you reach the right audience at the right time.
           </p>
+          <div className="flex flex-wrap gap-3">
+            <button onClick={() => navigate('organiser-form')} className="btn-primary px-6 py-3.5 text-sm">
+              List Your Event →
+            </button>
+            <a href="https://www.instagram.com/pass_no_jugaad_?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="btn-outline px-6 py-3.5 text-sm flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+              </svg>
+              Talk to us on Instagram
+            </a>
+          </div>
         </div>
       </div>
 
       {/* Benefits */}
-      <div className="px-4 py-8">
-        <div className="space-y-4 mb-8">
-          {BENEFITS.map((b) => (
-            <div
-              key={b.num}
-              className="rounded-lg p-5 flex items-start gap-4"
-              style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.05)' }}
-            >
-              <div className="font-display font-black text-3xl leading-none" style={{ color: '#FF5500', minWidth: 40 }}>{b.num}</div>
-              <div>
-                <div className="font-display font-black text-white mb-1" style={{ fontSize: 16, letterSpacing: '0.01em' }}>{b.title}</div>
-                <div className="text-white/50 text-sm" style={{ lineHeight: 1.5 }}>{b.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="px-5 py-12" style={{ background: '#FAF7F2' }}>
+        <div className="max-w-2xl mx-auto">
+          <div className="eyebrow mb-3">What you get</div>
+          <h2 className="font-serif mb-8 leading-tight" style={{ fontSize: 'clamp(26px, 7vw, 40px)', fontWeight: 500 }}>
+            Built for organisers who care.
+          </h2>
 
-        {/* CTAs */}
-        <div className="space-y-3 mb-10">
-          <button onClick={() => navigate('organiser-form')} className="btn-primary w-full py-4 text-lg">
-            LIST YOUR EVENT →
-          </button>
-          <a
-            href="https://instagram.com/pass_no_jugaad"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-outline w-full py-3.5 flex items-center justify-center gap-2 text-sm font-display font-bold tracking-wide"
-          >
-            TALK TO US ON INSTAGRAM →
-          </a>
-          <a
-            href="https://wa.me/919999999999"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-outline w-full py-3.5 flex items-center justify-center gap-2 text-sm font-display font-bold tracking-wide"
-          >
-            WHATSAPP US →
-          </a>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {BENEFITS.map((b) => (
+              <div key={b.n} className="card-light p-5">
+                <div className="font-serif mb-2" style={{ fontSize: 13, color: '#C1440E', fontStyle: 'italic' }}>{b.n}</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1612', marginBottom: 6 }}>{b.t}</div>
+                <div style={{ fontSize: 14, lineHeight: 1.65, color: '#6B5B52' }}>{b.d}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Demand intelligence */}
-      <div className="px-4 pb-8">
-        <div className="rounded-lg p-5" style={{ background: '#0d0d0d', border: '1px solid rgba(255,85,0,0.15)' }}>
-          <div className="font-display font-bold text-xs tracking-widest mb-1" style={{ color: '#FF5500' }}>COMMUNITY DEMAND SIGNALS</div>
-          <h2 className="font-display font-black mb-4 leading-tight" style={{ fontSize: 24 }}>
-            NAVRATRI DEMAND<br />INTELLIGENCE
+      <div className="px-5 py-10" style={{ background: '#F0E8DC' }}>
+        <div className="max-w-2xl mx-auto">
+          <div className="eyebrow mb-3">Community demand signals</div>
+          <h2 className="font-serif mb-2 leading-tight" style={{ fontSize: 'clamp(24px, 6vw, 36px)', fontWeight: 500 }}>
+            Navratri demand intelligence.
           </h2>
+          <p style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.65, marginBottom: 20 }}>
+            Understand what Ahmedabad is looking for — before you go live.
+          </p>
 
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            {DEMO_METRICS.map((m) => (
-              <div
-                key={m.label}
-                className="rounded-md p-3"
-                style={{ background: 'rgba(255,85,0,0.06)', border: '1px solid rgba(255,85,0,0.12)' }}
-              >
-                <div className="font-display font-bold text-white/30 text-[10px] tracking-widest mb-1">{m.label}</div>
-                <div className="font-display font-black text-white" style={{ fontSize: 18 }}>{m.value}</div>
-                <div className="font-display font-semibold text-white/25 text-[9px] tracking-widest">{m.sub}</div>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {METRICS.map((m) => (
+              <div key={m.label} className="card-light p-4">
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 6 }}>{m.label}</div>
+                <div className="font-serif" style={{ fontSize: 22, fontWeight: 500, color: '#1A1612' }}>{m.value}</div>
+                <div style={{ fontSize: 11, color: '#9A8B82', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>{m.sub}</div>
               </div>
             ))}
           </div>
 
-          <p className="text-white/20 text-[10px]">* Demo data. Real insights for listed organisers.</p>
+          <p style={{ fontSize: 11, color: '#9A8B82' }}>* Demo data. Real insights available to listed organisers.</p>
+        </div>
+      </div>
+
+      {/* CTA bottom */}
+      <div className="px-5 py-10" style={{ background: '#FAF7F2' }}>
+        <div className="max-w-2xl mx-auto space-y-3">
+          <button onClick={() => navigate('organiser-form')} className="btn-primary w-full py-4 text-base">
+            List Your Event →
+          </button>
+          <a
+            href="mailto:passnojugaadd@gmail.com"
+            className="btn-outline w-full py-3.5 flex items-center justify-center gap-2 text-sm"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
+            </svg>
+            Email us
+          </a>
         </div>
       </div>
     </div>

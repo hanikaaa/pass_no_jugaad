@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { type NavProps, EVENTS } from '../data/events';
+import { submitPassRequest } from '../lib/api';
 
 interface Props extends NavProps {
   eventId: string | null;
@@ -8,101 +9,121 @@ interface Props extends NavProps {
 export default function RequestPass({ navigate, eventId }: Props) {
   const event = EVENTS.find((e) => e.id === eventId) || EVENTS[0];
   const [qty, setQty] = useState(2);
-  const [budget, setBudget] = useState('');
+  const [budgetMin, setBudgetMin] = useState(500);
+  const [budgetMax, setBudgetMax] = useState(2500);
   const [priority, setPriority] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
+  const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
-  const BUDGETS = ['₹500–₹1,000', '₹1,000–₹1,500', '₹1,500–₹2,500', '₹2,500+'];
   const PRIORITIES = [
-    { value: 'best-price', label: '💰 Best Price' },
-    { value: 'premium', label: '👑 Premium / VIP' },
-    { value: 'any', label: '✓ Any Pass' },
+    { value: 'best-price', label: 'Best price' },
+    { value: 'premium', label: 'Premium / VIP' },
+    { value: 'any', label: 'Any pass that fits' },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await submitPassRequest({
+      event_id: event.id,
+      quantity: qty,
+      budget_min: budgetMin,
+      budget_max: budgetMax,
+      priority_note: priority,
+    });
     navigate('request-success');
   };
 
+  const fmt = (v: number) => v >= 1000 ? `₹${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}K` : `₹${v}`;
+
   return (
-    <div className="px-4 py-6 pb-24 max-w-lg mx-auto">
-      <button onClick={() => navigate('event-detail', { eventId: event.id })} className="flex items-center gap-2 text-white/40 text-sm mb-6 hover:text-white transition-colors">
+    <div className="px-5 py-6 pb-28 max-w-lg mx-auto" style={{ color: '#1A1612' }}>
+      <button onClick={() => navigate('event-detail', { eventId: event.id })} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#9A8B82', marginBottom: 24 }}>
         ← Back
       </button>
 
-      <h1 className="font-display font-black leading-none mb-6" style={{ fontSize: 'clamp(36px, 10vw, 52px)', letterSpacing: '-0.02em' }}>
-        REQUEST<br /><span style={{ color: '#FF5500' }}>PASSES</span>
+      <div className="eyebrow mb-3">Request passes</div>
+      <h1 className="font-serif leading-tight mb-6" style={{ fontSize: 'clamp(32px, 9vw, 48px)', fontWeight: 500 }}>
+        {event.name}
       </h1>
 
-      {/* Pre-filled event info */}
-      <div className="rounded-lg p-4 mb-6" style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}>
-        <div className="font-display font-bold text-xs tracking-widest text-white/30 mb-2">EVENT</div>
-        <div className="font-display font-black text-white text-lg mb-1">{event.name}</div>
-        <div className="flex gap-3 text-xs text-white/40">
+      {/* Event summary */}
+      <div className="card-light p-4 mb-6">
+        <div className="flex items-center gap-3 text-sm" style={{ color: '#6B5B52' }}>
           <span>📅 {event.dateShort}</span>
+          <span>·</span>
           <span>📍 {event.venue}</span>
-          <span>💰 {event.priceRange}</span>
+          <span>·</span>
+          <span style={{ color: '#C1440E', fontWeight: 600 }}>{event.priceRange}</span>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Quantity */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">NUMBER OF PASSES</label>
+          <label style={{ display: 'block', marginBottom: 10 }}>Number of passes</label>
           <div className="flex items-center gap-4">
-            <button type="button" onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 rounded-md border border-white/10 text-white font-bold text-xl hover:border-orange-500 hover:text-orange-500 transition-all">−</button>
-            <span className="font-display font-black text-3xl text-white w-8 text-center">{qty}</span>
-            <button type="button" onClick={() => setQty(Math.min(20, qty + 1))} className="w-10 h-10 rounded-md border border-white/10 text-white font-bold text-xl hover:border-orange-500 hover:text-orange-500 transition-all">+</button>
+            <button type="button" onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 rounded flex items-center justify-center font-bold text-xl" style={{ border: '1.5px solid rgba(26,22,18,0.18)', background: '#fff' }}>−</button>
+            <span className="font-serif" style={{ fontSize: 36, fontWeight: 500, minWidth: 36, textAlign: 'center' }}>{qty}</span>
+            <button type="button" onClick={() => setQty(Math.min(20, qty + 1))} className="w-10 h-10 rounded flex items-center justify-center font-bold text-xl" style={{ border: '1.5px solid rgba(26,22,18,0.18)', background: '#fff' }}>+</button>
           </div>
         </div>
 
-        {/* Budget */}
+        {/* Budget slider */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">YOUR BUDGET PER PERSON</label>
-          <div className="flex flex-wrap gap-2">
-            {BUDGETS.map((b) => (
-              <button key={b} type="button" onClick={() => setBudget(b)} className={`chip ${budget === b ? 'active' : ''}`}>{b}</button>
-            ))}
+          <div className="flex items-center justify-between mb-2">
+            <label>Budget per person</label>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#C1440E' }}>{fmt(budgetMin)} – {fmt(budgetMax)}</span>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <div style={{ fontSize: 12, color: '#9A8B82', marginBottom: 6 }}>Min</div>
+              <input type="range" min={500} max={15000} step={500} value={budgetMin} onChange={(e) => setBudgetMin(Math.min(Number(e.target.value), budgetMax - 500))} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: '#9A8B82', marginBottom: 6 }}>Max</div>
+              <input type="range" min={500} max={15000} step={500} value={budgetMax} onChange={(e) => setBudgetMax(Math.max(Number(e.target.value), budgetMin + 500))} />
+            </div>
           </div>
         </div>
 
         {/* Priority */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">PRIORITY</label>
+          <label style={{ display: 'block', marginBottom: 10 }}>Priority</label>
           <div className="space-y-2">
             {PRIORITIES.map((p) => (
               <button
                 key={p.value}
                 type="button"
                 onClick={() => setPriority(p.value)}
-                className="w-full text-left px-4 py-3 rounded-md border transition-all"
+                className="w-full text-left px-4 py-3 rounded transition-all"
                 style={{
-                  background: priority === p.value ? 'rgba(255,85,0,0.1)' : '#0f0f0f',
-                  borderColor: priority === p.value ? '#FF5500' : 'rgba(255,255,255,0.1)',
-                  color: priority === p.value ? '#FF5500' : 'rgba(255,255,255,0.7)',
+                  border: `1.5px solid ${priority === p.value ? '#C1440E' : 'rgba(26,22,18,0.18)'}`,
+                  background: priority === p.value ? 'rgba(193,68,14,0.06)' : '#fff',
+                  color: priority === p.value ? '#C1440E' : '#1A1612',
+                  fontSize: 14,
+                  fontWeight: priority === p.value ? 600 : 400,
                 }}
               >
-                <span className="font-semibold text-sm">{p.label}</span>
+                {p.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* WhatsApp */}
+        {/* Email */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">WHATSAPP NUMBER</label>
-          <input required type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+91 __________" />
+          <label style={{ display: 'block', marginBottom: 6 }}>Email address</label>
+          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
         </div>
 
         {/* Message */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">ADDITIONAL MESSAGE <span className="text-white/20 font-normal normal-case">Optional</span></label>
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Anything else?" rows={3} />
+          <label style={{ display: 'block', marginBottom: 6 }}>Anything else? <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9A8B82' }}>— optional</span></label>
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Any notes..." rows={3} />
         </div>
 
-        <button type="submit" className="btn-primary w-full py-4 text-lg">
-          SUBMIT REQUEST →
+        <button type="submit" className="btn-primary w-full py-4" style={{ fontSize: 16 }}>
+          Submit Request →
         </button>
       </form>
     </div>

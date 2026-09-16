@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { type NavProps, EVENTS, NAVRATRI_DATES, DEMAND_COLOR, DEMAND_LABEL, AVAIL_COLOR } from '../data/events';
+import { type NavProps, EVENTS, NAVRATRI_DATES } from '../data/events';
+import EventCard from '../components/EventCard';
 
 export default function CalendarPage({ navigate }: NavProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -9,19 +10,18 @@ export default function CalendarPage({ navigate }: NavProps) {
     : [];
 
   return (
-    <div className="pb-24">
-      <div className="px-4 py-6">
-        <div className="font-display font-bold text-xs tracking-widest mb-2" style={{ color: '#FF5500' }}>
-          NAVRATRI 2026
-        </div>
-        <h1 className="font-display font-black leading-none mb-1" style={{ fontSize: 'clamp(40px, 11vw, 64px)', letterSpacing: '-0.02em' }}>
-          NAVRATRI<br /><span style={{ color: '#FF5500' }}>CALENDAR</span>
+    <div className="pb-24" style={{ color: '#1A1612' }}>
+      <div className="px-5 py-7">
+        <div className="eyebrow mb-2">Navratri 2026</div>
+        <h1 className="font-serif leading-tight mb-1" style={{ fontSize: 'clamp(36px, 10vw, 56px)', fontWeight: 500 }}>
+          Navratri<br />
+          <span style={{ color: '#C1440E', fontStyle: 'italic' }}>Calendar.</span>
         </h1>
-        <p className="text-white/40 text-sm">Explore events night by night.</p>
+        <p style={{ fontSize: 14, color: '#6B5B52' }}>Explore events night by night.</p>
       </div>
 
       {/* Dates scroll */}
-      <div className="scroll-x flex gap-3 px-4 pb-4">
+      <div className="scroll-x flex gap-3 px-5 pb-4">
         {NAVRATRI_DATES.map((d) => {
           const hasEvents = EVENTS.some((e) => e.dateShort === d);
           const active = selectedDate === d;
@@ -32,29 +32,20 @@ export default function CalendarPage({ navigate }: NavProps) {
               className="snap-start flex-shrink-0 rounded-lg transition-all"
               style={{
                 padding: '12px 16px',
-                background: active ? '#FF5500' : '#111',
-                border: active ? '1px solid #FF5500' : '1px solid rgba(255,255,255,0.07)',
-                minWidth: 72,
+                background: active ? '#C1440E' : '#fff',
+                border: `1.5px solid ${active ? '#C1440E' : 'rgba(26,22,18,0.15)'}`,
+                minWidth: 68,
               }}
             >
-              <div
-                className="font-display font-black leading-none text-center"
-                style={{ fontSize: 22, color: active ? 'white' : 'rgba(255,255,255,0.9)' }}
-              >
+              <div className="font-serif text-center" style={{ fontSize: 22, fontWeight: 500, color: active ? '#fff' : '#1A1612' }}>
                 {d.split(' ')[0]}
               </div>
-              <div
-                className="font-display font-bold text-center"
-                style={{ fontSize: 11, letterSpacing: '0.06em', color: active ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.35)' }}
-              >
+              <div className="text-center" style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', color: active ? 'rgba(255,255,255,0.75)' : '#9A8B82' }}>
                 {d.split(' ')[1]}
               </div>
               {hasEvents && (
                 <div className="flex justify-center mt-1.5">
-                  <div
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: active ? 'white' : '#FF5500' }}
-                  />
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: active ? 'rgba(255,255,255,0.7)' : '#C1440E' }} />
                 </div>
               )}
             </button>
@@ -62,94 +53,34 @@ export default function CalendarPage({ navigate }: NavProps) {
         })}
       </div>
 
-      {/* Events for selected date */}
-      <div className="px-4">
+      {/* Events for date */}
+      <div className="px-5 py-4">
         {!selectedDate && (
-          <div
-            className="rounded-lg p-6 text-center"
-            style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.05)' }}
-          >
-            <p className="text-white/30 text-sm">Select a date to see events</p>
+          <div className="card-light p-6 text-center">
+            <p style={{ fontSize: 14, color: '#9A8B82' }}>Select a date to see events</p>
           </div>
         )}
 
         {selectedDate && eventsForDate.length === 0 && (
-          <div
-            className="rounded-lg p-6"
-            style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.05)' }}
-          >
-            <div className="font-display font-black text-white text-xl mb-2">{"CAN'T FIND IT?"}</div>
-            <p className="text-white/50 text-sm mb-4">No events listed for {selectedDate} yet. Tell us what {"you're"} looking for.</p>
-            <button
-              onClick={() => navigate('find-jugaad')}
-              className="btn-primary w-full py-3"
-            >
-              REQUEST IT →
+          <div className="card-light p-6">
+            <h3 className="font-serif mb-2" style={{ fontSize: 20, fontWeight: 500 }}>{"Can't find it?"}</h3>
+            <p style={{ fontSize: 14, color: '#6B5B52', marginBottom: 16 }}>No events listed for {selectedDate} yet. Tell us what {"you're"} looking for.</p>
+            <button onClick={() => navigate('find-jugaad')} className="btn-primary w-full py-3 text-sm">
+              Request it →
             </button>
           </div>
         )}
 
         {selectedDate && eventsForDate.length > 0 && (
-          <div className="space-y-4">
-            <div className="font-display font-bold text-xs tracking-widest text-white/30 mb-2">
-              {eventsForDate.length} EVENT{eventsForDate.length > 1 ? 'S' : ''} ON {selectedDate}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 16 }}>
+              {eventsForDate.length} event{eventsForDate.length > 1 ? 's' : ''} on {selectedDate}
             </div>
-            {eventsForDate.map((event) => (
-              <div
-                key={event.id}
-                className="rounded-lg overflow-hidden card-glow cursor-pointer"
-                style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}
-                onClick={() => navigate('event-detail', { eventId: event.id })}
-              >
-                <div className="relative h-[160px] bg-zinc-900">
-                  <img
-                    src={event.image}
-                    alt={event.name}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)' }} />
-                  <div className="absolute bottom-3 left-3">
-                    <div className="font-display font-black text-white text-lg leading-tight">{event.name}</div>
-                  </div>
-                </div>
-
-                <div className="p-3">
-                  <div className="flex items-center gap-2 text-white/40 text-xs mb-2">
-                    <span>📍 {event.venue}</span>
-                    <span>•</span>
-                    <span>⏰ {event.time}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-display font-bold" style={{ color: '#FF5500' }}>{event.priceRange}</span>
-                    <span className="font-display font-bold text-xs" style={{ color: AVAIL_COLOR[event.availability] }}>
-                      {event.availability}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="font-display font-bold text-xs" style={{ color: DEMAND_COLOR[event.demand] }}>
-                      {DEMAND_LABEL[event.demand]}
-                    </span>
-                    <div className="flex gap-1">
-                      {event.type.map((t) => (
-                        <span key={t} className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    className="btn-primary w-full mt-3 py-2.5 text-sm"
-                    onClick={(e) => { e.stopPropagation(); navigate('event-detail', { eventId: event.id }); }}
-                  >
-                    VIEW EVENT →
-                  </button>
-                </div>
-              </div>
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {eventsForDate.map((event) => (
+                <EventCard key={event.id} event={event} navigate={navigate} currentPage="calendar" />
+              ))}
+            </div>
           </div>
         )}
       </div>

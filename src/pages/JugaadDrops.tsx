@@ -4,77 +4,62 @@ export default function JugaadDrops({ navigate }: NavProps) {
   const drops = EVENTS.filter((e) => e.jugaadDrop);
 
   return (
-    <div className="px-4 py-6 pb-24">
-      <div className="font-display font-bold text-xs tracking-widest mb-2 text-yellow-400">PASS NO JUGAAD EXCLUSIVE</div>
-      <h1 className="font-display font-black leading-none mb-2" style={{ fontSize: 'clamp(44px, 12vw, 72px)', letterSpacing: '-0.02em' }}>
-        JUGAAD<br /><span style={{ color: '#FF5500' }}>DROPS ⚡</span>
+    <div className="px-5 py-6 pb-28" style={{ color: '#1A1612' }}>
+      <div className="eyebrow mb-3">Pass No Jugaad exclusive</div>
+      <h1 className="font-serif leading-tight mb-2" style={{ fontSize: 'clamp(40px, 11vw, 60px)', fontWeight: 500 }}>
+        Jugaad<br />
+        <span style={{ color: '#C1440E', fontStyle: 'italic' }}>Drops.</span>
       </h1>
-      <p className="text-white/50 text-sm mb-8" style={{ lineHeight: 1.6 }}>
-        When something good lands,<br />{"you'll"} know.
+      <p style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.65, marginBottom: 28 }}>
+        When something good lands, {"you'll"} know.
       </p>
 
-      {/* Drop cards */}
-      <div className="space-y-4 mb-8">
+      <div className="space-y-5 mb-8">
         {drops.map((event) => (
-          <div
-            key={event.id}
-            className="rounded-lg overflow-hidden"
-            style={{ background: '#0d0d0d', border: '1px solid rgba(255,85,0,0.2)' }}
-          >
-            <div className="relative h-[180px] bg-zinc-900">
-              <img src={event.image} alt={event.name} className="w-full h-full object-cover opacity-70" loading="lazy" />
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 50%)' }} />
+          <div key={event.id} className="card-light overflow-hidden">
+            <div className="relative bg-stone-200" style={{ height: 200 }}>
+              <img src={event.image} alt={event.name} className="w-full h-full object-cover" loading="lazy" style={{ opacity: 0.85 }} />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,22,18,0.7) 0%, transparent 55%)' }} />
 
               <div className="absolute top-3 left-3 flex items-center gap-2">
-                <span className="font-display font-black text-xs px-2 py-1 rounded" style={{ background: '#FF5500', color: 'white' }}>
-                  ⚡ DROP #{String(event.dropNumber).padStart(2, '0')}
+                <span className="rounded font-sans font-semibold text-white text-xs px-2.5 py-1" style={{ background: '#C1440E', letterSpacing: '0.06em' }}>
+                  ⚡ Drop #{String(event.dropNumber).padStart(2, '0')}
                 </span>
-                <span className="font-display font-bold text-xs px-2 py-1 rounded" style={{ background: 'rgba(0,0,0,0.6)', color: 'white', backdropFilter: 'blur(4px)' }}>
+                <span className="rounded text-xs px-2 py-1" style={{ background: 'rgba(250,247,242,0.9)', color: '#1A1612', fontWeight: 600 }}>
                   {event.dateShort}
                 </span>
               </div>
 
-              <div className="absolute bottom-3 left-3">
-                <div className="font-display font-black text-white leading-tight" style={{ fontSize: 20 }}>{event.name}</div>
-                <div className="text-white/60 text-xs">📍 {event.venue}</div>
+              <div className="absolute bottom-3 left-4">
+                <div className="font-serif text-white leading-tight" style={{ fontSize: 22, fontWeight: 500 }}>{event.name}</div>
+                <div style={{ fontSize: 12, color: 'rgba(250,247,242,0.75)' }}>📍 {event.venue}</div>
               </div>
             </div>
 
-            <div className="p-4">
-              <div className="flex items-end gap-3 mb-3">
+            <div className="p-5">
+              <div className="flex items-end gap-4 mb-3">
                 <div>
-                  <div className="font-display font-bold text-xs tracking-widest text-white/30 mb-0.5">PASS NO JUGAAD PRICE</div>
-                  <div className="font-display font-black" style={{ fontSize: 28, color: '#FF5500' }}>₹{event.dropPrice?.toLocaleString()}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 2 }}>Jugaad price</div>
+                  <div className="font-serif" style={{ fontSize: 32, fontWeight: 500, color: '#C1440E', lineHeight: 1 }}>₹{event.dropPrice?.toLocaleString()}</div>
                 </div>
-                <div className="mb-1">
-                  <div className="font-display font-bold text-xs tracking-widest text-white/30 mb-0.5">ORIGINAL</div>
-                  <div className="font-display font-bold text-white/30 text-lg line-through">₹{event.originalPrice?.toLocaleString()}</div>
+                <div className="mb-0.5">
+                  <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 2 }}>Original</div>
+                  <div style={{ fontSize: 18, color: '#9A8B82', textDecoration: 'line-through' }}>₹{event.originalPrice?.toLocaleString()}</div>
                 </div>
                 <div className="ml-auto mb-1">
-                  <div
-                    className="font-display font-black text-xs px-3 py-1.5 rounded"
-                    style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.25)' }}
-                  >
-                    SAVE {Math.round(((event.originalPrice! - event.dropPrice!) / event.originalPrice!) * 100)}%
+                  <div className="rounded-full px-3 py-1" style={{ background: 'rgba(45,122,79,0.1)', border: '1px solid rgba(45,122,79,0.25)', fontSize: 12, fontWeight: 700, color: '#2D7A4F' }}>
+                    Save {Math.round(((event.originalPrice! - event.dropPrice!) / event.originalPrice!) * 100)}%
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mb-3">
-                <span
-                  className="font-display font-bold text-xs px-2 py-1 rounded"
-                  style={{ background: 'rgba(255,180,0,0.1)', color: '#f5b800', border: '1px solid rgba(255,180,0,0.2)' }}
-                >
-                  ⚡ LIMITED
-                </span>
-                <span className="font-display font-bold text-xs text-white/30">PASS NO JUGAAD EXCLUSIVE</span>
+              <div className="flex items-center justify-between mb-4">
+                <span className="chip active" style={{ padding: '3px 10px', fontSize: 11 }}>Limited</span>
+                <span style={{ fontSize: 11, color: '#9A8B82', fontWeight: 500 }}>Pass No Jugaad exclusive</span>
               </div>
 
-              <button
-                onClick={() => navigate('event-detail', { eventId: event.id })}
-                className="btn-primary w-full py-3.5 text-base"
-              >
-                GRAB THIS DROP →
+              <button onClick={() => navigate('event-detail', { eventId: event.id })} className="btn-primary w-full py-3.5 text-sm">
+                Grab this Drop →
               </button>
             </div>
           </div>
@@ -82,19 +67,14 @@ export default function JugaadDrops({ navigate }: NavProps) {
       </div>
 
       {/* Coming soon */}
-      <div
-        className="rounded-lg p-6 text-center"
-        style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.05)' }}
-      >
-        <div className="font-display font-black text-white text-2xl mb-2">MORE DROPS<br />COMING SOON.</div>
-        <p className="text-white/40 text-sm mb-4">{"Don't miss the next one."}</p>
-        <a
-          href="https://wa.me/919999999999"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary inline-flex items-center gap-2 px-6 py-3"
-        >
-          NOTIFY ME →
+      <div className="card-light p-6 text-center">
+        <h3 className="font-serif mb-2" style={{ fontSize: 22, fontWeight: 500 }}>More drops coming soon.</h3>
+        <p style={{ fontSize: 14, color: '#6B5B52', marginBottom: 16 }}>{"Don't"} miss the next one. Follow us to stay updated.</p>
+        <a href="https://www.instagram.com/pass_no_jugaad_?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+          </svg>
+          Follow on Instagram →
         </a>
       </div>
     </div>

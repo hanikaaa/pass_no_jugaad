@@ -1,32 +1,37 @@
 import { useState } from 'react';
-import { type Event, DEMAND_COLOR, DEMAND_LABEL, AVAIL_COLOR, type NavProps } from '../data/events';
+import { type Event, DEMAND_LABEL, type NavProps } from '../data/events';
 
 interface Props extends NavProps {
   event: Event;
 }
+
+const AVAIL_STYLE: Record<string, { color: string }> = {
+  'Available':    { color: '#2D7A4F' },
+  'Limited':      { color: '#C1440E' },
+  'Request Only': { color: '#9A8B82' },
+};
 
 export default function EventCard({ event, navigate }: Props) {
   const [bookmarked, setBookmarked] = useState(false);
 
   return (
     <div
-      className="card-glow rounded-lg overflow-hidden cursor-pointer transition-all"
-      style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}
+      className="card-light overflow-hidden cursor-pointer"
       onClick={() => navigate('event-detail', { eventId: event.id })}
     >
-      <div className="relative h-[180px] bg-zinc-900 overflow-hidden">
+      <div className="relative h-[200px] bg-stone-100 overflow-hidden">
         <img
           src={event.image}
           alt={event.name}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           loading="lazy"
         />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,22,18,0.55) 0%, transparent 55%)' }} />
 
         <div className="absolute top-3 left-3">
           <div
-            className="font-display font-black leading-none px-2 py-1 rounded"
-            style={{ background: '#FF5500', fontSize: 11, letterSpacing: '0.06em', color: 'white' }}
+            className="font-sans font-bold leading-none px-2.5 py-1 rounded text-white"
+            style={{ background: '#C1440E', fontSize: 11, letterSpacing: '0.08em' }}
           >
             {event.dateShort}
           </div>
@@ -35,71 +40,59 @@ export default function EventCard({ event, navigate }: Props) {
         <button
           onClick={(e) => { e.stopPropagation(); setBookmarked(!bookmarked); }}
           className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full transition-all"
-          style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'rgba(250,247,242,0.9)', backdropFilter: 'blur(8px)' }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill={bookmarked ? '#FF5500' : 'none'} stroke={bookmarked ? '#FF5500' : 'white'} strokeWidth="2">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill={bookmarked ? '#C1440E' : 'none'} stroke={bookmarked ? '#C1440E' : '#1A1612'} strokeWidth="2">
             <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
           </svg>
         </button>
 
         {event.jugaadDrop && (
           <div className="absolute bottom-3 left-3">
-            <span className="font-display font-bold text-[10px] px-2 py-0.5 rounded" style={{ background: '#FF5500', color: 'white', letterSpacing: '0.06em' }}>
-              ⚡ JUGAAD DROP
+            <span className="font-sans font-semibold text-[10px] px-2 py-0.5 rounded text-white" style={{ background: '#C1440E', letterSpacing: '0.06em' }}>
+              ⚡ Jugaad Drop
             </span>
           </div>
         )}
       </div>
 
-      <div className="p-3">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <div
-            className="font-display font-black leading-tight"
-            style={{ fontSize: 16, letterSpacing: '-0.01em' }}
-          >
-            {event.name}
-          </div>
+      <div className="p-4">
+        <div className="flex gap-1 mb-2 flex-wrap">
+          {event.type.slice(0, 2).map((t) => (
+            <span key={t} className="chip" style={{ padding: '2px 8px', fontSize: 11 }}>{t}</span>
+          ))}
         </div>
 
-        <div className="flex items-center gap-1 mb-2">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2">
+        <div className="font-serif mb-1 leading-snug" style={{ fontSize: 18, fontWeight: 500, color: '#1A1612' }}>
+          {event.name}
+        </div>
+
+        <div className="flex items-center gap-1 mb-3">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9A8B82" strokeWidth="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{event.venue}</span>
+          <span style={{ fontSize: 12, color: '#9A8B82' }}>{event.venue}</span>
         </div>
 
-        <div className="flex items-center justify-between mb-2.5">
-          <span className="font-display font-bold text-sm" style={{ color: '#FF5500' }}>
+        <div className="flex items-center justify-between">
+          <span className="font-sans font-semibold" style={{ color: '#C1440E', fontSize: 15 }}>
             {event.priceRange}
           </span>
-          <span
-            className="font-display font-bold text-xs"
-            style={{ color: AVAIL_COLOR[event.availability] }}
-          >
+          <span style={{ fontSize: 12, fontWeight: 600, color: AVAIL_STYLE[event.availability]?.color ?? '#9A8B82' }}>
             {event.availability}
           </span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <span
-            className="font-display font-bold text-xs"
-            style={{ color: DEMAND_COLOR[event.demand] }}
+        <div className="flex items-center justify-between mt-2.5 pt-2.5" style={{ borderTop: '1px solid rgba(26,22,18,0.07)' }}>
+          <span style={{ fontSize: 12, color: '#9A8B82' }}>{DEMAND_LABEL[event.demand]}</span>
+          <button
+            className="btn-primary"
+            style={{ padding: '6px 14px', fontSize: 12 }}
+            onClick={(e) => { e.stopPropagation(); navigate('event-detail', { eventId: event.id }); }}
           >
-            {DEMAND_LABEL[event.demand]}
-          </span>
-
-          <div className="flex gap-1">
-            {event.type.slice(0, 1).map((t) => (
-              <span
-                key={t}
-                className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-                style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}
-              >
-                {t}
-              </span>
-            ))}
-          </div>
+            View →
+          </button>
         </div>
       </div>
     </div>

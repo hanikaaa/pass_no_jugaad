@@ -23,12 +23,13 @@ export default function Gallery() {
   const filtered = activeCat === 'All' ? GALLERY_IMAGES : GALLERY_IMAGES.filter((i) => i.cat === activeCat);
 
   return (
-    <div className="pb-24">
-      <div className="px-4 py-6">
-        <h1 className="font-display font-black leading-none mb-1" style={{ fontSize: 'clamp(40px, 11vw, 64px)', letterSpacing: '-0.02em' }}>
-          AHMEDABAD<br /><span style={{ color: '#FF5500' }}>AFTER DARK</span>
+    <div className="pb-24" style={{ color: '#1A1612' }}>
+      <div className="px-5 py-6">
+        <div className="eyebrow mb-2">The Jugaad Gallery</div>
+        <h1 className="font-serif leading-tight mb-1" style={{ fontSize: 'clamp(36px, 10vw, 56px)', fontWeight: 500 }}>
+          Ahmedabad<br /><span style={{ color: '#C1440E', fontStyle: 'italic' }}>after dark.</span>
         </h1>
-        <p className="text-white/40 text-sm mb-5">The Jugaad Gallery.</p>
+        <p style={{ fontSize: 14, color: '#9A8B82', marginBottom: 20 }}>Tag @pass_no_jugaad to get featured.</p>
 
         {/* Category scroll */}
         <div className="scroll-x flex gap-2 pb-2">
@@ -60,7 +61,7 @@ export default function Gallery() {
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
             <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#FF5500', color: 'white' }}>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: '#C1440E', color: 'white' }}>
                 {img.cat}
               </span>
             </div>
@@ -69,22 +70,19 @@ export default function Gallery() {
       </div>
 
       {/* Instagram CTA */}
-      <div className="px-4 mt-6 text-center">
-        <p className="text-white/30 text-sm mb-3">
-          Tag <span className="text-white/60 font-semibold">@pass_no_jugaad</span> to get featured.
-        </p>
+      <div className="px-5 mt-6 text-center">
         <a
-          href="https://instagram.com/pass_no_jugaad"
+          href="https://www.instagram.com/pass_no_jugaad_?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-outline inline-flex items-center gap-2 px-5 py-3 text-sm"
+          className="btn-primary inline-flex items-center gap-2 px-5 py-3 text-sm"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <rect x="2" y="2" width="20" height="20" rx="5" />
             <circle cx="12" cy="12" r="4" />
             <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
           </svg>
-          @PASS_NO_JUGAAD
+          @pass_no_jugaad
         </a>
       </div>
 

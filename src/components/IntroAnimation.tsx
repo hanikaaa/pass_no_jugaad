@@ -1,67 +1,65 @@
 import { useEffect, useState } from 'react';
+import logoSrc from '@/imports/garba_no_pass_taaro__6_.png';
 
 interface Props {
   onComplete: () => void;
 }
 
 export default function IntroAnimation({ onComplete }: Props) {
-  const [fading, setFading] = useState(false);
+  const [phase, setPhase] = useState<'in' | 'hold' | 'out'>('in');
 
   useEffect(() => {
-    const t1 = setTimeout(() => setFading(true), 1400);
-    const t2 = setTimeout(() => onComplete(), 1900);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t1 = setTimeout(() => setPhase('hold'), 100);
+    const t2 = setTimeout(() => setPhase('out'), 1800);
+    const t3 = setTimeout(() => onComplete(), 2300);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onComplete]);
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
       style={{
-        transition: 'opacity 0.5s ease',
-        opacity: fading ? 0 : 1,
-        pointerEvents: fading ? 'none' : 'auto',
+        background: '#FAF7F2',
+        opacity: phase === 'out' ? 0 : 1,
+        transition: phase === 'out' ? 'opacity 0.5s ease' : 'none',
+        pointerEvents: phase === 'out' ? 'none' : 'auto',
       }}
     >
-      <div className="text-center select-none">
-        <div
-          className="font-display font-black text-white animate-logo-reveal"
-          style={{ fontSize: 'clamp(56px, 18vw, 120px)', lineHeight: 0.85, letterSpacing: '-0.02em' }}
-        >
-          PASS NO
-        </div>
-        <div
-          className="font-display font-black animate-logo-reveal-2"
+      {/* Logo — multiply blend removes white canvas against ivory bg */}
+      <div
+        style={{
+          opacity: phase === 'in' ? 0 : 1,
+          transform: phase === 'in' ? 'translateY(12px) scale(0.95)' : 'translateY(0) scale(1)',
+          transition: 'opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1)',
+        }}
+      >
+        <img
+          src={logoSrc}
+          alt="Pass No Jugaad"
           style={{
-            fontSize: 'clamp(56px, 18vw, 120px)',
-            lineHeight: 0.85,
-            letterSpacing: '-0.02em',
-            color: '#FF5500',
+            width: 'clamp(220px, 60vw, 340px)',
+            height: 'auto',
+            mixBlendMode: 'multiply',
+            display: 'block',
           }}
-        >
-          JUGAAD
-        </div>
-        <div
-          className="mt-4 font-display font-semibold text-white/40 tracking-widest text-sm animate-fade-in"
-          style={{ animationDelay: '0.6s', opacity: 0 }}
-        >
-          AHMEDABAD · NAVRATRI 2026
-        </div>
+        />
       </div>
 
-      <div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        style={{ animation: 'fadeIn 0.5s ease 0.8s forwards', opacity: 0 }}
+      <p
+        style={{
+          marginTop: 16,
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: '#9A8B82',
+          opacity: phase === 'in' ? 0 : 1,
+          transition: 'opacity 0.5s ease 0.45s',
+        }}
       >
-        <div className="flex gap-1">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-1 h-1 rounded-full bg-white/30"
-              style={{ animation: `radarPulse 0.8s ease ${i * 0.15}s infinite` }}
-            />
-          ))}
-        </div>
-      </div>
+        Ahmedabad · Navratri 2026
+      </p>
     </div>
   );
 }

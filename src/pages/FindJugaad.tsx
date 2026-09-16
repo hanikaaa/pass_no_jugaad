@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { type NavProps, NAVRATRI_DATES } from '../data/events';
+import { submitJugaadSignal } from '../lib/api';
 
 interface Props extends NavProps {
   prefill?: Partial<FormData>;
@@ -7,12 +8,11 @@ interface Props extends NavProps {
 
 interface FormData {
   name: string;
-  whatsapp: string;
+  email: string;
   dates: string[];
   quantity: number;
-  budget: string;
-  customBudget: string;
-  location: string;
+  budgetMin: number;
+  budgetMax: number;
   eventTypes: string[];
   artist: string;
   specificEvent: string;
@@ -20,24 +20,29 @@ interface FormData {
   message: string;
 }
 
-const EVENT_TYPES = ['Full Power', 'Pure Garba', 'Artist Night', 'Premium', 'Late Night', 'Family', 'College', 'Other'];
-const LOCATIONS = ['SG Highway', 'Sindhu Bhavan', 'Bopal', 'GIFT City', 'Shilaj', 'SBR', 'Anywhere'];
-const BUDGETS = ['₹500–₹1,000', '₹1,000–₹1,500', '₹1,500–₹2,500', '₹2,500+'];
+const EVENT_TYPES = ['Garba', 'Dandiya', 'DJ Night', 'Live Music', 'Bollywood Night', 'Club Night', 'Cultural Event', 'Other'];
 const READINESS = [
-  { value: 'ready', label: '🔥 Ready to book' },
-  { value: 'exploring', label: '👀 Exploring' },
-  { value: 'maybe', label: '💸 Take it if it\'s right' },
+  { value: 'ready', label: 'Ready to book' },
+  { value: 'exploring', label: 'Just exploring' },
+  { value: 'maybe', label: "Take it if it's right" },
 ];
+
+const BUDGET_MIN = 500;
+const BUDGET_MAX = 15000;
+
+function formatBudget(v: number) {
+  if (v >= 1000) return `₹${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}K`;
+  return `₹${v}`;
+}
 
 export default function FindJugaad({ navigate, prefill }: Props) {
   const [form, setForm] = useState<FormData>({
     name: '',
-    whatsapp: '',
+    email: '',
     dates: prefill?.dates || [],
     quantity: prefill?.quantity || 2,
-    budget: prefill?.budget || '',
-    customBudget: '',
-    location: prefill?.location || '',
+    budgetMin: 500,
+    budgetMax: 5000,
     eventTypes: prefill?.eventTypes || [],
     artist: '',
     specificEvent: prefill?.specificEvent || '',
@@ -54,191 +59,165 @@ export default function FindJugaad({ navigate, prefill }: Props) {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await submitJugaadSignal({
+      preferred_dates: form.dates,
+      num_passes: form.quantity,
+      budget_min: form.budgetMin,
+      budget_max: form.budgetMax,
+      event_types: form.eventTypes,
+      artist_preference: form.artist,
+      specific_event: form.specificEvent,
+      readiness: (form.readiness || 'maybe') as 'ready' | 'exploring' | 'maybe',
+    });
     navigate('jugaad-success');
   };
 
   return (
-    <div className="px-4 py-6 pb-24 max-w-lg mx-auto">
-      <button onClick={() => navigate('home')} className="flex items-center gap-2 text-white/40 text-sm mb-6 hover:text-white transition-colors">
+    <div className="px-5 py-6 pb-28 max-w-lg mx-auto">
+      <button onClick={() => navigate('home')} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#9A8B82', marginBottom: 24 }}>
         ← Back
       </button>
 
-      <h1 className="font-display font-black leading-none mb-2" style={{ fontSize: 'clamp(40px, 11vw, 60px)', letterSpacing: '-0.02em' }}>
-        WHAT ARE YOU<br /><span style={{ color: '#FF5500' }}>LOOKING FOR?</span>
+      <div className="eyebrow mb-3">Find Your Jugaad</div>
+      <h1 className="font-serif leading-tight mb-2" style={{ fontSize: 'clamp(36px, 10vw, 54px)', fontWeight: 500 }}>
+        What are you<br />
+        <span style={{ color: '#C1440E', fontStyle: 'italic' }}>looking for?</span>
       </h1>
-      <p className="text-white/50 text-sm mb-8">Tell us what your ideal Navratri looks like.</p>
+      <p style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.65, marginBottom: 32 }}>
+        Tell us what your ideal Navratri looks like.
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-7">
         {/* Name */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">NAME</label>
-          <input
-            required
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="Type your name"
-          />
+          <label style={{ display: 'block', marginBottom: 6 }}>Your name</label>
+          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="First name" />
         </div>
 
-        {/* WhatsApp */}
+        {/* Email */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">WHATSAPP NUMBER</label>
-          <input
-            required
-            type="tel"
-            value={form.whatsapp}
-            onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-            placeholder="+91 __________"
-          />
+          <label style={{ display: 'block', marginBottom: 6 }}>Email address</label>
+          <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
         </div>
 
         {/* Dates */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">PREFERRED DATE</label>
+          <label style={{ display: 'block', marginBottom: 8 }}>Preferred date(s)</label>
           <div className="flex flex-wrap gap-2">
             {NAVRATRI_DATES.map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => toggle('dates', d)}
-                className={`chip ${form.dates.includes(d) ? 'active' : ''}`}
-              >
-                {d}
-              </button>
+              <button key={d} type="button" onClick={() => toggle('dates', d)} className={`chip ${form.dates.includes(d) ? 'active' : ''}`}>{d}</button>
             ))}
           </div>
         </div>
 
         {/* Quantity */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">NUMBER OF PASSES</label>
+          <label style={{ display: 'block', marginBottom: 8 }}>Number of passes</label>
           <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={() => setForm({ ...form, quantity: Math.max(1, form.quantity - 1) })}
-              className="w-10 h-10 rounded-md border border-white/10 text-white font-bold text-xl hover:border-orange-500 hover:text-orange-500 transition-all"
-            >
-              −
-            </button>
-            <span className="font-display font-black text-3xl text-white w-8 text-center">{form.quantity}</span>
+              className="w-10 h-10 rounded flex items-center justify-center font-bold text-xl transition-colors"
+              style={{ border: '1.5px solid rgba(26,22,18,0.18)', background: '#fff', color: '#1A1612' }}
+            >−</button>
+            <span className="font-serif" style={{ fontSize: 32, fontWeight: 500, minWidth: 32, textAlign: 'center' }}>{form.quantity}</span>
             <button
               type="button"
               onClick={() => setForm({ ...form, quantity: Math.min(20, form.quantity + 1) })}
-              className="w-10 h-10 rounded-md border border-white/10 text-white font-bold text-xl hover:border-orange-500 hover:text-orange-500 transition-all"
-            >
-              +
-            </button>
-            <span className="text-white/40 text-sm">passes</span>
+              className="w-10 h-10 rounded flex items-center justify-center font-bold text-xl transition-colors"
+              style={{ border: '1.5px solid rgba(26,22,18,0.18)', background: '#fff', color: '#1A1612' }}
+            >+</button>
+            <span style={{ fontSize: 14, color: '#9A8B82' }}>passes</span>
           </div>
         </div>
 
-        {/* Budget */}
+        {/* Budget slider */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">YOUR BUDGET PER PERSON</label>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {BUDGETS.map((b) => (
-              <button
-                key={b}
-                type="button"
-                onClick={() => setForm({ ...form, budget: b, customBudget: '' })}
-                className={`chip ${form.budget === b ? 'active' : ''}`}
-              >
-                {b}
-              </button>
-            ))}
+          <div className="flex items-center justify-between mb-2">
+            <label>Budget per person</label>
+            <span style={{ fontSize: 15, fontWeight: 600, color: '#C1440E' }}>
+              {formatBudget(form.budgetMin)} – {formatBudget(form.budgetMax)}
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-white/40 text-sm">Custom ₹</span>
-            <input
-              value={form.customBudget}
-              onChange={(e) => setForm({ ...form, customBudget: e.target.value, budget: '' })}
-              placeholder="Type amount"
-              style={{ width: '140px' }}
-            />
-          </div>
-        </div>
-
-        {/* Location */}
-        <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">LOCATION</label>
-          <input
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-            placeholder="Where do you want to go?"
-            className="mb-2"
-          />
-          <div className="flex flex-wrap gap-2">
-            {LOCATIONS.map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setForm({ ...form, location: l })}
-                className={`chip ${form.location === l ? 'active' : ''}`}
-              >
-                {l}
-              </button>
-            ))}
+          <div className="space-y-3">
+            <div>
+              <div style={{ fontSize: 12, color: '#9A8B82', marginBottom: 6 }}>Minimum</div>
+              <input
+                type="range"
+                min={BUDGET_MIN}
+                max={BUDGET_MAX}
+                step={500}
+                value={form.budgetMin}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setForm({ ...form, budgetMin: Math.min(v, form.budgetMax - 500) });
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: '#9A8B82', marginBottom: 6 }}>Maximum</div>
+              <input
+                type="range"
+                min={BUDGET_MIN}
+                max={BUDGET_MAX}
+                step={500}
+                value={form.budgetMax}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setForm({ ...form, budgetMax: Math.max(v, form.budgetMin + 500) });
+                }}
+              />
+            </div>
+            <div className="flex justify-between" style={{ fontSize: 11, color: '#9A8B82' }}>
+              <span>{formatBudget(BUDGET_MIN)}</span>
+              <span>{formatBudget(BUDGET_MAX)}</span>
+            </div>
           </div>
         </div>
 
         {/* Event Type */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">EVENT TYPE</label>
+          <label style={{ display: 'block', marginBottom: 8 }}>Event type</label>
           <div className="flex flex-wrap gap-2">
             {EVENT_TYPES.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => toggle('eventTypes', t)}
-                className={`chip ${form.eventTypes.includes(t) ? 'active' : ''}`}
-              >
-                {t}
-              </button>
+              <button key={t} type="button" onClick={() => toggle('eventTypes', t)} className={`chip ${form.eventTypes.includes(t) ? 'active' : ''}`}>{t}</button>
             ))}
           </div>
         </div>
 
         {/* Artist */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">ARTIST / DJ PREFERENCE</label>
-          <input
-            value={form.artist}
-            onChange={(e) => setForm({ ...form, artist: e.target.value })}
-            placeholder="Any artist or DJ?"
-          />
+          <label style={{ display: 'block', marginBottom: 6 }}>Artist / DJ preference <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9A8B82' }}>— optional</span></label>
+          <input value={form.artist} onChange={(e) => setForm({ ...form, artist: e.target.value })} placeholder="Any artist or DJ?" />
         </div>
 
         {/* Specific Event */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">
-            SPECIFIC EVENT <span className="text-white/20 font-normal normal-case">Optional</span>
-          </label>
-          <input
-            value={form.specificEvent}
-            onChange={(e) => setForm({ ...form, specificEvent: e.target.value })}
-            placeholder="Looking for something specific?"
-          />
+          <label style={{ display: 'block', marginBottom: 6 }}>Specific event <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9A8B82' }}>— optional</span></label>
+          <input value={form.specificEvent} onChange={(e) => setForm({ ...form, specificEvent: e.target.value })} placeholder="Looking for something specific?" />
         </div>
 
         {/* Readiness */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">HOW READY ARE YOU TO BUY?</label>
+          <label style={{ display: 'block', marginBottom: 8 }}>How ready are you to buy?</label>
           <div className="space-y-2">
             {READINESS.map((r) => (
               <button
                 key={r.value}
                 type="button"
                 onClick={() => setForm({ ...form, readiness: r.value })}
-                className="w-full text-left px-4 py-3 rounded-md border transition-all"
+                className="w-full text-left px-4 py-3 rounded transition-all"
                 style={{
-                  background: form.readiness === r.value ? 'rgba(255,85,0,0.1)' : '#0f0f0f',
-                  borderColor: form.readiness === r.value ? '#FF5500' : 'rgba(255,255,255,0.1)',
-                  color: form.readiness === r.value ? '#FF5500' : 'rgba(255,255,255,0.7)',
+                  border: `1.5px solid ${form.readiness === r.value ? '#C1440E' : 'rgba(26,22,18,0.18)'}`,
+                  background: form.readiness === r.value ? 'rgba(193,68,14,0.06)' : '#fff',
+                  color: form.readiness === r.value ? '#C1440E' : '#1A1612',
+                  fontSize: 15,
+                  fontWeight: form.readiness === r.value ? 600 : 400,
                 }}
               >
-                <span className="font-semibold text-sm">{r.label}</span>
+                {r.label}
               </button>
             ))}
           </div>
@@ -246,19 +225,12 @@ export default function FindJugaad({ navigate, prefill }: Props) {
 
         {/* Message */}
         <div>
-          <label className="font-display font-bold text-xs tracking-widest text-white/40 block mb-2">
-            ADDITIONAL MESSAGE <span className="text-white/20 font-normal normal-case">Optional</span>
-          </label>
-          <textarea
-            value={form.message}
-            onChange={(e) => setForm({ ...form, message: e.target.value })}
-            placeholder="Anything else we should know?"
-            rows={3}
-          />
+          <label style={{ display: 'block', marginBottom: 6 }}>Anything else? <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9A8B82' }}>— optional</span></label>
+          <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Tell us more..." rows={3} />
         </div>
 
-        <button type="submit" className="btn-primary w-full py-4 text-lg">
-          ADD ME TO THE RADAR →
+        <button type="submit" className="btn-primary w-full py-4" style={{ fontSize: 16 }}>
+          Add me to the Radar →
         </button>
       </form>
     </div>

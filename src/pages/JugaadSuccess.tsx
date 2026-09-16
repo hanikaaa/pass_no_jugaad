@@ -10,76 +10,63 @@ export default function JugaadSuccess({ navigate }: NavProps) {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-24 text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 pb-24 text-center" style={{ color: '#1A1612' }}>
       <div
         style={{
           opacity: show ? 1 : 0,
-          transform: show ? 'none' : 'translateY(30px)',
+          transform: show ? 'none' : 'translateY(28px)',
           transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {/* Check animation */}
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,85,0,0.12)', border: '1px solid rgba(255,85,0,0.3)' }}>
+        {/* Check circle */}
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(193,68,14,0.1)', border: '1px solid rgba(193,68,14,0.25)' }}>
           <svg width="40" height="40" viewBox="0 0 50 50" fill="none">
-            <polyline
-              points="10,27 20,37 40,15"
-              stroke="#FF5500"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="check-stroke"
-            />
+            <polyline points="10,27 20,37 40,15" stroke="#C1440E" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="check-stroke" />
           </svg>
         </div>
 
-        <h1 className="font-display font-black leading-none mb-2" style={{ fontSize: 'clamp(44px, 12vw, 72px)', letterSpacing: '-0.02em' }}>
-          {"YOU'RE ON"}<br /><span style={{ color: '#FF5500' }}>THE RADAR. 🔥</span>
+        <div className="eyebrow mb-3">Request submitted</div>
+        <h1 className="font-serif leading-tight mb-4" style={{ fontSize: 'clamp(36px, 10vw, 56px)', fontWeight: 500 }}>
+          {"You're on"}<br />
+          <span style={{ color: '#C1440E', fontStyle: 'italic' }}>the Radar.</span>
         </h1>
 
-        {/* Summary */}
-        <div
-          className="my-6 rounded-lg p-4 text-left max-w-xs mx-auto"
-          style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)' }}
-        >
-          <div className="font-display font-bold text-xs tracking-widest text-white/30 mb-3">YOUR REQUEST</div>
-          <div className="space-y-2">
+        {/* Request summary */}
+        <div className="card-light my-6 p-5 text-left max-w-xs mx-auto">
+          <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9A8B82', marginBottom: 12 }}>Your request</div>
+          <div className="space-y-2.5">
             {[
-              { label: 'DATE', value: '12 OCT' },
-              { label: 'PASSES', value: '2 PASSES' },
-              { label: 'BUDGET', value: '₹1,000–₹1,500' },
-              { label: 'VIBE', value: 'Artist Night' },
+              { label: 'Date', value: '12 Oct' },
+              { label: 'Passes', value: '2 passes' },
+              { label: 'Budget', value: '₹1,000–₹1,500' },
+              { label: 'Vibe', value: 'Artist Night' },
             ].map((r) => (
               <div key={r.label} className="flex justify-between">
-                <span className="font-display font-bold text-xs tracking-wide text-white/30">{r.label}</span>
-                <span className="font-display font-bold text-sm text-white">{r.value}</span>
+                <span style={{ fontSize: 13, color: '#9A8B82' }}>{r.label}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1612' }}>{r.value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-white/50 text-sm mb-8 max-w-xs mx-auto" style={{ lineHeight: 1.6 }}>
+        <p style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.7, maxWidth: 300, margin: '0 auto 28px' }}>
           {"We've got your request. If something relevant becomes available, we'll get in touch."}
         </p>
 
         <div className="space-y-3 max-w-xs mx-auto w-full">
           <button onClick={() => navigate('events')} className="btn-primary w-full py-3.5">
-            VIEW EVENTS →
+            Browse events →
           </button>
           <a
-            href="https://wa.me/919999999999"
+            href="https://www.instagram.com/pass_no_jugaad_?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw=="
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-outline w-full py-3.5 flex items-center justify-center gap-2 text-sm font-display font-bold tracking-wide"
+            className="btn-outline w-full py-3.5 flex items-center justify-center gap-2 text-sm"
           >
-            JOIN WHATSAPP UPDATES →
-          </a>
-          <a
-            href="https://instagram.com/pass_no_jugaad"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-outline w-full py-3.5 flex items-center justify-center gap-2 text-sm font-display font-bold tracking-wide"
-          >
-            FOLLOW INSTAGRAM →
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+            </svg>
+            Follow on Instagram
           </a>
         </div>
       </div>
