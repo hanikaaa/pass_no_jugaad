@@ -77,10 +77,11 @@ export interface DBJugaadSignal {
 
 /*
 ──────────────────────────────────────────────────────────────
-  RUN THIS SQL IN SUPABASE SQL EDITOR ONCE
+  RUN THIS SQL IN YOUR SUPABASE SQL EDITOR TO FIX SIGNUP & SCHEMA
 ──────────────────────────────────────────────────────────────
 
-CREATE TABLE profiles (
+-- 1. Create Profiles Table
+CREATE TABLE IF NOT EXISTS public.profiles (
   id         UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email      TEXT,
   role       TEXT NOT NULL DEFAULT 'buyer'
@@ -90,21 +91,40 @@ CREATE TABLE profiles (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+-- 2. Create Trigger Function to Auto-Create Profile on User Signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
 BEGIN
-  INSERT INTO profiles (id, email, role) VALUES (NEW.id, NEW.email, 'buyer');
+  INSERT INTO public.profiles (id, email, role, name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    'buyer',
+    COALESCE(NEW.raw_user_meta_data->>'name', '')
+  )
+  ON CONFLICT (id) DO UPDATE
+  SET email = EXCLUDED.email,
+      name = COALESCE(EXCLUDED.name, public.profiles.name);
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+
+-- 3. Drop existing trigger if any and create new trigger on auth.users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
-CREATE TABLE events (
+-- 4. Create Events Table
+CREATE TABLE IF NOT EXISTS public.events (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  organiser_id     UUID REFERENCES profiles(id),
+  organiser_id     UUID REFERENCES public.profiles(id),
   name             TEXT NOT NULL,
   venue            TEXT,
   date             TEXT,
@@ -119,16 +139,17 @@ CREATE TABLE events (
   status           TEXT NOT NULL DEFAULT 'pending_review'
     CHECK (status IN ('pending_review','approved','rejected')),
   rejection_reason TEXT,
-  reviewed_by      UUID REFERENCES profiles(id),
+  reviewed_by      UUID REFERENCES public.profiles(id),
   reviewed_at      TIMESTAMPTZ,
   created_at       TIMESTAMPTZ DEFAULT NOW(),
   updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE pass_requests (
+-- 5. Create Pass Requests Table
+CREATE TABLE IF NOT EXISTS public.pass_requests (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_id       UUID REFERENCES events(id) ON DELETE CASCADE,
-  buyer_id       UUID REFERENCES profiles(id),
+  event_id       UUID REFERENCES public.events(id) ON DELETE CASCADE,
+  buyer_id       UUID REFERENCES public.profiles(id),
   quantity       INTEGER NOT NULL,
   budget_min     INTEGER,
   budget_max     INTEGER,
@@ -140,9 +161,10 @@ CREATE TABLE pass_requests (
   updated_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE jugaad_signals (
+-- 6. Create Jugaad Signals Table
+CREATE TABLE IF NOT EXISTS public.jugaad_signals (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  buyer_id          UUID REFERENCES profiles(id),
+  buyer_id          UUID REFERENCES public.profiles(id),
   preferred_dates   TEXT[],
   num_passes        INTEGER,
   budget_min        INTEGER,
@@ -154,33 +176,54 @@ CREATE TABLE jugaad_signals (
   created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE OR REPLACE FUNCTION is_super_admin()
-RETURNS BOOLEAN AS $$
-  SELECT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin');
-$$ LANGUAGE SQL SECURITY DEFINER;
+-- 7. Helper Functions for RLS
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'super_admin');
+$$;
 
-CREATE OR REPLACE FUNCTION my_event_ids()
-RETURNS UUID[] AS $$
-  SELECT ARRAY(SELECT id FROM events WHERE organiser_id = auth.uid());
-$$ LANGUAGE SQL SECURITY DEFINER;
+CREATE OR REPLACE FUNCTION public.my_event_ids()
+RETURNS UUID[]
+LANGUAGE sql
+SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT ARRAY(SELECT id FROM public.events WHERE organiser_id = auth.uid());
+$$;
 
-ALTER TABLE profiles       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE events         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pass_requests  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE jugaad_signals ENABLE ROW LEVEL SECURITY;
+-- 8. Enable RLS
+ALTER TABLE public.profiles       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.events         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pass_requests  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.jugaad_signals ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Own profile"             ON profiles       FOR ALL     USING (id = auth.uid());
-CREATE POLICY "Admin profiles"          ON profiles       FOR SELECT  USING (is_super_admin());
-CREATE POLICY "Public approved events"  ON events         FOR SELECT  USING (status = 'approved');
-CREATE POLICY "Organiser own events"    ON events         FOR ALL     USING (organiser_id = auth.uid()) WITH CHECK (organiser_id = auth.uid());
-CREATE POLICY "Admin all events"        ON events         FOR ALL     USING (is_super_admin());
-CREATE POLICY "Buyer own requests"      ON pass_requests  FOR ALL     USING (buyer_id = auth.uid()) WITH CHECK (buyer_id = auth.uid());
-CREATE POLICY "Org requests select"     ON pass_requests  FOR SELECT  USING (event_id = ANY(my_event_ids()));
-CREATE POLICY "Org requests update"     ON pass_requests  FOR UPDATE  USING (event_id = ANY(my_event_ids()));
-CREATE POLICY "Admin all requests"      ON pass_requests  FOR ALL     USING (is_super_admin());
-CREATE POLICY "Buyer own signals"       ON jugaad_signals FOR ALL     USING (buyer_id = auth.uid()) WITH CHECK (buyer_id = auth.uid());
-CREATE POLICY "Admin all signals"       ON jugaad_signals FOR ALL     USING (is_super_admin());
+-- 9. RLS Policies
+DROP POLICY IF EXISTS "Own profile"             ON public.profiles;
+DROP POLICY IF EXISTS "Admin profiles"          ON public.profiles;
+DROP POLICY IF EXISTS "Public approved events"  ON public.events;
+DROP POLICY IF EXISTS "Organiser own events"    ON public.events;
+DROP POLICY IF EXISTS "Admin all events"        ON public.events;
+DROP POLICY IF EXISTS "Buyer own requests"      ON public.pass_requests;
+DROP POLICY IF EXISTS "Org requests select"     ON public.pass_requests;
+DROP POLICY IF EXISTS "Org requests update"     ON public.pass_requests;
+DROP POLICY IF EXISTS "Admin all requests"      ON public.pass_requests;
+DROP POLICY IF EXISTS "Buyer own signals"       ON public.jugaad_signals;
+DROP POLICY IF EXISTS "Admin all signals"       ON public.jugaad_signals;
 
--- Set super admin once:
--- UPDATE profiles SET role = 'super_admin' WHERE email = 'hanika@passnojugaad.com';
+CREATE POLICY "Own profile"             ON public.profiles       FOR ALL     USING (id = auth.uid());
+CREATE POLICY "Admin profiles"          ON public.profiles       FOR SELECT  USING (public.is_super_admin());
+CREATE POLICY "Public approved events"  ON public.events         FOR SELECT  USING (status = 'approved');
+CREATE POLICY "Organiser own events"    ON public.events         FOR ALL     USING (organiser_id = auth.uid()) WITH CHECK (organiser_id = auth.uid());
+CREATE POLICY "Admin all events"        ON public.events         FOR ALL     USING (public.is_super_admin());
+CREATE POLICY "Buyer own requests"      ON public.pass_requests  FOR ALL     USING (buyer_id = auth.uid()) WITH CHECK (buyer_id = auth.uid());
+CREATE POLICY "Org requests select"     ON public.pass_requests  FOR SELECT  USING (event_id = ANY(public.my_event_ids()));
+CREATE POLICY "Org requests update"     ON public.pass_requests  FOR UPDATE  USING (event_id = ANY(public.my_event_ids()));
+CREATE POLICY "Admin all requests"      ON public.pass_requests  FOR ALL     USING (public.is_super_admin());
+CREATE POLICY "Buyer own signals"       ON public.jugaad_signals FOR ALL     USING (buyer_id = auth.uid()) WITH CHECK (buyer_id = auth.uid());
+CREATE POLICY "Admin all signals"       ON public.jugaad_signals FOR ALL     USING (public.is_super_admin());
+
+-- Optional: Promote initial user to super_admin:
+-- UPDATE public.profiles SET role = 'super_admin' WHERE email = 'hanika@passnojugaad.com';
 */
