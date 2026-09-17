@@ -13,13 +13,34 @@ import { EVENTS } from '../data/events';
 
 // ─── Auth ─────────────────────────────────────────────────────
 
-export async function signUp(email: string, password: string, name: string): Promise<{ error: string | null }> {
+export async function signUp(email: string, password: string, name: string): Promise<{ error: string | null; needsEmailConfirmation?: boolean }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null }; // demo: always succeed
-  const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name, role: 'buyer' } }
+  });
   if (error) return { error: error.message };
-  // Profile auto-created by DB trigger; update name
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) await supabase.from('profiles').update({ name }).eq('id', user.id);
+
+  // If Supabase has email confirmation enabled and session is not yet active
+  if (data.user && !data.session) {
+    return { error: null, needsEmailConfirmation: true };
+  }
+
+  // Ensure profile is created/updated in profiles table
+  if (data.user) {
+    try {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        email: data.user.email,
+        name,
+        role: 'buyer'
+      });
+    } catch {
+      // ignore if RLS or trigger handled it
+    }
+  }
+
   return { error: null };
 }
 
@@ -44,8 +65,23 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   if (!SUPABASE_CONFIGURED || !supabase) return null;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-  return data ?? null;
+
+  try {
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    if (data) return data;
+  } catch {
+    // If profiles table query fails, return a profile fallback from user metadata
+  }
+
+  // Fallback profile from auth session if table row is not ready yet
+  return {
+    id: user.id,
+    email: user.email || '',
+    role: ((user.user_metadata?.role as any) || 'buyer'),
+    name: (user.user_metadata?.name as string) || null,
+    phone: null,
+    created_at: user.created_at || new Date().toISOString(),
+  };
 }
 
 // ─── Events ───────────────────────────────────────────────────

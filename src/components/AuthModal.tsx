@@ -16,6 +16,7 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,12 +38,20 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
       return;
     }
 
-    const { error } = mode === 'signup'
-      ? await signUp(email, password, name)
-      : await signIn(email, password);
+    if (mode === 'signup') {
+      const res = await signUp(email, password, name);
+      setLoading(false);
+      if (res.error) { setAuthError(res.error); return; }
+      if (res.needsEmailConfirmation) {
+        setConfirmationSent(true);
+        return;
+      }
+    } else {
+      const { error } = await signIn(email, password);
+      setLoading(false);
+      if (error) { setAuthError(error); return; }
+    }
 
-    setLoading(false);
-    if (error) { setAuthError(error); return; }
     onSuccess();
   };
 
@@ -54,9 +63,10 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
         onClick={onClose}
       />
       <div
-        className="fixed z-[61] w-full max-w-sm"
+        className="fixed z-[61] w-full max-w-md"
         style={{
-          top: '50%', left: '50%',
+          top: '50%',
+          left: '50%',
           transform: 'translate(-50%, -50%)',
           background: '#FAF7F2',
           border: '1px solid rgba(26,22,18,0.1)',
@@ -72,7 +82,18 @@ export default function AuthModal({ onSuccess, onClose }: Props) {
           ✕
         </button>
 
-        {resetSent ? (
+        {confirmationSent ? (
+          <div className="text-center py-4">
+            <div style={{ fontSize: 32, marginBottom: 12 }}>✉️</div>
+            <h2 className="font-serif" style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>Verify your email</h2>
+            <p style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.6, marginBottom: 20 }}>
+              {"We've sent a verification link to"} <strong>{email}</strong>. Please confirm your email to log in.
+            </p>
+            <button onClick={() => { setMode('login'); setConfirmationSent(false); }} className="btn-ghost text-sm">
+              Back to login
+            </button>
+          </div>
+        ) : resetSent ? (
           <div className="text-center py-4">
             <div style={{ fontSize: 32, marginBottom: 12 }}>📬</div>
             <h2 className="font-serif" style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>Check your inbox</h2>

@@ -19,6 +19,7 @@ export default function Login({ navigate, onAuthSuccess }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,12 +49,20 @@ export default function Login({ navigate, onAuthSuccess }: Props) {
       return;
     }
 
-    const { error: err } = mode === 'signup'
-      ? await signUp(email, password, name)
-      : await signIn(email, password);
+    if (mode === 'signup') {
+      const res = await signUp(email, password, name);
+      setLoading(false);
+      if (res.error) { setError(res.error); return; }
+      if (res.needsEmailConfirmation) {
+        setConfirmationSent(true);
+        return;
+      }
+    } else {
+      const { error: err } = await signIn(email, password);
+      setLoading(false);
+      if (err) { setError(err); return; }
+    }
 
-    setLoading(false);
-    if (err) { setError(err); return; }
     if (onAuthSuccess) onAuthSuccess();
     else navigate('home');
   };
@@ -74,7 +83,18 @@ export default function Login({ navigate, onAuthSuccess }: Props) {
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-10">
         <div className="w-full max-w-sm">
 
-          {resetSent ? (
+          {confirmationSent ? (
+            <div className="text-center">
+              <div style={{ fontSize: 40, marginBottom: 16 }}>✉️</div>
+              <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 8 }}>Verify your email</h1>
+              <p style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.65, marginBottom: 24 }}>
+                We sent a confirmation email to <strong>{email}</strong>. Please check your inbox and click the verification link to log in.
+              </p>
+              <button onClick={() => { setMode('login'); setConfirmationSent(false); }} className="btn-ghost text-sm">
+                ← Back to login
+              </button>
+            </div>
+          ) : resetSent ? (
             <div className="text-center">
               <div style={{ fontSize: 40, marginBottom: 16 }}>📬</div>
               <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 8 }}>Check your inbox</h1>
