@@ -1,7 +1,16 @@
 {
-  "description": "Automates essential tasks efficiently to save time and streamline workflows, empowering users to focus on high-priority activities.",
+  "title": "Pass No Jugaad",
+  "description": "Ahmedabad's Navratri 2026 Event Discovery & Demand Aggregation Platform",
+  "icons": {
+    "icon": "/logo.png"
+  },
+  "openGraph": {
+    "title": "Pass No Jugaad",
+    "description": "Ahmedabad's Navratri 2026 Event Discovery & Demand Aggregation Platform",
+    "image": "/logo.png"
+  },
   "robots": {
-    "index": false
+    "index": true
   },
   "accessibility": {
     "addBypassLinks": false,

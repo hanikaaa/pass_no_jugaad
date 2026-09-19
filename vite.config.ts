@@ -85,10 +85,10 @@ function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
     return html.replace(`<!-- ${slotName} -->`, content)
   }
 
-  const title = config.title ?? "Figma Make App"
-  const description = config.description ?? ''
-  const favicon = config.icons?.icon ?? ''
-  const socialImage = config.openGraph?.image ?? ''
+  const title = config.title ?? "Pass No Jugaad"
+  const description = config.description ?? "Ahmedabad's Navratri 2026 Event Discovery & Demand Aggregation Platform"
+  const favicon = config.icons?.icon ?? '/logo.png'
+  const socialImage = config.openGraph?.image ?? '/logo.png'
   const language = sanitizeHtmlValue(config.language) || 'en'
   const googleAnalyticsId = sanitizeHtmlValue(config.analytics?.googleAnalyticsId)
   const headStart = config.customScripts?.headStart ?? ''
