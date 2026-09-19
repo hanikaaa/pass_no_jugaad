@@ -1,7 +1,8 @@
-import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
+import nodemailer from 'nodemailer'
 
 import siteConfiguration from './.figma/make/site.json'
 
@@ -9,6 +10,7 @@ import siteConfiguration from './.figma/make/site.json'
 export default defineConfig(({ mode }) => {
   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
   const emitSourcemaps = mode === 'development'
+  const env = loadEnv(mode, process.cwd(), '')
 
   return {
     base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : '/',
@@ -23,6 +25,7 @@ export default defineConfig(({ mode }) => {
       figmaErrorOverlayReplay(),
       figmaReactRefreshBoundaryFallback(),
       figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
+      apiDevServerPlugin(env),
     ],
     resolve: {
       alias: {
@@ -358,3 +361,144 @@ function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin
     },
   }
 }
+
+/**
+ * Dev server plugin to handle /api/send-email locally
+ */
+function apiDevServerPlugin(env: Record<string, string>): Plugin {
+  return {
+    name: 'api-dev-server-email-handler',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = req.url || ''
+        if (url.split('?')[0] !== '/api/send-email' || req.method !== 'POST') {
+          return next()
+        }
+
+        let bodyStr = ''
+        req.on('data', chunk => {
+          bodyStr += chunk
+        })
+        req.on('end', async () => {
+          try {
+            const { type, payload } = JSON.parse(bodyStr || '{}')
+            const ADMIN_EMAIL = env.ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'passnojugaadd@gmail.com'
+            const SMTP_USER = env.SMTP_USER || process.env.SMTP_USER || env.GMAIL_USER || process.env.GMAIL_USER || 'passnojugaadd@gmail.com'
+            const SMTP_PASS = env.SMTP_PASS || process.env.SMTP_PASS || env.GMAIL_PASS || process.env.GMAIL_PASS || env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD || ''
+            const SMTP_HOST = env.SMTP_HOST || process.env.SMTP_HOST || 'smtp.gmail.com'
+            const SMTP_PORT = parseInt(env.SMTP_PORT || process.env.SMTP_PORT || '465', 10)
+
+            const emailsToSend: { to: string; subject: string; html: string }[] = []
+
+            if (type === 'pass_request') {
+              const { eventName, buyerName, buyerEmail, quantity, budgetMin, budgetMax, priorityNote } = payload || {}
+              emailsToSend.push({
+                to: ADMIN_EMAIL,
+                subject: `🔥 New Pass Request: ${eventName} - ${buyerName} (${quantity} passes)`,
+                html: `
+                  <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; padding: 24px; border-radius: 12px; border: 1px solid rgba(26,22,18,0.1);">
+                    <div style="background: #7A1F2E; padding: 18px; border-radius: 8px; color: #FAF7F2; margin-bottom: 20px;">
+                      <h2 style="margin: 0;">Pass No Jugaad — New Pass Request</h2>
+                    </div>
+                    <p style="font-size: 16px;"><strong>Event:</strong> ${eventName}</p>
+                    <p><strong>Buyer:</strong> ${buyerName} (${buyerEmail})</p>
+                    <p><strong>Quantity:</strong> ${quantity} passes</p>
+                    <p><strong>Budget:</strong> ₹${budgetMin} – ₹${budgetMax}</p>
+                    ${priorityNote ? `<p><strong>Note:</strong> ${priorityNote}</p>` : ''}
+                    <p style="font-size: 12px; color: #888;">Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
+                  </div>
+                `,
+              })
+              if (buyerEmail) {
+                emailsToSend.push({
+                  to: buyerEmail,
+                  subject: `🎟️ Request Received for ${eventName} | Pass No Jugaad`,
+                  html: `
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; padding: 24px; border-radius: 12px;">
+                      <h2 style="color: #7A1F2E;">Pass No Jugaad</h2>
+                      <p>Hi ${buyerName || 'Garba Lover'}, we have received your request for <strong>${quantity} passes</strong> for <strong>${eventName}</strong>.</p>
+                      <p>We are coordinating with verified organisers to find passes in your budget (₹${budgetMin}–₹${budgetMax}).</p>
+                    </div>
+                  `,
+                })
+              }
+            } else if (type === 'jugaad_signal') {
+              const { buyerName, buyerEmail, preferredDates, numPasses, budgetMin, budgetMax, readiness } = payload || {}
+              emailsToSend.push({
+                to: ADMIN_EMAIL,
+                subject: `📡 New Radar Signal from ${buyerName} (${numPasses} passes, ${readiness})`,
+                html: `
+                  <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; padding: 24px; border-radius: 12px;">
+                    <h2 style="color: #C1440E;">New Radar Signal Logged</h2>
+                    <p><strong>Buyer:</strong> ${buyerName} (${buyerEmail})</p>
+                    <p><strong>Dates:</strong> ${preferredDates?.join(', ') || 'Any'}</p>
+                    <p><strong>Passes:</strong> ${numPasses}</p>
+                    <p><strong>Budget:</strong> ₹${budgetMin} – ₹${budgetMax}</p>
+                    <p><strong>Readiness:</strong> ${readiness}</p>
+                  </div>
+                `,
+              })
+            } else if (type === 'user_signup') {
+              const { name, email } = payload || {}
+              emailsToSend.push({
+                to: ADMIN_EMAIL,
+                subject: `👤 New User Signup: ${name || 'New User'} (${email})`,
+                html: `<p>New User: ${name} (${email})</p>`,
+              })
+            }
+
+            if (SMTP_PASS) {
+              const transporter = nodemailer.createTransport(
+                SMTP_HOST === 'smtp.gmail.com'
+                  ? {
+                      service: 'gmail',
+                      auth: {
+                        user: SMTP_USER,
+                        pass: SMTP_PASS.replace(/\s+/g, ''),
+                      },
+                    }
+                  : {
+                      host: SMTP_HOST,
+                      port: SMTP_PORT,
+                      secure: SMTP_PORT === 465,
+                      auth: {
+                        user: SMTP_USER,
+                        pass: SMTP_PASS,
+                      },
+                    }
+              )
+
+              for (const email of emailsToSend) {
+                await transporter.sendMail({
+                  from: `"Pass No Jugaad" <${SMTP_USER}>`,
+                  to: email.to,
+                  subject: email.subject,
+                  html: email.html,
+                })
+              }
+              console.log(`\x1b[32m[Email Notification Sent]\x1b[0m Successfully sent ${emailsToSend.length} email(s) via ${SMTP_USER}`)
+            } else {
+              console.warn(
+                `\x1b[33m[Email Notification Not Dispatched]\x1b[0m\n` +
+                  `Reason: SMTP_PASS is not set in .env.\n` +
+                  `Recipient: ${emailsToSend.map(e => e.to).join(', ')}\n` +
+                  `Subject: ${emailsToSend.map(e => e.subject).join(' | ')}\n` +
+                  `👉 To send real emails from passnojugaadd@gmail.com, generate a Google App Password and add SMTP_PASS to your .env file.`
+              )
+            }
+
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: true, count: emailsToSend.length }))
+          } catch (err: any) {
+            console.error('[Email Handler Error]:', err)
+            res.statusCode = 500
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: err.message || 'Server error' }))
+          }
+        })
+      })
+    },
+  }
+}
+

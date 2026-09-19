@@ -35,6 +35,9 @@ export async function signUp(email: string, password: string, name: string): Pro
     } catch {
       // ignore if RLS or trigger handled it
     }
+
+    // Notify Super Admin of new user registration
+    sendNotification('user_signup', { name, email: data.user.email || email });
   }
 
   return { error: null };

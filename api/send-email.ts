@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'passnojugaadd@gmail.com';
 const SMTP_USER = process.env.SMTP_USER || process.env.GMAIL_USER || 'passnojugaadd@gmail.com';
-const SMTP_PASS = process.env.SMTP_PASS || process.env.GMAIL_PASS || '';
+const SMTP_PASS = process.env.SMTP_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD || '';
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 
@@ -29,15 +29,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Configure Transporter
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: SMTP_PORT === 465,
-      auth: SMTP_PASS ? {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      } : undefined,
-    });
+    const transporter = nodemailer.createTransport(
+      SMTP_HOST === 'smtp.gmail.com'
+        ? {
+            service: 'gmail',
+            auth: SMTP_PASS
+              ? {
+                  user: SMTP_USER,
+                  pass: SMTP_PASS.replace(/\s+/g, ''), // Strip spaces from Google App Password
+                }
+              : undefined,
+          }
+        : {
+            host: SMTP_HOST,
+            port: SMTP_PORT,
+            secure: SMTP_PORT === 465,
+            auth: SMTP_PASS
+              ? {
+                  user: SMTP_USER,
+                  pass: SMTP_PASS,
+                }
+              : undefined,
+          }
+    );
 
     const emailsToSend: { to: string; subject: string; html: string }[] = [];
 
@@ -217,6 +231,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             <p><strong>Contact Email:</strong> <a href="mailto:${contactEmail}">${contactEmail}</a></p>
             <p><strong>Instagram:</strong> ${instagramLink || '—'}</p>
             <p><a href="https://passnojugaad.in" style="display: inline-block; padding: 10px 18px; background: #C1440E; color: #fff; text-decoration: none; border-radius: 6px;">Open Super Admin Dashboard</a></p>
+          </div>
+        `,
+      });
+    }
+
+    // ─── 4. User Signup Notification ──────────────────────────────
+    else if (type === 'user_signup') {
+      const { name, email } = payload;
+      emailsToSend.push({
+        to: ADMIN_EMAIL,
+        subject: `👤 New User Signup: ${name || 'New User'} (${email})`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; padding: 24px; border-radius: 12px; border: 1px solid rgba(26,22,18,0.1);">
+            <div style="background: #1A1612; padding: 18px; border-radius: 8px; color: #FAF7F2; margin-bottom: 20px;">
+              <h2 style="margin: 0; font-size: 20px; font-family: Georgia, serif;">Pass No Jugaad — New Member</h2>
+            </div>
+            <p style="font-size: 15px; color: #1A1612;">A new user has just registered on the platform:</p>
+            <table style="width: 100%; font-size: 14px; margin: 16px 0;">
+              <tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Name:</strong></td><td>${name || '—'}</td></tr>
+              <tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Email:</strong></td><td><a href="mailto:${email}" style="color: #C1440E;">${email}</a></td></tr>
+              <tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Role:</strong></td><td>Buyer / Seeker</td></tr>
+              <tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Timestamp:</strong></td><td>${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td></tr>
+            </table>
           </div>
         `,
       });

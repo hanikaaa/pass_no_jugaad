@@ -283,10 +283,10 @@ export default function Home({ navigate }: NavProps) {
         <div className="card-light overflow-hidden">
           <div className="relative h-[200px] bg-stone-200 overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1504680177321-2e6a879aac86?w=800&h=400&fit=crop&auto=format"
+              src="/images/jugaad-drops-banner.png"
               alt="Jugaad Drops"
               className="w-full h-full object-cover"
-              style={{ opacity: 0.75 }}
+              style={{ opacity: 0.85 }}
             />
             <div className="absolute inset-0 flex items-end p-5" style={{ background: 'linear-gradient(to top, rgba(26,22,18,0.7) 0%, transparent 60%)' }}>
               <div>
