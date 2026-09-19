@@ -50,7 +50,7 @@ export default function EventsPage({ navigate }: NavProps) {
           type: e.type_tags || ['Garba'],
           demand: idx % 3 === 0 ? 'VERY HIGH' : idx % 2 === 0 ? 'HIGH' : 'MEDIUM',
           availability: 'Available',
-          image: EVENTS[idx % EVENTS.length]?.image || 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
+          image: 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
           artist: e.artist || undefined,
           description: e.description || '',
           featured: idx < 3,
@@ -58,6 +58,7 @@ export default function EventsPage({ navigate }: NavProps) {
         setEventsList(mapped);
       }
     });
+
   }, []);
 
   const toggle = <K extends keyof Filters>(key: K, val: string) => {

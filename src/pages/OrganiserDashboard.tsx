@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { type NavProps, EVENTS } from '../data/events';
 import {
-  MOCK_PASS_REQUESTS, REQUEST_STATUS_LABEL, REQUEST_STATUS_STYLE, EVENT_STATUS_STYLE,
+  REQUEST_STATUS_LABEL, REQUEST_STATUS_STYLE, EVENT_STATUS_STYLE,
 } from '../lib/mockData';
+
 import { getMyEvents, getRequestsForMyEvents, updateRequestStatus, updateEvent } from '../lib/api';
 import { SUPABASE_CONFIGURED } from '../lib/supabase';
 import type { DBEvent, DBPassRequest } from '../lib/supabase';
@@ -144,14 +145,13 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
 
 // ─── Pass Requests tab ────────────────────────────────────────
 function RequestsTab() {
-  const [requests, setRequests] = useState<DBPassRequest[]>(
-    MOCK_PASS_REQUESTS.filter(r => ['e1', 'e5'].includes(r.event_id)) as unknown as DBPassRequest[]
-  );
+  const [requests, setRequests] = useState<DBPassRequest[]>([]);
 
   useEffect(() => {
     if (!SUPABASE_CONFIGURED) return;
     getRequestsForMyEvents().then(setRequests);
   }, []);
+
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterEvent, setFilterEvent] = useState('all');
 
@@ -252,21 +252,25 @@ function RequestsTab() {
 // ─── Main ─────────────────────────────────────────────────────
 export default function OrganiserDashboard({ navigate }: NavProps) {
   const [tab, setTab] = useState<OrgTab>('my-events');
+  const [pendingRequests, setPendingRequests] = useState(0);
 
-  const pendingRequests = MOCK_PASS_REQUESTS.filter(
-    r => ['e1', 'e5'].includes(r.event_id) && !['completed', 'closed'].includes(r.status)
-  ).length;
+  useEffect(() => {
+    getRequestsForMyEvents().then(reqs => {
+      setPendingRequests(reqs.filter(r => !['completed', 'closed'].includes(r.status)).length);
+    });
+  }, []);
 
   return (
     <div className="pb-28" style={{ color: '#1A1612' }}>
       {/* Header */}
       <div className="px-5 py-6" style={{ background: '#F0E8DC', borderBottom: '1px solid rgba(26,22,18,0.08)' }}>
-        <div className="eyebrow mb-1" style={{ color: '#9A8B82' }}>Vikram Rawal · Organiser</div>
+        <div className="eyebrow mb-1" style={{ color: '#C1440E', fontWeight: 700 }}>🏢 Organiser Portal</div>
         <h1 className="font-serif leading-tight" style={{ fontSize: 'clamp(26px, 7vw, 38px)', fontWeight: 500 }}>
           My Event Dashboard
         </h1>
         <p style={{ fontSize: 13, color: '#6B5B52', marginTop: 4 }}>Manage your events and the pass requests tied to them.</p>
       </div>
+
 
       {/* Tabs */}
       <div className="flex border-b" style={{ background: '#FAF7F2', borderColor: 'rgba(26,22,18,0.08)' }}>

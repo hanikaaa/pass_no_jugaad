@@ -185,8 +185,8 @@ interface MyRequestsProps extends NavProps {
 // ─── Main ─────────────────────────────────────────────────────
 export default function MyRequests({ navigate, activeRole }: MyRequestsProps) {
   const [mainTab, setMainTab] = useState<MainTab>('requests');
-  const [requests, setRequests] = useState<DBPassRequest[]>(MY_PASS_REQUESTS as unknown as DBPassRequest[]);
-  const [signals, setSignals] = useState<DBJugaadSignal[]>(MY_JUGAAD_SIGNALS as unknown as DBJugaadSignal[]);
+  const [requests, setRequests] = useState<DBPassRequest[]>([]);
+  const [signals, setSignals] = useState<DBJugaadSignal[]>([]);
 
   useEffect(() => {
     if (!SUPABASE_CONFIGURED) return;
@@ -195,6 +195,7 @@ export default function MyRequests({ navigate, activeRole }: MyRequestsProps) {
   }, []);
 
   const activeCount = requests.filter(r => ACTIVE_STATUSES.includes(r.status)).length;
+
 
   return (
     <div className="px-5 py-6 pb-28 max-w-lg mx-auto" style={{ color: '#1A1612' }}>

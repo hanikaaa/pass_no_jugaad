@@ -24,7 +24,7 @@ export default function CalendarPage({ navigate }: NavProps) {
           type: e.type_tags || ['Garba'],
           demand: idx % 3 === 0 ? 'VERY HIGH' : idx % 2 === 0 ? 'HIGH' : 'MEDIUM',
           availability: 'Available',
-          image: EVENTS[idx % EVENTS.length]?.image || 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
+          image: 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
           artist: e.artist || undefined,
           description: e.description || '',
           featured: idx < 3,
@@ -32,6 +32,7 @@ export default function CalendarPage({ navigate }: NavProps) {
         setEventsList(mapped);
       }
     });
+
   }, []);
 
   const eventsForDate = selectedDate
@@ -52,8 +53,9 @@ export default function CalendarPage({ navigate }: NavProps) {
       {/* Dates scroll */}
       <div className="scroll-x flex gap-3 px-5 pb-4">
         {NAVRATRI_DATES.map((d) => {
-          const hasEvents = EVENTS.some((e) => e.dateShort === d);
+          const hasEvents = eventsList.some((e) => e.dateShort === d || (e.date && e.date.toLowerCase().includes(d.toLowerCase().split(' ')[0])));
           const active = selectedDate === d;
+
           return (
             <button
               key={d}

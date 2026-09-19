@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { type NavProps, EVENTS } from '../data/events';
+import { type NavProps } from '../data/events';
 import {
-  MOCK_PASS_REQUESTS, MOCK_JUGAAD_SIGNALS, MOCK_ORGANISERS, PENDING_EVENTS,
   REQUEST_STATUS_LABEL, REQUEST_STATUS_STYLE, EVENT_STATUS_STYLE,
 } from '../lib/mockData';
 import {
   getPendingEvents, getAllEvents, getAllPassRequests, getAllSignals,
   getOrganisers, approveEvent, rejectEvent, updateRequestStatus, deleteEvent,
   getAllUsers, updateUserRole, createEventByAdmin, updateEventByAdmin,
-  updatePassRequestWithOffer, seedDatabaseEvents,
+  updatePassRequestWithOffer,
 } from '../lib/api';
 import { SUPABASE_CONFIGURED, type Profile, type DBEvent, type DBPassRequest, type DBJugaadSignal } from '../lib/supabase';
+
 
 type AdminTab = 'overview' | 'pending' | 'events' | 'requests' | 'signals' | 'users' | 'organisers';
 
@@ -69,22 +69,6 @@ function OverviewTab({
   events: any[]; requests: any[]; signals: any[]; users: any[]; pendingCount: number;
   setTab: (t: AdminTab) => void; onSeedDatabase: () => void;
 }) {
-  const [seeding, setSeeding] = useState(false);
-  const [seedMsg, setSeedMsg] = useState<string | null>(null);
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    setSeedMsg(null);
-    const res = await seedDatabaseEvents();
-    setSeeding(false);
-    if (res.error) {
-      setSeedMsg(`Error: ${res.error}`);
-    } else {
-      setSeedMsg(`Successfully seeded ${res.count} events!`);
-      onSeedDatabase();
-    }
-  };
-
   const totalDemandPasses = signals.reduce((s, x) => s + (x.num_passes || 0), 0);
   const requestedPasses = requests.reduce((s, x) => s + (x.quantity || 0), 0);
   const estimatedRevenue = requests.reduce((s, x) => s + ((x.quantity || 1) * ((x.budget_min || 0) + (x.budget_max || 0)) / 2), 0);
@@ -108,15 +92,6 @@ function OverviewTab({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {events.length === 0 && SUPABASE_CONFIGURED && (
-            <button
-              onClick={handleSeed}
-              disabled={seeding}
-              className="btn-primary py-2 px-3 text-xs"
-            >
-              {seeding ? 'Seeding...' : '⚡ Seed Database Events'}
-            </button>
-          )}
           <button
             onClick={() => setTab('pending')}
             className="btn-outline py-2 px-3 text-xs font-semibold"
@@ -127,12 +102,6 @@ function OverviewTab({
         </div>
       </div>
 
-      {seedMsg && (
-        <div className="p-3 rounded-lg text-xs font-semibold text-center"
-          style={{ background: seedMsg.startsWith('Error') ? 'rgba(122,31,46,0.1)' : 'rgba(45,122,79,0.1)', color: seedMsg.startsWith('Error') ? '#7A1F2E' : '#2D7A4F' }}>
-          {seedMsg}
-        </div>
-      )}
 
       {/* Main KPI Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -261,7 +230,7 @@ function OverviewTab({
 
 // ─── 2. Pending Review tab ────────────────────────────────────
 function PendingTab({ onRefresh }: { onRefresh: () => void }) {
-  const [items, setItems] = useState<any[]>(PENDING_EVENTS);
+  const [items, setItems] = useState<any[]>([]);
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
@@ -270,6 +239,7 @@ function PendingTab({ onRefresh }: { onRefresh: () => void }) {
     if (!SUPABASE_CONFIGURED) return;
     getPendingEvents().then(data => setItems(data));
   }, []);
+
 
   const approve = async (id: string) => {
     setProcessing(id);
@@ -401,26 +371,17 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
   const [formDesc, setFormDesc] = useState('');
 
   const loadData = () => {
-    if (!SUPABASE_CONFIGURED) {
-      setAllEvents([
-        ...EVENTS.map(e => ({ id: e.id, name: e.name, dateShort: e.dateShort, venue: e.venue, priceRange: e.priceRange, price_min: e.priceMin, price_max: e.priceMax, demand: e.demand, type_tags: e.type, status: 'approved', artist: e.artist, description: e.description })),
-        ...PENDING_EVENTS.map(e => ({ id: e.id, name: e.name, dateShort: e.date, venue: e.venue, priceRange: e.price, price_min: 600, price_max: 900, demand: 'MEDIUM', type_tags: e.type, status: 'pending_review', artist: '', description: '' })),
-      ]);
-      return;
-    }
+    if (!SUPABASE_CONFIGURED) return;
     getAllEvents().then(data => {
-      if (data && data.length > 0) {
-        setAllEvents(data.map((e: any) => ({
-          id: e.id, name: e.name, dateShort: e.date, venue: e.venue,
-          priceRange: e.price_min ? `₹${e.price_min}–₹${e.price_max}` : '—',
-          price_min: e.price_min, price_max: e.price_max,
-          demand: 'MEDIUM', type_tags: e.type_tags ?? [], status: e.status, artist: e.artist, description: e.description
-        })));
-      } else {
-        setAllEvents(EVENTS.map(e => ({ id: e.id, name: e.name, dateShort: e.dateShort, venue: e.venue, priceRange: e.priceRange, price_min: e.priceMin, price_max: e.priceMax, demand: e.demand, type_tags: e.type, status: 'approved', artist: e.artist, description: e.description })));
-      }
+      setAllEvents((data ?? []).map((e: any) => ({
+        id: e.id, name: e.name, dateShort: e.date, venue: e.venue,
+        priceRange: e.price_min ? `₹${e.price_min}–₹${e.price_max}` : '—',
+        price_min: e.price_min, price_max: e.price_max,
+        demand: 'MEDIUM', type_tags: e.type_tags ?? [], status: e.status, artist: e.artist, description: e.description
+      })));
     });
   };
+
 
   useEffect(() => { loadData(); }, []);
 
@@ -604,7 +565,7 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
 
 // ─── 4. Pass Requests CRM Tab (with Match & Offer details) ───
 function RequestsTab({ onRefresh }: { onRefresh: () => void }) {
-  const [requests, setRequests] = useState<any[]>(MOCK_PASS_REQUESTS);
+  const [requests, setRequests] = useState<any[]>([]);
   const [filterEvent, setFilterEvent] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [offerModalId, setOfferModalId] = useState<string | null>(null);
@@ -614,7 +575,7 @@ function RequestsTab({ onRefresh }: { onRefresh: () => void }) {
   const loadRequests = () => {
     if (!SUPABASE_CONFIGURED) return;
     getAllPassRequests().then(data => {
-      if (data && data.length > 0) setRequests(data as any);
+      setRequests(data ?? []);
     });
   };
 
@@ -752,12 +713,12 @@ function RequestsTab({ onRefresh }: { onRefresh: () => void }) {
 
 // ─── 5. Radar / Signals Tab ───────────────────────────────────
 function SignalsTab() {
-  const [signals, setSignals] = useState<any[]>(MOCK_JUGAAD_SIGNALS);
+  const [signals, setSignals] = useState<any[]>([]);
 
   useEffect(() => {
     if (!SUPABASE_CONFIGURED) return;
     getAllSignals().then(data => {
-      if (data && data.length > 0) setSignals(data as any);
+      setSignals(data ?? []);
     });
   }, []);
 
@@ -792,7 +753,7 @@ function SignalsTab() {
         {[
           { l: 'Total Signals', v: signals.length },
           { l: 'Passes Demanded', v: totalPasses },
-          { l: 'Ready To Book', v: `${ready} / ${signals.length}` },
+          { l: 'Ready To Book', v: `${ready} / ${signals.length || 0}` },
           { l: 'Avg Willing Budget', v: `₹${avgBudget}` },
         ].map(d => (
           <div key={d.l} className="card-light p-3 text-center">
@@ -933,7 +894,7 @@ function UsersTab({ onRefresh }: { onRefresh: () => void }) {
 
 // ─── 7. Organisers Tab ────────────────────────────────────────
 function OrganisersTab({ onRefresh, users, onPromote }: { onRefresh: () => void; users: Profile[]; onPromote: (userId: string) => Promise<void> }) {
-  const [orgs, setOrgs] = useState<any[]>(MOCK_ORGANISERS);
+  const [orgs, setOrgs] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [promoting, setPromoting] = useState(false);
@@ -941,7 +902,7 @@ function OrganisersTab({ onRefresh, users, onPromote }: { onRefresh: () => void;
   useEffect(() => {
     if (!SUPABASE_CONFIGURED) return;
     getOrganisers().then(data => {
-      if (data && data.length > 0) setOrgs(data as any);
+      setOrgs(data ?? []);
     });
   }, []);
 
@@ -1044,18 +1005,6 @@ export default function AdminDashboard({ navigate }: NavProps) {
   const [pendingCount, setPendingCount] = useState(0);
 
   const fetchGlobalData = async () => {
-    if (!SUPABASE_CONFIGURED) {
-      setEvents(EVENTS);
-      setRequests(MOCK_PASS_REQUESTS);
-      setSignals(MOCK_JUGAAD_SIGNALS);
-      setUsers([
-        { id: 'u1', email: 'hanika@passnojugaad.com', role: 'super_admin', name: 'Hanika', phone: null, created_at: new Date().toISOString() },
-        { id: 'u2', email: 'mira@example.com', role: 'buyer', name: 'Mira Desai', phone: null, created_at: new Date().toISOString() },
-      ]);
-      setPendingCount(PENDING_EVENTS.length);
-      return;
-    }
-
     try {
       const [evData, reqData, sigData, usrData, penData] = await Promise.all([
         getAllEvents(),
@@ -1073,6 +1022,7 @@ export default function AdminDashboard({ navigate }: NavProps) {
       console.error('Error fetching admin data:', err);
     }
   };
+
 
   useEffect(() => {
     fetchGlobalData();

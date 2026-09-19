@@ -5,11 +5,7 @@
  */
 
 import { supabase, SUPABASE_CONFIGURED, type Profile, type DBEvent, type DBPassRequest, type DBJugaadSignal } from './supabase';
-import {
-  MOCK_PASS_REQUESTS, MY_PASS_REQUESTS, MOCK_JUGAAD_SIGNALS, MY_JUGAAD_SIGNALS,
-  MOCK_ORGANISERS, PENDING_EVENTS,
-} from './mockData';
-import { EVENTS } from '../data/events';
+
 
 // ─── Auth ─────────────────────────────────────────────────────
 
@@ -87,48 +83,13 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 // ─── Events ───────────────────────────────────────────────────
 
 export async function getApprovedEvents(): Promise<DBEvent[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) {
-    // Map local mock events to DBEvent shape
-    return EVENTS.map(e => ({
-      id: e.id,
-      organiser_id: null,
-      name: e.name,
-      venue: e.venue,
-      date: e.dateShort ?? null,
-      time: null,
-      price_min: e.priceMin ?? null,
-      price_max: e.priceMax ?? null,
-      type_tags: e.type ?? null,
-      artist: e.artist ?? null,
-      description: e.description ?? null,
-      instagram_link: null,
-      contact_email: null,
-      status: 'approved' as const,
-      rejection_reason: null,
-      reviewed_by: null,
-      reviewed_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
-  }
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data } = await supabase.from('events').select('*').eq('status', 'approved').order('date');
   return data ?? [];
 }
 
 export async function getEventById(id: string): Promise<DBEvent | null> {
-  if (!SUPABASE_CONFIGURED || !supabase) {
-    const e = EVENTS.find(ev => ev.id === id);
-    if (!e) return null;
-    return {
-      id: e.id, organiser_id: null, name: e.name, venue: e.venue,
-      date: e.dateShort ?? null, time: null,
-      price_min: e.priceMin ?? null, price_max: e.priceMax ?? null,
-      type_tags: e.type ?? null, artist: e.artist ?? null,
-      description: e.description ?? null, instagram_link: null, contact_email: null,
-      status: 'approved', rejection_reason: null, reviewed_by: null, reviewed_at: null,
-      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-    };
-  }
+  if (!SUPABASE_CONFIGURED || !supabase) return null;
   const { data } = await supabase.from('events').select('*').eq('id', id).single();
   return data ?? null;
 }
@@ -142,21 +103,28 @@ export async function submitEvent(fields: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not signed in' };
   const { error } = await supabase.from('events').insert({
-    ...fields, organiser_id: user.id, status: 'pending_review',
+    ...fields,
+    organiser_id: user.id,
+    status: 'pending_review',
   });
-  // Promote to organiser if still buyer
-  if (!error) {
-    await supabase.from('profiles')
-      .update({ role: 'organiser' })
-      .eq('id', user.id)
-      .eq('role', 'buyer');
-  }
   return { error: error?.message ?? null };
 }
 
-export async function updateEvent(id: string, fields: Partial<DBEvent>): Promise<{ error: string | null }> {
+export async function approveEvent(id: string): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
-  const { error } = await supabase.from('events').update({ ...fields, updated_at: new Date().toISOString() }).eq('id', id);
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase.from('events').update({
+    status: 'approved', reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString(),
+  }).eq('id', id);
+  return { error: error?.message ?? null };
+}
+
+export async function rejectEvent(id: string, reason: string): Promise<{ error: string | null }> {
+  if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase.from('events').update({
+    status: 'rejected', rejection_reason: reason, reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString(),
+  }).eq('id', id);
   return { error: error?.message ?? null };
 }
 
@@ -166,46 +134,23 @@ export async function deleteEvent(id: string): Promise<{ error: string | null }>
   return { error: error?.message ?? null };
 }
 
-export async function approveEvent(id: string): Promise<{ error: string | null }> {
+export async function updateEvent(id: string, fields: Partial<DBEvent>): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
-  const { data: { user } } = await supabase.auth.getUser();
   const { error } = await supabase.from('events').update({
-    status: 'approved', reviewed_by: user?.id, reviewed_at: new Date().toISOString(),
-  }).eq('id', id);
-  return { error: error?.message ?? null };
-}
-
-export async function rejectEvent(id: string, reason: string): Promise<{ error: string | null }> {
-  if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
-  const { data: { user } } = await supabase.auth.getUser();
-  const { error } = await supabase.from('events').update({
-    status: 'rejected', rejection_reason: reason,
-    reviewed_by: user?.id, reviewed_at: new Date().toISOString(),
+    ...fields, updated_at: new Date().toISOString(),
   }).eq('id', id);
   return { error: error?.message ?? null };
 }
 
 // Admin
 export async function getAllEvents(): Promise<DBEvent[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) {
-    const allEvents = await getApprovedEvents();
-    const pending = PENDING_EVENTS.map(pe => ({
-      id: pe.id, organiser_id: null, name: pe.name, venue: pe.venue,
-      date: pe.date, time: null, price_min: null, price_max: null,
-      type_tags: pe.type, artist: null, description: null,
-      instagram_link: pe.instagram || null, contact_email: pe.email,
-      status: 'pending_review' as const, rejection_reason: null,
-      reviewed_by: null, reviewed_at: null,
-      created_at: pe.submitted_at, updated_at: pe.submitted_at,
-    }));
-    return [...pending, ...allEvents];
-  }
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data } = await supabase.from('events').select('*').order('created_at', { ascending: false });
   return data ?? [];
 }
 
-export async function getPendingEvents() {
-  if (!SUPABASE_CONFIGURED || !supabase) return PENDING_EVENTS;
+export async function getPendingEvents(): Promise<DBEvent[]> {
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data } = await supabase
     .from('events')
     .select('*, profiles(name, email, org_name)')
@@ -215,17 +160,7 @@ export async function getPendingEvents() {
 }
 
 export async function getMyEvents(): Promise<DBEvent[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) {
-    return EVENTS.filter(e => ['e1', 'e5'].includes(e.id)).map(e => ({
-      id: e.id, organiser_id: 'demo', name: e.name, venue: e.venue,
-      date: e.dateShort ?? null, time: null,
-      price_min: e.priceMin ?? null, price_max: e.priceMax ?? null,
-      type_tags: e.type ?? null, artist: e.artist ?? null,
-      description: e.description ?? null, instagram_link: null, contact_email: null,
-      status: 'approved' as const, rejection_reason: null, reviewed_by: null, reviewed_at: null,
-      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-    }));
-  }
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
   const { data } = await supabase.from('events').select('*').eq('organiser_id', user.id).order('created_at', { ascending: false });
@@ -247,7 +182,7 @@ export async function submitPassRequest(data: {
 }
 
 export async function getMyPassRequests(): Promise<DBPassRequest[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) return MY_PASS_REQUESTS as unknown as DBPassRequest[];
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
   const { data } = await supabase
@@ -259,9 +194,7 @@ export async function getMyPassRequests(): Promise<DBPassRequest[]> {
 }
 
 export async function getRequestsForMyEvents(): Promise<DBPassRequest[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) {
-    return MOCK_PASS_REQUESTS.filter(r => ['e1', 'e5'].includes(r.event_id)) as unknown as DBPassRequest[];
-  }
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
   const { data } = await supabase
@@ -275,7 +208,7 @@ export async function getRequestsForMyEvents(): Promise<DBPassRequest[]> {
 }
 
 export async function getAllPassRequests(): Promise<DBPassRequest[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) return MOCK_PASS_REQUESTS as unknown as DBPassRequest[];
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data } = await supabase
     .from('pass_requests')
     .select('*, events(name), profiles(name, email)')
@@ -313,7 +246,7 @@ export async function submitJugaadSignal(data: {
 }
 
 export async function getMySignals(): Promise<DBJugaadSignal[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) return MY_JUGAAD_SIGNALS as unknown as DBJugaadSignal[];
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
   const { data } = await supabase
@@ -325,7 +258,7 @@ export async function getMySignals(): Promise<DBJugaadSignal[]> {
 }
 
 export async function getAllSignals(): Promise<DBJugaadSignal[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) return MOCK_JUGAAD_SIGNALS as unknown as DBJugaadSignal[];
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data } = await supabase
     .from('jugaad_signals')
     .select('*, profiles(name, email)')
@@ -341,31 +274,7 @@ export async function getRadarAggregates(): Promise<{
   topTypes: { type: string; count: number }[];
 }> {
   if (!SUPABASE_CONFIGURED || !supabase) {
-    // Return mock aggregate from MOCK_JUGAAD_SIGNALS
-    const signals = MOCK_JUGAAD_SIGNALS;
-    const byDate: Record<string, { count: number; budgets: number[] }> = {};
-    const byType: Record<string, number> = {};
-    let totalPasses = 0;
-    signals.forEach(s => {
-      totalPasses += s.num_passes;
-      s.preferred_dates.forEach(d => {
-        byDate[d] = byDate[d] ?? { count: 0, budgets: [] };
-        byDate[d].count++;
-        byDate[d].budgets.push(s.budget_min, s.budget_max);
-      });
-      s.event_type.forEach((t: string) => { byType[t] = (byType[t] ?? 0) + 1; });
-    });
-    return {
-      totalSeekers: signals.length,
-      avgGroup: totalPasses / signals.length,
-      byDate: Object.entries(byDate).map(([date, v]) => ({
-        date,
-        count: v.count,
-        avg_budget_min: Math.round(v.budgets.reduce((a, b) => a + b, 0) / v.budgets.length / 2),
-        avg_budget_max: Math.round(v.budgets.reduce((a, b) => a + b, 0) / v.budgets.length),
-      })).sort((a, b) => b.count - a.count),
-      topTypes: Object.entries(byType).map(([type, count]) => ({ type, count })).sort((a, b) => b.count - a.count),
-    };
+    return { totalSeekers: 0, avgGroup: 0, byDate: [], topTypes: [] };
   }
   const { data: signals } = await supabase.from('jugaad_signals').select('*');
   const all = signals ?? [];
@@ -394,7 +303,7 @@ export async function getRadarAggregates(): Promise<{
 // ─── Admin ────────────────────────────────────────────────────
 
 export async function getOrganisers() {
-  if (!SUPABASE_CONFIGURED || !supabase) return MOCK_ORGANISERS;
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data } = await supabase
     .from('profiles')
     .select('*, events(id, status)')
@@ -409,19 +318,11 @@ export async function getOrganisers() {
 }
 
 export async function getAllUsers(): Promise<Profile[]> {
-  if (!SUPABASE_CONFIGURED || !supabase) {
-    return [
-      { id: 'u1', email: 'hanika@passnojugaad.com', role: 'super_admin', name: 'Hanika', phone: '+91 98765 43210', created_at: '2026-08-01T10:00:00Z' },
-      { id: 'u2', email: 'vikram@raasrang.com', role: 'organiser', name: 'Vikram Rawal', phone: '+91 98222 11111', created_at: '2026-08-15T00:00:00Z' },
-      { id: 'u3', email: 'neha@ugf.in', role: 'organiser', name: 'Neha Trivedi', phone: '+91 98333 22222', created_at: '2026-08-10T00:00:00Z' },
-      { id: 'u4', email: 'mira@example.com', role: 'buyer', name: 'Mira Desai', phone: '+91 99000 12345', created_at: '2026-09-01T14:20:00Z' },
-      { id: 'u5', email: 'rohan@example.com', role: 'buyer', name: 'Rohan Shah', phone: '+91 99111 23456', created_at: '2026-09-03T11:15:00Z' },
-      { id: 'u6', email: 'priya@example.com', role: 'buyer', name: 'Priya Mehta', phone: '+91 99222 34567', created_at: '2026-09-05T09:40:00Z' },
-    ];
-  }
+  if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
   return data ?? [];
 }
+
 
 export async function updateUserRole(userId: string, role: 'buyer' | 'organiser' | 'super_admin'): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
@@ -459,24 +360,3 @@ export async function updatePassRequestWithOffer(id: string, status: string, off
   return { error: error?.message ?? null };
 }
 
-export async function seedDatabaseEvents(): Promise<{ count: number; error: string | null }> {
-  if (!SUPABASE_CONFIGURED || !supabase) return { count: 0, error: 'Database not configured' };
-
-  const toInsert = EVENTS.map(e => ({
-    name: e.name,
-    venue: e.venue,
-    date: e.date,
-    time: e.time,
-    price_min: e.priceMin,
-    price_max: e.priceMax,
-    type_tags: e.type,
-    artist: e.artist || null,
-    description: e.description,
-    status: 'approved' as const,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }));
-
-  const { data, error } = await supabase.from('events').insert(toInsert).select();
-  return { count: data?.length ?? 0, error: error?.message ?? null };
-}

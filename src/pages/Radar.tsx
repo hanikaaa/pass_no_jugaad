@@ -39,9 +39,9 @@ export default function Radar({ navigate }: NavProps) {
         const sigs = signals ?? [];
         const evts = events ?? [];
 
-        const totalPeople = sigs.reduce((acc, s) => acc + (s.num_passes || 2), 0);
-        setTotalSeekers(sigs.length > 0 ? sigs.length * 12 + 140 : 1454);
-        setAvgGroup(sigs.length > 0 ? parseFloat((totalPeople / (sigs.length || 1)).toFixed(1)) : 2.4);
+        const totalPeople = sigs.reduce((acc, s) => acc + (s.num_passes || 1), 0);
+        setTotalSeekers(totalPeople);
+        setAvgGroup(sigs.length > 0 ? parseFloat((totalPeople / sigs.length).toFixed(1)) : 0);
 
         // Group by dates
         const dateMap: Record<string, { count: number; passes: number[]; budgets: number[]; types: Set<string> }> = {};
@@ -49,7 +49,7 @@ export default function Radar({ navigate }: NavProps) {
         // Default Navratri dates
         const defaultDates = ['10 Oct', '11 Oct', '12 Oct', '13 Oct', '14 Oct', '15 Oct', '16 Oct', '17 Oct', '18 Oct', '19 Oct'];
         defaultDates.forEach(d => {
-          dateMap[d] = { count: 0, passes: [], budgets: [], types: new Set(['Garba']) };
+          dateMap[d] = { count: 0, passes: [], budgets: [], types: new Set() };
         });
 
         // Add events vibes and dates
@@ -58,7 +58,6 @@ export default function Radar({ navigate }: NavProps) {
             const normalized = e.date.toLowerCase();
             defaultDates.forEach(d => {
               if (normalized.includes(d.toLowerCase().split(' ')[0])) {
-                dateMap[d].count += 15;
                 if (e.price_min) dateMap[d].budgets.push(e.price_min);
                 if (e.price_max) dateMap[d].budgets.push(e.price_max);
                 (e.type_tags ?? []).forEach(t => dateMap[d].types.add(t));
@@ -75,36 +74,40 @@ export default function Radar({ navigate }: NavProps) {
             if (!dateMap[key]) {
               dateMap[key] = { count: 0, passes: [], budgets: [], types: new Set() };
             }
-            dateMap[key].count += s.num_passes || 2;
-            dateMap[key].passes.push(s.num_passes || 2);
+            dateMap[key].count += s.num_passes || 1;
+            dateMap[key].passes.push(s.num_passes || 1);
             if (s.budget_min) dateMap[key].budgets.push(s.budget_min);
             if (s.budget_max) dateMap[key].budgets.push(s.budget_max);
             (s.event_types ?? []).forEach(t => dateMap[key].types.add(t));
           });
         });
 
-        const points: RadarPoint[] = Object.entries(dateMap).map(([date, info]) => {
-          const peopleCount = info.count > 0 ? info.count * 15 + 80 : Math.floor(Math.random() * 100) + 120;
-          const minBudget = info.budgets.length ? Math.min(...info.budgets) : 800;
-          const maxBudget = info.budgets.length ? Math.max(...info.budgets) : 2500;
-          const minPass = info.passes.length ? Math.min(...info.passes) : 2;
-          const maxPass = info.passes.length ? Math.max(...info.passes) : 6;
-          const demandLevel: 'Very High' | 'High' | 'Medium' | 'Low' = peopleCount > 250 ? 'Very High' : peopleCount > 160 ? 'High' : peopleCount > 100 ? 'Medium' : 'Low';
-          const demandPct = Math.min(100, Math.round((peopleCount / 400) * 100));
+        const activePoints: RadarPoint[] = Object.entries(dateMap)
+          .filter(([_, info]) => info.count > 0 || info.budgets.length > 0)
+          .map(([date, info]) => {
+            const peopleCount = info.count;
+            const minBudget = info.budgets.length ? Math.min(...info.budgets) : 0;
+            const maxBudget = info.budgets.length ? Math.max(...info.budgets) : 0;
+            const minPass = info.passes.length ? Math.min(...info.passes) : 1;
+            const maxPass = info.passes.length ? Math.max(...info.passes) : (info.count || 1);
+            const demandLevel: 'Very High' | 'High' | 'Medium' | 'Low' =
+              peopleCount >= 10 ? 'Very High' : peopleCount >= 5 ? 'High' : peopleCount >= 2 ? 'Medium' : 'Low';
+            const demandPct = Math.min(100, Math.max(15, Math.round((peopleCount / (totalPeople || 1)) * 100)));
 
-          return {
-            date,
-            demand: demandLevel,
-            people: peopleCount,
-            passRange: `${minPass}–${maxPass} passes`,
-            budget: `₹${minBudget.toLocaleString()}–₹${maxBudget.toLocaleString()}`,
-            vibes: Array.from(info.types).slice(0, 3).length > 0 ? Array.from(info.types).slice(0, 3) : ['Garba', 'Artist Night'],
-            demandPct: Math.max(35, demandPct),
-          };
-        }).sort((a, b) => b.people - a.people);
+            return {
+              date,
+              demand: demandLevel,
+              people: peopleCount,
+              passRange: `${minPass}–${maxPass} passes`,
+              budget: minBudget && maxBudget ? `₹${minBudget.toLocaleString()}–₹${maxBudget.toLocaleString()}` : 'Flexible',
+              vibes: Array.from(info.types).slice(0, 3),
+              demandPct,
+            };
+          }).sort((a, b) => b.people - a.people);
 
-        setRadarPoints(points.slice(0, 6));
-        setNightsHot(`${Math.min(10, points.filter(p => p.demand === 'Very High' || p.demand === 'High').length)}/10`);
+        setRadarPoints(activePoints);
+        setNightsHot(`${activePoints.length}/10`);
+
       } catch (err) {
         console.error('Failed to load radar signals:', err);
       } finally {

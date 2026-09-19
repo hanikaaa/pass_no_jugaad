@@ -5,7 +5,7 @@ import EventCard from '../components/EventCard';
 
 export default function Home({ navigate }: NavProps) {
   const [visible, setVisible] = useState(false);
-  const [featuredEvents, setFeaturedEvents] = useState<Event[]>(EVENTS.filter((e) => e.featured).slice(0, 3));
+  const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 60);
@@ -25,7 +25,7 @@ export default function Home({ navigate }: NavProps) {
           type: e.type_tags || ['Garba'],
           demand: idx === 0 ? 'VERY HIGH' : 'HIGH',
           availability: 'Available',
-          image: EVENTS[idx % EVENTS.length]?.image || 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
+          image: 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
           artist: e.artist || undefined,
           description: e.description || '',
           featured: true,
@@ -35,6 +35,7 @@ export default function Home({ navigate }: NavProps) {
     });
     return () => clearTimeout(t);
   }, []);
+
 
   return (
     <div style={{ color: '#1A1612' }}>
@@ -185,7 +186,20 @@ export default function Home({ navigate }: NavProps) {
           {featuredEvents.map((e) => (
             <EventCard key={e.id} event={e} navigate={navigate} currentPage="home" />
           ))}
+          {featuredEvents.length === 0 && (
+            <div className="col-span-full card-light p-8 text-center">
+              <div className="text-3xl mb-2">🎪</div>
+              <div className="font-serif text-lg font-semibold text-stone-800 mb-1">New Events Launching Soon</div>
+              <p className="text-xs text-stone-500 max-w-sm mx-auto mb-4">
+                Organisers are submitting passes for Navratri 2026. Submit what you need on Radar to get notified first!
+              </p>
+              <button onClick={() => navigate('find-jugaad')} className="btn-primary py-2 px-5 text-xs font-semibold">
+                Submit Your Jugaad Request →
+              </button>
+            </div>
+          )}
         </div>
+
       </div>
 
       {/* RADAR TEASER */}
