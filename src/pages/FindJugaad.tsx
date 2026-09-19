@@ -20,7 +20,6 @@ interface FormData {
   message: string;
 }
 
-const EVENT_TYPES = ['Garba', 'Dandiya', 'DJ Night', 'Live Music', 'Bollywood Night', 'Club Night', 'Cultural Event', 'Other'];
 const READINESS = [
   { value: 'ready', label: 'Ready to book' },
   { value: 'exploring', label: 'Just exploring' },
@@ -43,19 +42,17 @@ export default function FindJugaad({ navigate, prefill }: Props) {
     quantity: prefill?.quantity || 2,
     budgetMin: 500,
     budgetMax: 5000,
-    eventTypes: prefill?.eventTypes || [],
+    eventTypes: [],
     artist: '',
     specificEvent: prefill?.specificEvent || '',
     readiness: '',
     message: '',
   });
 
-  const toggle = <K extends 'dates' | 'eventTypes'>(key: K, val: string) => {
+  const toggleDate = (val: string) => {
     setForm((f) => ({
       ...f,
-      [key]: (f[key] as string[]).includes(val)
-        ? (f[key] as string[]).filter((x) => x !== val)
-        : [...(f[key] as string[]), val],
+      dates: f.dates.includes(val) ? f.dates.filter((x) => x !== val) : [...f.dates, val],
     }));
   };
 
@@ -107,7 +104,7 @@ export default function FindJugaad({ navigate, prefill }: Props) {
           <label style={{ display: 'block', marginBottom: 8 }}>Preferred date(s)</label>
           <div className="flex flex-wrap gap-2">
             {NAVRATRI_DATES.map((d) => (
-              <button key={d} type="button" onClick={() => toggle('dates', d)} className={`chip ${form.dates.includes(d) ? 'active' : ''}`}>{d}</button>
+              <button key={d} type="button" onClick={() => toggleDate(d)} className={`chip ${form.dates.includes(d) ? 'active' : ''}`}>{d}</button>
             ))}
           </div>
         </div>
@@ -174,16 +171,6 @@ export default function FindJugaad({ navigate, prefill }: Props) {
               <span>{formatBudget(BUDGET_MIN)}</span>
               <span>{formatBudget(BUDGET_MAX)}</span>
             </div>
-          </div>
-        </div>
-
-        {/* Event Type */}
-        <div>
-          <label style={{ display: 'block', marginBottom: 8 }}>Event type</label>
-          <div className="flex flex-wrap gap-2">
-            {EVENT_TYPES.map((t) => (
-              <button key={t} type="button" onClick={() => toggle('eventTypes', t)} className={`chip ${form.eventTypes.includes(t) ? 'active' : ''}`}>{t}</button>
-            ))}
           </div>
         </div>
 

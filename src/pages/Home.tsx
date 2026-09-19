@@ -84,12 +84,12 @@ export default function Home({ navigate }: NavProps) {
     <div style={{ color: '#1A1612' }}>
       {/* HERO */}
       <div className="relative overflow-hidden -mt-[60px]" style={{ minHeight: '92vh' }}>
-        <div className="absolute inset-0 bg-stone-800">
+        <div className="absolute inset-0 bg-stone-950">
           <img
             src={heroSrc || '/hero.png'}
             alt="Ahmedabad Navratri celebration"
             className="w-full h-full object-cover"
-            style={{ opacity: 0.6 }}
+            style={{ opacity: 0.9 }}
           />
         </div>
         <div className="hero-overlay absolute inset-0" />
