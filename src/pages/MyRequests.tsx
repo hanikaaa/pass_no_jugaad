@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { type NavProps } from '../data/events';
+import { type NavProps, type UserRole } from '../data/events';
 import { MY_PASS_REQUESTS, MY_JUGAAD_SIGNALS, REQUEST_STATUS_LABEL, REQUEST_STATUS_STYLE } from '../lib/mockData';
 import { getMyPassRequests, getMySignals } from '../lib/api';
 import type { DBPassRequest, DBJugaadSignal } from '../lib/supabase';
@@ -178,8 +178,12 @@ function MySignalsSection({ navigate, signals }: { navigate: NavProps['navigate'
   );
 }
 
+interface MyRequestsProps extends NavProps {
+  activeRole?: UserRole;
+}
+
 // ─── Main ─────────────────────────────────────────────────────
-export default function MyRequests({ navigate }: NavProps) {
+export default function MyRequests({ navigate, activeRole }: MyRequestsProps) {
   const [mainTab, setMainTab] = useState<MainTab>('requests');
   const [requests, setRequests] = useState<DBPassRequest[]>(MY_PASS_REQUESTS as unknown as DBPassRequest[]);
   const [signals, setSignals] = useState<DBJugaadSignal[]>(MY_JUGAAD_SIGNALS as unknown as DBJugaadSignal[]);
@@ -194,6 +198,23 @@ export default function MyRequests({ navigate }: NavProps) {
 
   return (
     <div className="px-5 py-6 pb-28 max-w-lg mx-auto" style={{ color: '#1A1612' }}>
+      {activeRole === 'super_admin' && (
+        <div className="mb-5 p-3 rounded-xl flex items-center justify-between gap-3"
+          style={{ background: 'rgba(122,31,46,0.08)', border: '1px solid rgba(122,31,46,0.2)' }}>
+          <div className="flex items-center gap-2">
+            <span>👑</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#7A1F2E' }}>Super Admin logged in</span>
+          </div>
+          <button
+            onClick={() => navigate('admin-dashboard')}
+            className="btn-primary py-1 px-3 text-xs font-semibold"
+            style={{ background: '#7A1F2E' }}
+          >
+            Open Admin Dashboard →
+          </button>
+        </div>
+      )}
+
       <div className="eyebrow mb-2">Your panel</div>
       <h1 className="font-serif leading-tight mb-5" style={{ fontSize: 'clamp(30px, 8vw, 44px)', fontWeight: 500 }}>
         My Jugaad

@@ -44,14 +44,61 @@ export default function HamburgerMenu({ navigate, currentPage, onClose, profile,
         </div>
 
         <nav className="flex-1 overflow-y-auto px-5 py-4">
+          {/* Admin / Organiser special shortcuts — strictly for authorized roles */}
+          {profile?.role === 'super_admin' && (
+            <div className="mb-3 space-y-1.5">
+              <button
+                onClick={() => go('admin-dashboard')}
+                className="w-full text-left py-2.5 px-3 rounded-lg flex items-center justify-between transition-all"
+                style={{
+                  background: currentPage === 'admin-dashboard' ? 'rgba(122,31,46,0.15)' : 'rgba(122,31,46,0.06)',
+                  border: '1px solid rgba(122,31,46,0.2)',
+                  color: '#7A1F2E',
+                  fontWeight: 600,
+                  fontSize: 14,
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <span>👑</span> Super Admin Dashboard
+                </span>
+                <span className="text-xs">→</span>
+              </button>
+            </div>
+          )}
+
+          {(profile?.role === 'organiser' || profile?.role === 'super_admin') && (
+            <div className="mb-3 space-y-1.5">
+              <button
+                onClick={() => go('organiser-dashboard')}
+                className="w-full text-left py-2.5 px-3 rounded-lg flex items-center justify-between transition-all"
+                style={{
+                  background: currentPage === 'organiser-dashboard' ? 'rgba(193,68,14,0.12)' : 'rgba(193,68,14,0.05)',
+                  border: '1px solid rgba(193,68,14,0.15)',
+                  color: '#C1440E',
+                  fontWeight: 600,
+                  fontSize: 14,
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <span>🎪</span> Organiser Hub
+                </span>
+                <span className="text-xs">→</span>
+              </button>
+            </div>
+          )}
+
+          {(profile?.role === 'super_admin' || profile?.role === 'organiser') && (
+            <div style={{ height: 1, background: 'rgba(26,22,18,0.07)', margin: '12px 0' }} />
+          )}
+
           {links.map(({ label, page }) => (
             <button
               key={page}
               onClick={() => go(page)}
-              className="w-full text-left py-3 transition-colors"
+              className="w-full text-left py-2.5 transition-colors"
               style={{
-                borderBottom: '1px solid rgba(26,22,18,0.06)',
-                fontSize: 17,
+                borderBottom: '1px solid rgba(26,22,18,0.04)',
+                fontSize: 16,
                 fontWeight: currentPage === page ? 600 : 400,
                 color: currentPage === page ? '#C1440E' : '#1A1612',
                 fontFamily: "'DM Sans', sans-serif",

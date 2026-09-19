@@ -407,3 +407,76 @@ export async function getOrganisers() {
     joined_at: p.created_at,
   }));
 }
+
+export async function getAllUsers(): Promise<Profile[]> {
+  if (!SUPABASE_CONFIGURED || !supabase) {
+    return [
+      { id: 'u1', email: 'hanika@passnojugaad.com', role: 'super_admin', name: 'Hanika', phone: '+91 98765 43210', created_at: '2026-08-01T10:00:00Z' },
+      { id: 'u2', email: 'vikram@raasrang.com', role: 'organiser', name: 'Vikram Rawal', phone: '+91 98222 11111', created_at: '2026-08-15T00:00:00Z' },
+      { id: 'u3', email: 'neha@ugf.in', role: 'organiser', name: 'Neha Trivedi', phone: '+91 98333 22222', created_at: '2026-08-10T00:00:00Z' },
+      { id: 'u4', email: 'mira@example.com', role: 'buyer', name: 'Mira Desai', phone: '+91 99000 12345', created_at: '2026-09-01T14:20:00Z' },
+      { id: 'u5', email: 'rohan@example.com', role: 'buyer', name: 'Rohan Shah', phone: '+91 99111 23456', created_at: '2026-09-03T11:15:00Z' },
+      { id: 'u6', email: 'priya@example.com', role: 'buyer', name: 'Priya Mehta', phone: '+91 99222 34567', created_at: '2026-09-05T09:40:00Z' },
+    ];
+  }
+  const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+  return data ?? [];
+}
+
+export async function updateUserRole(userId: string, role: 'buyer' | 'organiser' | 'super_admin'): Promise<{ error: string | null }> {
+  if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
+  const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
+  return { error: error?.message ?? null };
+}
+
+export async function createEventByAdmin(eventData: Partial<DBEvent>): Promise<{ data: DBEvent | null; error: string | null }> {
+  if (!SUPABASE_CONFIGURED || !supabase) return { data: null, error: null };
+  const { data, error } = await supabase.from('events').insert({
+    ...eventData,
+    status: 'approved',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }).select().single();
+  return { data: data ?? null, error: error?.message ?? null };
+}
+
+export async function updateEventByAdmin(id: string, eventData: Partial<DBEvent>): Promise<{ error: string | null }> {
+  if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
+  const { error } = await supabase.from('events').update({
+    ...eventData,
+    updated_at: new Date().toISOString(),
+  }).eq('id', id);
+  return { error: error?.message ?? null };
+}
+
+export async function updatePassRequestWithOffer(id: string, status: string, offer_details: string): Promise<{ error: string | null }> {
+  if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
+  const { error } = await supabase.from('pass_requests').update({
+    status,
+    offer_details,
+    updated_at: new Date().toISOString(),
+  }).eq('id', id);
+  return { error: error?.message ?? null };
+}
+
+export async function seedDatabaseEvents(): Promise<{ count: number; error: string | null }> {
+  if (!SUPABASE_CONFIGURED || !supabase) return { count: 0, error: 'Database not configured' };
+
+  const toInsert = EVENTS.map(e => ({
+    name: e.name,
+    venue: e.venue,
+    date: e.date,
+    time: e.time,
+    price_min: e.priceMin,
+    price_max: e.priceMax,
+    type_tags: e.type,
+    artist: e.artist || null,
+    description: e.description,
+    status: 'approved' as const,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }));
+
+  const { data, error } = await supabase.from('events').insert(toInsert).select();
+  return { count: data?.length ?? 0, error: error?.message ?? null };
+}

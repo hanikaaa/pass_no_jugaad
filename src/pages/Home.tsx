@@ -1,16 +1,40 @@
 import { useState, useEffect } from 'react';
-import { type NavProps, EVENTS } from '../data/events';
+import { type NavProps, EVENTS, type Event } from '../data/events';
+import { getApprovedEvents } from '../lib/api';
 import EventCard from '../components/EventCard';
 
 export default function Home({ navigate }: NavProps) {
   const [visible, setVisible] = useState(false);
+  const [featuredEvents, setFeaturedEvents] = useState<Event[]>(EVENTS.filter((e) => e.featured).slice(0, 3));
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 60);
+    getApprovedEvents().then((dbEvents) => {
+      if (dbEvents && dbEvents.length > 0) {
+        const mapped: Event[] = dbEvents.slice(0, 3).map((e, idx) => ({
+          id: e.id,
+          name: e.name,
+          date: e.date || '12 OCT 2026',
+          dateShort: e.date ? e.date.replace(' 2026', '') : '12 OCT',
+          venue: e.venue || 'Ahmedabad',
+          location: e.venue || 'Ahmedabad',
+          time: e.time || '7:00 PM onwards',
+          priceRange: e.price_min ? `₹${e.price_min}–₹${e.price_max}` : '₹800–₹1,500',
+          priceMin: e.price_min || 800,
+          priceMax: e.price_max || 1500,
+          type: e.type_tags || ['Garba'],
+          demand: idx === 0 ? 'VERY HIGH' : 'HIGH',
+          availability: 'Available',
+          image: EVENTS[idx % EVENTS.length]?.image || 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
+          artist: e.artist || undefined,
+          description: e.description || '',
+          featured: true,
+        }));
+        setFeaturedEvents(mapped);
+      }
+    });
     return () => clearTimeout(t);
   }, []);
-
-  const featuredEvents = EVENTS.filter((e) => e.featured).slice(0, 3);
 
   return (
     <div style={{ color: '#1A1612' }}>

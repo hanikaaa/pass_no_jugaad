@@ -63,12 +63,9 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Derive active role: real profile role when configured, else demo switcher
-  const activeRole: UserRole = SUPABASE_CONFIGURED && profile
-    ? profile.role
-    : demoRole;
-
-  const isLoggedIn = SUPABASE_CONFIGURED ? !!profile : true; // demo: always "logged in"
+  // Derive active role: strictly from authenticated profile
+  const activeRole: UserRole = profile?.role || 'buyer';
+  const isLoggedIn = !!profile;
 
   const navigate = useCallback((p: Page, opts?: { eventId?: string }) => {
     if (AUTH_GATED.includes(p) && !isLoggedIn) {
@@ -78,11 +75,25 @@ export default function App() {
       setTimeout(() => scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' }), 0);
       return;
     }
+
+    // Role-based access control
+    if (p === 'admin-dashboard' && activeRole !== 'super_admin') {
+      setPage('my-requests');
+      setMenuOpen(false);
+      return;
+    }
+
+    if (p === 'organiser-dashboard' && activeRole !== 'organiser' && activeRole !== 'super_admin') {
+      setPage('organisers');
+      setMenuOpen(false);
+      return;
+    }
+
     setPage(p);
     if (opts?.eventId) setEventId(opts.eventId);
     setMenuOpen(false);
     setTimeout(() => scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' }), 0);
-  }, []);
+  }, [isLoggedIn, activeRole]);
 
   const handleAuthSuccess = () => {
     setAuthOpen(false);
@@ -121,7 +132,7 @@ export default function App() {
       case 'organisers': return <Organisers {...navProps} />;
       case 'organiser-form': return <OrganiserForm {...navProps} />;
       case 'organiser-success': return <JugaadSuccess {...navProps} />;
-      case 'my-requests': return <MyRequests {...navProps} />;
+      case 'my-requests': return <MyRequests {...navProps} activeRole={activeRole} />;
       case 'admin-dashboard': return <AdminDashboard {...navProps} />;
       case 'organiser-dashboard': return <OrganiserDashboard {...navProps} />;
       case 'login': return <Login {...navProps} onAuthSuccess={handleAuthSuccess} />;
@@ -156,7 +167,7 @@ export default function App() {
         {showFooter && <Footer {...navProps} />}
       </div>
 
-      <BottomNav {...navProps} />
+      <BottomNav {...navProps} activeRole={activeRole} />
 
       {menuOpen && (
         <HamburgerMenu
@@ -165,37 +176,6 @@ export default function App() {
           profile={profile}
           onSignOut={async () => { await signOut(); setProfile(null); navigate('home'); }}
         />
-      )}
-
-      {/* Demo role switcher — only shown when Supabase is not yet configured */}
-      {!SUPABASE_CONFIGURED && (
-        <div style={{
-          position: 'fixed', bottom: 76, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 40, display: 'flex', gap: 4, padding: '4px 6px',
-          background: 'rgba(26,22,18,0.88)', backdropFilter: 'blur(12px)',
-          borderRadius: 999, boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
-        }}>
-          {(['buyer', 'organiser', 'super_admin'] as UserRole[]).map(r => (
-            <button
-              key={r}
-              onClick={() => {
-                setDemoRole(r);
-                if (r === 'super_admin') { setPage('admin-dashboard'); setMenuOpen(false); }
-                else if (r === 'organiser') { setPage('organiser-dashboard'); setMenuOpen(false); }
-                else { setPage('my-requests'); setMenuOpen(false); }
-              }}
-              style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-                padding: '4px 10px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                background: demoRole === r ? '#C1440E' : 'transparent',
-                color: demoRole === r ? '#fff' : 'rgba(255,255,255,0.5)',
-                transition: 'all 0.15s',
-              }}
-            >
-              {r === 'super_admin' ? 'Admin' : r === 'organiser' ? 'Organiser' : 'Buyer'}
-            </button>
-          ))}
-        </div>
       )}
 
       {authOpen && (

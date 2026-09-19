@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { type NavProps, EVENTS, DEMAND_LABEL, type Event } from '../data/events';
+import { getApprovedEvents } from '../lib/api';
 import EventCard from '../components/EventCard';
 
 const DATE_FILTERS = ['10 OCT', '11 OCT', '12 OCT', '13 OCT', '14 OCT', '15 OCT', '16 OCT', '17 OCT', '18 OCT', '19 OCT'];
@@ -26,10 +27,38 @@ function budgetMatch(min: number, max: number, filter: string) {
 }
 
 export default function EventsPage({ navigate }: NavProps) {
+  const [eventsList, setEventsList] = useState<Event[]>(EVENTS);
   const [filters, setFilters] = useState<Filters>({
     search: '', dates: [], budgets: [], types: [], sort: 'Recommended',
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    getApprovedEvents().then((dbEvents) => {
+      if (dbEvents && dbEvents.length > 0) {
+        const mapped: Event[] = dbEvents.map((e, idx) => ({
+          id: e.id,
+          name: e.name,
+          date: e.date || '12 OCT 2026',
+          dateShort: e.date ? e.date.replace(' 2026', '') : '12 OCT',
+          venue: e.venue || 'Ahmedabad',
+          location: e.venue || 'Ahmedabad',
+          time: e.time || '7:00 PM onwards',
+          priceRange: e.price_min ? `₹${e.price_min}–₹${e.price_max}` : '₹800–₹1,500',
+          priceMin: e.price_min || 800,
+          priceMax: e.price_max || 1500,
+          type: e.type_tags || ['Garba'],
+          demand: idx % 3 === 0 ? 'VERY HIGH' : idx % 2 === 0 ? 'HIGH' : 'MEDIUM',
+          availability: 'Available',
+          image: EVENTS[idx % EVENTS.length]?.image || 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
+          artist: e.artist || undefined,
+          description: e.description || '',
+          featured: idx < 3,
+        }));
+        setEventsList(mapped);
+      }
+    });
+  }, []);
 
   const toggle = <K extends keyof Filters>(key: K, val: string) => {
     const arr = filters[key] as string[];
@@ -37,7 +66,7 @@ export default function EventsPage({ navigate }: NavProps) {
   };
 
   const filtered = useMemo(() => {
-    let evts = EVENTS.filter((e: Event) => {
+    let evts = eventsList.filter((e: Event) => {
       const q = filters.search.toLowerCase();
       if (q && !e.name.toLowerCase().includes(q) && !e.venue.toLowerCase().includes(q) && !(e.artist || '').toLowerCase().includes(q)) return false;
       if (filters.dates.length && !filters.dates.includes(e.dateShort)) return false;
@@ -49,7 +78,7 @@ export default function EventsPage({ navigate }: NavProps) {
     if (filters.sort === 'Lowest Price') evts = [...evts].sort((a, b) => a.priceMin - b.priceMin);
     if (filters.sort === 'Highest Demand') evts = [...evts].sort((a, b) => DEMAND_ORDER.indexOf(b.demand) - DEMAND_ORDER.indexOf(a.demand));
     return evts;
-  }, [filters]);
+  }, [filters, eventsList]);
 
   const activeFilterCount = filters.dates.length + filters.budgets.length + filters.types.length;
 
