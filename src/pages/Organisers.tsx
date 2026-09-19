@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { type NavProps } from '../data/events';
+import { getAllSignals } from '../lib/api';
 
 const BENEFITS = [
   { n: '01', t: 'Real demand signals', d: 'Understand what people are actively looking for — across dates, budgets, and vibes — before you even list.' },
@@ -9,14 +11,46 @@ const BENEFITS = [
   { n: '06', t: 'Community trust', d: "Pass No Jugaad is Ahmedabad's word-of-mouth for Navratri. Your event belongs here." },
 ];
 
-const METRICS = [
-  { label: '12 Oct', value: '212', sub: 'Requests' },
-  { label: 'Top budget', value: '₹1K–₹2.5K', sub: 'Per person' },
-  { label: 'Group size', value: '2–4', sub: 'Passes' },
-  { label: 'Top vibe', value: 'Garba', sub: 'Category' },
-];
-
 export default function Organisers({ navigate }: NavProps) {
+  const [metrics, setMetrics] = useState([
+    { label: 'Demand', value: 'Live', sub: 'Tracking 2026' },
+    { label: 'Avg budget', value: 'Flexible', sub: 'Per person' },
+    { label: 'Group size', value: '2–4', sub: 'Passes avg' },
+    { label: 'Top vibe', value: 'Garba', sub: 'Category' },
+  ]);
+
+  useEffect(() => {
+    getAllSignals().then((signals) => {
+      const sigs = signals || [];
+      if (sigs.length === 0) return;
+
+      const totalPeople = sigs.reduce((acc, s) => acc + (s.num_passes || 1), 0);
+      const avgGroup = (totalPeople / sigs.length).toFixed(1);
+
+      // Budgets
+      const minBudgets = sigs.map((s) => s.budget_min).filter((b): b is number => !!b);
+      const maxBudgets = sigs.map((s) => s.budget_max).filter((b): b is number => !!b);
+      const minB = minBudgets.length ? Math.min(...minBudgets) : 500;
+      const maxB = maxBudgets.length ? Math.max(...maxBudgets) : 2500;
+
+      // Top vibe
+      const vibesCount: Record<string, number> = {};
+      sigs.forEach((s) => {
+        (s.event_types || []).forEach((t) => {
+          vibesCount[t] = (vibesCount[t] || 0) + 1;
+        });
+      });
+      const topVibe = Object.entries(vibesCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Garba';
+
+      setMetrics([
+        { label: 'Total Seekers', value: `${totalPeople}`, sub: 'Community requests' },
+        { label: 'Budget range', value: `₹${minB}–₹${maxB}`, sub: 'Per person' },
+        { label: 'Group size', value: `${avgGroup}`, sub: 'Passes avg' },
+        { label: 'Top vibe', value: topVibe, sub: 'Category' },
+      ]);
+    });
+  }, []);
+
   return (
     <div className="pb-24" style={{ color: '#1A1612' }}>
       {/* Hero */}
@@ -76,7 +110,7 @@ export default function Organisers({ navigate }: NavProps) {
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
-            {METRICS.map((m) => (
+            {metrics.map((m) => (
               <div key={m.label} className="card-light p-4">
                 <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 6 }}>{m.label}</div>
                 <div className="font-serif" style={{ fontSize: 22, fontWeight: 500, color: '#1A1612' }}>{m.value}</div>
@@ -85,7 +119,7 @@ export default function Organisers({ navigate }: NavProps) {
             ))}
           </div>
 
-          <p style={{ fontSize: 11, color: '#9A8B82' }}>* Demo data. Real insights available to listed organisers.</p>
+          <p style={{ fontSize: 11, color: '#9A8B82' }}>* Real-time insights from live community requests.</p>
         </div>
       </div>
 

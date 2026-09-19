@@ -1,18 +1,28 @@
 import { useState, useEffect } from 'react';
 import { type NavProps, EVENTS, type Event } from '../data/events';
-import { getApprovedEvents } from '../lib/api';
+import { getApprovedEvents, getAllSignals } from '../lib/api';
 import EventCard from '../components/EventCard';
 import heroSrc from '@/assets/hero.png';
 
 export default function Home({ navigate }: NavProps) {
   const [visible, setVisible] = useState(false);
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
+  const [radarStats, setRadarStats] = useState<{ label: string; value: number }[]>([
+    { label: '12 Oct', value: 0 },
+    { label: '15 Oct', value: 0 },
+    { label: '19 Oct', value: 0 },
+  ]);
+  const [stats, setStats] = useState({ nights: '10', events: '0', seekers: '0' });
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 60);
-    getApprovedEvents().then((dbEvents) => {
-      if (dbEvents && dbEvents.length > 0) {
-        const mapped: Event[] = dbEvents.slice(0, 3).map((e, idx) => ({
+
+    Promise.all([getApprovedEvents(), getAllSignals()]).then(([dbEvents, dbSignals]) => {
+      const evts = dbEvents || [];
+      const sigs = dbSignals || [];
+
+      if (evts.length > 0) {
+        const mapped: Event[] = evts.slice(0, 3).map((e, idx) => ({
           id: e.id,
           name: e.name,
           date: e.date || '12 OCT 2026',
@@ -33,7 +43,39 @@ export default function Home({ navigate }: NavProps) {
         }));
         setFeaturedEvents(mapped);
       }
+
+      // Calculate real total seekers
+      const totalSeekers = sigs.reduce((acc, s) => acc + (s.num_passes || 1), 0);
+      setStats({
+        nights: '10',
+        events: evts.length > 0 ? `${evts.length}+` : '0',
+        seekers: totalSeekers > 0 ? (totalSeekers >= 1000 ? `${(totalSeekers / 1000).toFixed(1)}k` : `${totalSeekers}`) : '0',
+      });
+
+      // Calculate real date counts for radar
+      const dateMap: Record<string, number> = {
+        '12 Oct': 0,
+        '15 Oct': 0,
+        '19 Oct': 0,
+      };
+
+      sigs.forEach((s) => {
+        (s.preferred_dates || []).forEach((pd) => {
+          Object.keys(dateMap).forEach((k) => {
+            if (pd.toLowerCase().includes(k.toLowerCase().split(' ')[0])) {
+              dateMap[k] += s.num_passes || 1;
+            }
+          });
+        });
+      });
+
+      setRadarStats([
+        { label: '12 Oct', value: dateMap['12 Oct'] },
+        { label: '15 Oct', value: dateMap['15 Oct'] },
+        { label: '19 Oct', value: dateMap['19 Oct'] },
+      ]);
     });
+
     return () => clearTimeout(t);
   }, []);
 
@@ -92,7 +134,11 @@ export default function Home({ navigate }: NavProps) {
           className="relative z-10 flex"
           style={{ background: 'rgba(26,22,18,0.75)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(250,247,242,0.08)' }}
         >
-          {[{ value: '10', label: 'Nights' }, { value: '50+', label: 'Events' }, { value: '10K+', label: 'Jugaad seekers' }].map((s, i, arr) => (
+          {[
+            { value: stats.nights, label: 'Nights' },
+            { value: stats.events, label: 'Events' },
+            { value: stats.seekers, label: 'Jugaad seekers' }
+          ].map((s, i, arr) => (
             <div
               key={s.label}
               className="flex-1 text-center py-4"
@@ -215,11 +261,7 @@ export default function Home({ navigate }: NavProps) {
         </p>
 
         <div className="flex gap-3 mb-5">
-          {[
-            { label: '12 Oct', value: '212' },
-            { label: '15 Oct', value: '318' },
-            { label: '19 Oct', value: '445' },
-          ].map((d) => (
+          {radarStats.map((d) => (
             <div
               key={d.label}
               className="flex-1 text-center rounded-lg py-4 card-light"
