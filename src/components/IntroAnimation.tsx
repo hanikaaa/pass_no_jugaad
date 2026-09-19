@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import logoSrc from '@/imports/garba_no_pass_taaro__6_.png';
+import logoSrc from '@/assets/logo.png';
 
 interface Props {
   onComplete: () => void;
@@ -34,7 +34,7 @@ export default function IntroAnimation({ onComplete }: Props) {
         }}
       >
         <img
-          src={logoSrc}
+          src={logoSrc || '/logo.png'}
           alt="Pass No Jugaad"
           style={{
             width: 'clamp(220px, 60vw, 340px)',
@@ -43,6 +43,7 @@ export default function IntroAnimation({ onComplete }: Props) {
             display: 'block',
           }}
         />
+
       </div>
 
       <p

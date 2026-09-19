@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { type NavProps } from '../data/events';
 import { signIn, signUp, sendPasswordReset } from '../lib/api';
 import { SUPABASE_CONFIGURED } from '../lib/supabase';
-import logoSrc from '@/imports/garba_no_pass_taaro__6_-1.png';
+
 
 type Mode = 'login' | 'signup' | 'reset';
 
@@ -68,20 +68,9 @@ export default function Login({ navigate, onAuthSuccess }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#FAF7F2', color: '#1A1612' }}>
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(26,22,18,0.07)' }}>
-        <button onClick={() => navigate('home')} style={{ lineHeight: 0 }}>
-          <img src={logoSrc} alt="Pass No Jugaad" style={{ width: 100, height: 'auto', mixBlendMode: 'multiply' }} />
-        </button>
-        <button onClick={() => navigate('home')} style={{ fontSize: 13, color: '#9A8B82', fontWeight: 500 }}>
-          ← Back to home
-        </button>
-      </div>
+    <div className="flex flex-col items-center justify-center px-5 py-8 pb-24" style={{ color: '#1A1612' }}>
+      <div className="w-full max-w-sm">
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-10">
-        <div className="w-full max-w-sm">
 
           {confirmationSent ? (
             <div className="text-center">
@@ -246,15 +235,15 @@ export default function Login({ navigate, onAuthSuccess }: Props) {
               </p>
             </>
           )}
+        {/* Bottom note */}
+        <div className="mt-8 text-center" style={{ borderTop: '1px solid rgba(26,22,18,0.07)', paddingTop: 16 }}>
+          <p style={{ fontSize: 11, color: '#9A8B82' }}>
+            Not a ticketing platform · Ahmedabad Navratri 2026
+          </p>
         </div>
-      </div>
-
-      {/* Bottom note */}
-      <div className="px-5 py-4 text-center" style={{ borderTop: '1px solid rgba(26,22,18,0.07)' }}>
-        <p style={{ fontSize: 11, color: '#9A8B82' }}>
-          Not a ticketing platform · Ahmedabad Navratri 2026
-        </p>
       </div>
     </div>
   );
 }
+
+

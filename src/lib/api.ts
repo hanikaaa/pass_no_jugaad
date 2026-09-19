@@ -94,6 +94,8 @@ export async function getEventById(id: string): Promise<DBEvent | null> {
   return data ?? null;
 }
 
+import { sendNotification } from './notifications';
+
 export async function submitEvent(fields: {
   name: string; venue: string; date: string; time: string;
   price_min: number; price_max: number; type_tags: string[];
@@ -107,6 +109,20 @@ export async function submitEvent(fields: {
     organiser_id: user.id,
     status: 'pending_review',
   });
+
+  if (!error) {
+    // Send email notification to Super Admin
+    sendNotification('event_submission', {
+      name: fields.name,
+      venue: fields.venue,
+      date: fields.date,
+      priceMin: fields.price_min,
+      priceMax: fields.price_max,
+      contactEmail: fields.contact_email || user.email,
+      instagramLink: fields.instagram_link,
+    }).catch(console.error);
+  }
+
   return { error: error?.message ?? null };
 }
 
@@ -177,7 +193,29 @@ export async function submitPassRequest(data: {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not signed in' };
+
+  // Fetch event details and buyer profile for email notifications
+  const [eventRes, profileRes] = await Promise.all([
+    supabase.from('events').select('name, contact_email, organiser_id').eq('id', data.event_id).maybeSingle(),
+    supabase.from('profiles').select('name, email').eq('id', user.id).maybeSingle(),
+  ]);
+
   const { error } = await supabase.from('pass_requests').insert({ ...data, buyer_id: user.id });
+
+  if (!error) {
+    // Send email notification to Super Admin, Buyer, and Organiser
+    sendNotification('pass_request', {
+      eventName: eventRes.data?.name || 'Navratri Event',
+      buyerName: profileRes.data?.name || user.email?.split('@')[0] || 'Pass Seeker',
+      buyerEmail: profileRes.data?.email || user.email || '',
+      quantity: data.quantity,
+      budgetMin: data.budget_min,
+      budgetMax: data.budget_max,
+      priorityNote: data.priority_note,
+      organiserEmail: eventRes.data?.contact_email,
+    }).catch(console.error);
+  }
+
   return { error: error?.message ?? null };
 }
 
@@ -241,9 +279,29 @@ export async function submitJugaadSignal(data: {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not signed in' };
+
+  const profileRes = await supabase.from('profiles').select('name, email').eq('id', user.id).maybeSingle();
+
   const { error } = await supabase.from('jugaad_signals').insert({ ...data, buyer_id: user.id });
+
+  if (!error) {
+    sendNotification('jugaad_signal', {
+      buyerName: profileRes.data?.name || user.email?.split('@')[0] || 'Pass Seeker',
+      buyerEmail: profileRes.data?.email || user.email || '',
+      preferredDates: data.preferred_dates,
+      numPasses: data.num_passes,
+      budgetMin: data.budget_min,
+      budgetMax: data.budget_max,
+      eventTypes: data.event_types,
+      artistPreference: data.artist_preference,
+      specificEvent: data.specific_event,
+      readiness: data.readiness,
+    }).catch(console.error);
+  }
+
   return { error: error?.message ?? null };
 }
+
 
 export async function getMySignals(): Promise<DBJugaadSignal[]> {
   if (!SUPABASE_CONFIGURED || !supabase) return [];

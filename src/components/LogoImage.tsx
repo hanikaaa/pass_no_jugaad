@@ -1,4 +1,4 @@
-import logoSrc from '@/imports/garba_no_pass_taaro__6_.png';
+import logoSrc from '@/assets/logo.png';
 
 interface Props {
   width?: number;
@@ -13,8 +13,9 @@ interface Props {
 export default function LogoImage({ width = 140, className = '' }: Props) {
   return (
     <img
-      src={logoSrc}
+      src={logoSrc || '/logo.png'}
       alt="Pass No Jugaad"
+
       draggable={false}
       className={className}
       style={{

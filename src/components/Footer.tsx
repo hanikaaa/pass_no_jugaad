@@ -1,5 +1,5 @@
 import { type NavProps, type Page } from '../data/events';
-import logoSrc from '@/imports/garba_no_pass_taaro__6_-1.png';
+import logoSrc from '@/assets/logo.png';
 
 const LINKS: { label: string; page: Page }[] = [
   { label: 'Home', page: 'home' },
@@ -18,10 +18,11 @@ export default function Footer({ navigate }: NavProps) {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8 mb-8">
           <div>
             <img
-              src={logoSrc}
+              src={logoSrc || '/logo.png'}
               alt="Pass No Jugaad"
               style={{ width: 130, height: 'auto', mixBlendMode: 'multiply', display: 'block' }}
             />
+
             <p style={{ marginTop: 12, fontSize: 13, color: '#6B5B52', lineHeight: 1.6, maxWidth: 260 }}>
               {"Ahmedabad's Navratri event discovery and demand platform."}
             </p>
