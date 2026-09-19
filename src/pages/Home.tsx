@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { type NavProps, EVENTS, type Event } from '../data/events';
 import { getApprovedEvents } from '../lib/api';
 import EventCard from '../components/EventCard';
+import heroSrc from '@/assets/hero.png';
 
 export default function Home({ navigate }: NavProps) {
   const [visible, setVisible] = useState(false);
@@ -43,13 +44,14 @@ export default function Home({ navigate }: NavProps) {
       <div className="relative overflow-hidden -mt-[60px]" style={{ minHeight: '92vh' }}>
         <div className="absolute inset-0 bg-stone-800">
           <img
-            src="https://images.unsplash.com/photo-1667831617890-458ca443d799?w=1400&h=1000&fit=crop&auto=format"
+            src={heroSrc || '/hero.png'}
             alt="Ahmedabad Navratri celebration"
             className="w-full h-full object-cover"
-            style={{ opacity: 0.55 }}
+            style={{ opacity: 0.6 }}
           />
         </div>
         <div className="hero-overlay absolute inset-0" />
+
 
         <div
           className="relative z-10 flex flex-col justify-end px-5 pb-10 pt-[120px]"

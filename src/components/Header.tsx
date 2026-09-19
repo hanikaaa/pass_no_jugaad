@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { type NavProps } from '../data/events';
-import logoSrc from '@/imports/garba_no_pass_taaro__6_-1.png';
+import logoSrc from '@/assets/logo.png';
 
 interface Props extends NavProps {
   menuOpen: boolean;
@@ -31,11 +31,12 @@ export default function Header({ navigate, menuOpen, onMenuToggle }: Props) {
       {/* Logo — mix-blend-mode:multiply makes the white canvas corners invisible on ivory */}
       <button onClick={() => navigate('home')} style={{ lineHeight: 0, flexShrink: 0 }}>
         <img
-          src={logoSrc}
+          src={logoSrc || '/logo.png'}
           alt="Pass No Jugaad"
           style={{ width: 120, height: 'auto', mixBlendMode: 'multiply', display: 'block' }}
         />
       </button>
+
 
       {/* Hamburger only — always visible */}
       <button
