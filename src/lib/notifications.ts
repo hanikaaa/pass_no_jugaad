@@ -5,7 +5,7 @@
  */
 
 export async function sendNotification(
-  type: 'pass_request' | 'jugaad_signal' | 'event_submission' | 'user_signup',
+  type: 'pass_request' | 'jugaad_signal' | 'event_submission' | 'user_signup' | 'event_approved' | 'event_rejected',
   payload: Record<string, any>
 ): Promise<boolean> {
   try {

@@ -100,41 +100,91 @@ export async function getEventById(id: string): Promise<DBEvent | null> {
 import { sendNotification } from './notifications';
 
 export async function submitEvent(fields: {
-  name: string; venue: string; date: string; time: string;
-  price_min?: number; price_max?: number; price?: number;
-  image_url?: string; type_tags?: string[];
-  artist?: string; description: string; instagram_link?: string; contact_email: string;
-}): Promise<{ error: string | null }> {
-  if (!SUPABASE_CONFIGURED || !supabase) return { error: null }; // demo: succeed silently
+  name: string;
+  venue: string;
+  date: string;
+  time?: string;
+  price?: number;
+  price_min?: number;
+  price_max?: number;
+  image_url?: string;
+  type_tags?: string[];
+  artist?: string;
+  description: string;
+  instagram_link?: string;
+  contact_email: string;
+}): Promise<{ data?: DBEvent | null; error: string | null }> {
+  if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not signed in' };
+
+  let organiserId: string | null = user?.id ?? null;
+
+  // If not logged in or missing organiserId, try to lookup existing profile by contact_email
+  if (!organiserId && fields.contact_email) {
+    try {
+      const { data: matchedProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', fields.contact_email.trim().toLowerCase())
+        .maybeSingle();
+      if (matchedProfile?.id) {
+        organiserId = matchedProfile.id;
+      }
+    } catch {
+      // ignore lookup error
+    }
+  }
 
   const priceMin = fields.price_min ?? fields.price ?? 0;
   const priceMax = fields.price_max ?? fields.price ?? priceMin;
 
-  const { error } = await supabase.from('events').insert({
+  const insertPayload: Record<string, any> = {
     name: fields.name,
     venue: fields.venue,
     date: fields.date,
-    time: fields.time,
+    time: fields.time || '7:00 PM onwards',
     price_min: priceMin,
     price_max: priceMax,
-    image_url: fields.image_url || null,
-    type_tags: fields.type_tags || [],
+    type_tags: fields.type_tags || ['Garba'],
     artist: fields.artist || null,
     description: fields.description || '',
     instagram_link: fields.instagram_link || null,
-    contact_email: fields.contact_email || user.email,
-    organiser_id: user.id,
+    contact_email: fields.contact_email || user?.email || '',
     status: 'pending_review',
-  });
+  };
+
+  if (organiserId) {
+    insertPayload.organiser_id = organiserId;
+  }
+
+  if (fields.image_url) {
+    insertPayload.image_url = fields.image_url;
+  }
+
+  // Attempt 1: Insert with image_url
+  let { data, error } = await supabase
+    .from('events')
+    .insert(insertPayload)
+    .select()
+    .maybeSingle();
+
+  // Attempt 2: If failed because of missing column (e.g. image_url), retry without image_url
+  if (error && error.message && (error.message.includes('image_url') || error.message.includes('column'))) {
+    console.warn('Retrying event insert without image_url due to schema:', error.message);
+    delete insertPayload.image_url;
+    const retry = await supabase.from('events').insert(insertPayload).select().maybeSingle();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (!error) {
-    // Auto-update role to organiser if needed
-    try {
-      await supabase.from('profiles').update({ role: 'organiser' }).eq('id', user.id).neq('role', 'super_admin');
-    } catch {
-      // ignore
+    // Auto-update role to organiser if signed in
+    if (user?.id) {
+      try {
+        await supabase.from('profiles').update({ role: 'organiser' }).eq('id', user.id).neq('role', 'super_admin');
+      } catch {
+        // ignore
+      }
     }
 
     // Send email notification to Super Admin
@@ -144,12 +194,15 @@ export async function submitEvent(fields: {
       date: fields.date,
       priceMin,
       priceMax,
-      contactEmail: fields.contact_email || user.email,
+      contactEmail: fields.contact_email || user?.email || '',
       instagramLink: fields.instagram_link,
     }).catch(console.error);
+
+    return { data: data ?? null, error: null };
   }
 
-  return { error: error?.message ?? null };
+  console.error('submitEvent error:', error);
+  return { error: error?.message ?? 'Failed to submit event' };
 }
 
 export async function approveEvent(id: string): Promise<{ error: string | null }> {

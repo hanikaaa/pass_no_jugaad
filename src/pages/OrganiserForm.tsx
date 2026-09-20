@@ -27,13 +27,16 @@ export default function OrganiserForm({ navigate }: NavProps) {
     reader.readAsDataURL(file);
   };
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setErrorMsg(null);
     const fd = new FormData(formRef.current!);
     const ticketPrice = Number(fd.get('price') || fd.get('price_min') || 0);
 
-    await submitEvent({
+    const res = await submitEvent({
       name: fd.get('name') as string,
       venue: fd.get('venue') as string,
       date: fd.get('date') as string,
@@ -48,7 +51,13 @@ export default function OrganiserForm({ navigate }: NavProps) {
       instagram_link: fd.get('instagram_link') as string,
       contact_email: fd.get('contact_email') as string,
     });
+
     setSubmitting(false);
+    if (res.error) {
+      setErrorMsg(res.error);
+      return;
+    }
+
     setSubmitted(true);
     window.scrollTo(0, 0);
   };
@@ -226,8 +235,14 @@ export default function OrganiserForm({ navigate }: NavProps) {
           </div>
         </div>
 
-        <button type="submit" className="btn-primary w-full py-4 text-base">
-          Submit Event →
+        {errorMsg && (
+          <div className="p-3 rounded-lg text-xs" style={{ background: 'rgba(193,68,14,0.1)', border: '1px solid rgba(193,68,14,0.3)', color: '#C1440E' }}>
+            ⚠️ {errorMsg}
+          </div>
+        )}
+
+        <button type="submit" disabled={submitting} className="btn-primary w-full py-4 text-base">
+          {submitting ? 'Submitting Event...' : 'Submit Event →'}
         </button>
 
         <p style={{ fontSize: 11, color: '#9A8B82', textAlign: 'center', lineHeight: 1.6 }}>
