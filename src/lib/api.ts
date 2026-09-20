@@ -170,12 +170,23 @@ export async function getAllEvents(): Promise<DBEvent[]> {
 
 export async function getPendingEvents(): Promise<DBEvent[]> {
   if (!SUPABASE_CONFIGURED || !supabase) return [];
-  const { data } = await supabase
-    .from('events')
-    .select('*, profiles(name, email, org_name)')
-    .eq('status', 'pending_review')
-    .order('created_at', { ascending: false });
-  return data ?? [];
+  try {
+    const [eventsRes, profilesRes] = await Promise.all([
+      supabase.from('events').select('*').eq('status', 'pending_review').order('created_at', { ascending: false }),
+      supabase.from('profiles').select('id, name, email, org_name'),
+    ]);
+    const profiles = profilesRes.data ?? [];
+    return (eventsRes.data ?? []).map((e: any) => {
+      const prof = profiles.find((p: any) => p.id === e.organiser_id);
+      return {
+        ...e,
+        profiles: prof ? { name: prof.name, email: prof.email, org_name: prof.org_name } : undefined,
+      };
+    });
+  } catch (err) {
+    console.error('getPendingEvents error:', err);
+    return [];
+  }
 }
 
 export async function getMyEvents(): Promise<DBEvent[]> {
@@ -226,37 +237,77 @@ export async function getMyPassRequests(): Promise<DBPassRequest[]> {
   if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-  const { data } = await supabase
-    .from('pass_requests')
-    .select('*, events(name)')
-    .eq('buyer_id', user.id)
-    .order('created_at', { ascending: false });
-  return (data ?? []).map((r: any) => ({ ...r, event_name: r.events?.name }));
+  try {
+    const [reqsRes, eventsRes] = await Promise.all([
+      supabase.from('pass_requests').select('*').eq('buyer_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('events').select('id, name'),
+    ]);
+    const eventsMap = new Map((eventsRes.data ?? []).map((e: any) => [e.id, e.name]));
+    return (reqsRes.data ?? []).map((r: any) => ({
+      ...r,
+      event_name: eventsMap.get(r.event_id) || 'Navratri Event',
+    }));
+  } catch (err) {
+    console.error('getMyPassRequests error:', err);
+    return [];
+  }
 }
 
 export async function getRequestsForMyEvents(): Promise<DBPassRequest[]> {
   if (!SUPABASE_CONFIGURED || !supabase) return [];
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-  const { data } = await supabase
-    .from('pass_requests')
-    .select('*, events!inner(name, organiser_id), profiles(name, email)')
-    .eq('events.organiser_id', user.id)
-    .order('created_at', { ascending: false });
-  return (data ?? []).map((r: any) => ({
-    ...r, event_name: r.events?.name, buyer_name: r.profiles?.name, buyer_email: r.profiles?.email,
-  }));
+  try {
+    const [eventsRes, reqsRes, profilesRes] = await Promise.all([
+      supabase.from('events').select('id, name, organiser_id').eq('organiser_id', user.id),
+      supabase.from('pass_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('profiles').select('id, name, email'),
+    ]);
+    const myEventIds = new Set((eventsRes.data ?? []).map((e: any) => e.id));
+    const myEventsMap = new Map((eventsRes.data ?? []).map((e: any) => [e.id, e.name]));
+    const profilesMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]));
+
+    return (reqsRes.data ?? [])
+      .filter((r: any) => myEventIds.has(r.event_id))
+      .map((r: any) => {
+        const prof = profilesMap.get(r.buyer_id);
+        return {
+          ...r,
+          event_name: myEventsMap.get(r.event_id) || 'Event',
+          buyer_name: prof?.name,
+          buyer_email: prof?.email,
+        };
+      });
+  } catch (err) {
+    console.error('getRequestsForMyEvents error:', err);
+    return [];
+  }
 }
 
 export async function getAllPassRequests(): Promise<DBPassRequest[]> {
   if (!SUPABASE_CONFIGURED || !supabase) return [];
-  const { data } = await supabase
-    .from('pass_requests')
-    .select('*, events(name), profiles(name, email)')
-    .order('created_at', { ascending: false });
-  return (data ?? []).map((r: any) => ({
-    ...r, event_name: r.events?.name, buyer_name: r.profiles?.name, buyer_email: r.profiles?.email,
-  }));
+  try {
+    const [reqsRes, eventsRes, profilesRes] = await Promise.all([
+      supabase.from('pass_requests').select('*').order('created_at', { ascending: false }),
+      supabase.from('events').select('id, name'),
+      supabase.from('profiles').select('id, name, email'),
+    ]);
+    const eventsMap = new Map((eventsRes.data ?? []).map((e: any) => [e.id, e.name]));
+    const profilesMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]));
+
+    return (reqsRes.data ?? []).map((r: any) => {
+      const prof = profilesMap.get(r.buyer_id);
+      return {
+        ...r,
+        event_name: eventsMap.get(r.event_id) || 'Navratri Event',
+        buyer_name: prof?.name,
+        buyer_email: prof?.email,
+      };
+    });
+  } catch (err) {
+    console.error('getAllPassRequests error:', err);
+    return [];
+  }
 }
 
 export async function updateRequestStatus(
@@ -365,17 +416,30 @@ export async function getRadarAggregates(): Promise<{
 
 export async function getOrganisers() {
   if (!SUPABASE_CONFIGURED || !supabase) return [];
-  const { data } = await supabase
-    .from('profiles')
-    .select('*, events(id, status)')
-    .eq('role', 'organiser')
-    .order('created_at', { ascending: false });
-  return (data ?? []).map((p: any) => ({
-    id: p.id, name: p.name, email: p.email, org: p.org_name ?? '—',
-    event_count: p.events?.length ?? 0,
-    approved_count: p.events?.filter((e: any) => e.status === 'approved').length ?? 0,
-    joined_at: p.created_at,
-  }));
+  try {
+    const [profilesRes, eventsRes] = await Promise.all([
+      supabase.from('profiles').select('*').eq('role', 'organiser').order('created_at', { ascending: false }),
+      supabase.from('events').select('id, organiser_id, status'),
+    ]);
+    const profiles = profilesRes.data ?? [];
+    const events = eventsRes.data ?? [];
+
+    return profiles.map((p: any) => {
+      const orgEvents = events.filter((e: any) => e.organiser_id === p.id);
+      return {
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        org: p.org_name ?? '—',
+        event_count: orgEvents.length,
+        approved_count: orgEvents.filter((e: any) => e.status === 'approved').length,
+        joined_at: p.created_at,
+      };
+    });
+  } catch (err) {
+    console.error('getOrganisers error:', err);
+    return [];
+  }
 }
 
 export async function getAllUsers(): Promise<Profile[]> {
@@ -387,8 +451,28 @@ export async function getAllUsers(): Promise<Profile[]> {
 
 export async function updateUserRole(userId: string, role: 'buyer' | 'organiser' | 'super_admin'): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
-  const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
-  return { error: error?.message ?? null };
+  try {
+    // 1. First attempt via Supabase RPC function (bypasses RLS if created in SQL editor)
+    const { error: rpcError } = await supabase.rpc('update_user_role', {
+      target_user_id: userId,
+      new_role: role,
+    });
+    if (!rpcError) {
+      return { error: null };
+    }
+
+    // 2. Fallback to direct table update with returned data check
+    const { data, error } = await supabase.from('profiles').update({ role }).eq('id', userId).select();
+    if (error) {
+      return { error: error.message };
+    }
+    if (data && data.length === 0) {
+      return { error: 'RLS policy prevented update. Please run the SQL migration in Supabase SQL editor.' };
+    }
+    return { error: null };
+  } catch (err: any) {
+    return { error: err.message || 'Failed to update user role' };
+  }
 }
 
 export async function createEventByAdmin(eventData: Partial<DBEvent>): Promise<{ data: DBEvent | null; error: string | null }> {

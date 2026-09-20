@@ -823,8 +823,12 @@ function UsersTab({ onRefresh }: { onRefresh: () => void }) {
 
   const handleRoleChange = async (userId: string, newRole: 'buyer' | 'organiser' | 'super_admin') => {
     setUpdatingId(userId);
-    await updateUserRole(userId, newRole);
-    setUsers(p => p.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    const { error } = await updateUserRole(userId, newRole);
+    if (error) {
+      alert(`Role update issue: ${error}`);
+    } else {
+      setUsers(p => p.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    }
     setUpdatingId(null);
     onRefresh();
   };
