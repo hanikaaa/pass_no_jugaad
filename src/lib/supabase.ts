@@ -29,6 +29,8 @@ export interface DBEvent {
   time: string | null;
   price_min: number | null;
   price_max: number | null;
+  image_url?: string | null;
+  image?: string | null;
   type_tags: string[] | null;
   artist: string | null;
   description: string | null;

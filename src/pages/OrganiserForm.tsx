@@ -12,6 +12,8 @@ export default function OrganiserForm({ navigate }: NavProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  const [submitting, setSubmitting] = useState(false);
+
   const toggle = (arr: string[], val: string, set: (a: string[]) => void) => {
     set(arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val]);
   };
@@ -27,20 +29,26 @@ export default function OrganiserForm({ navigate }: NavProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     const fd = new FormData(formRef.current!);
+    const ticketPrice = Number(fd.get('price') || fd.get('price_min') || 0);
+
     await submitEvent({
       name: fd.get('name') as string,
       venue: fd.get('venue') as string,
       date: fd.get('date') as string,
-      time: fd.get('time') as string,
-      price_min: Number(fd.get('price_min') ?? 0),
-      price_max: Number(fd.get('price_max') ?? 0),
-      type_tags: [],
+      time: fd.get('time') as string || '7:00 PM onwards',
+      price: ticketPrice,
+      price_min: ticketPrice,
+      price_max: ticketPrice,
+      image_url: imagePreview || undefined,
+      type_tags: ['Garba'],
       artist: fd.get('artist') as string,
       description: fd.get('description') as string,
       instagram_link: fd.get('instagram_link') as string,
       contact_email: fd.get('contact_email') as string,
     });
+    setSubmitting(false);
     setSubmitted(true);
     window.scrollTo(0, 0);
   };
@@ -160,27 +168,22 @@ export default function OrganiserForm({ navigate }: NavProps) {
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: 6 }}>Venue</label>
-            <input name="venue" placeholder="Where is it happening?" />
+            <input name="venue" required placeholder="Where is it happening?" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label style={{ display: 'block', marginBottom: 6 }}>Event date</label>
-              <input name="date" type="date" />
+              <input name="date" required placeholder="e.g. 8th October, 15 OCT 2026" />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 6 }}>Time</label>
-              <input name="time" type="time" />
+              <input name="time" placeholder="e.g. 7:00 PM onwards" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label style={{ display: 'block', marginBottom: 6 }}>Min price (₹)</label>
-              <input name="price_min" type="number" placeholder="500" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: 6 }}>Max price (₹)</label>
-              <input name="price_max" type="number" placeholder="2000" />
-            </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 6 }}>Ticket price (₹) *</label>
+            <input name="price" type="number" required placeholder="e.g. 1200" />
+            <p style={{ fontSize: 11, color: '#9A8B82', marginTop: 4 }}>Enter the pass/ticket price per person.</p>
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: 6 }}>Artist / DJ</label>

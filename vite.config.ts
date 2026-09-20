@@ -439,6 +439,53 @@ function apiDevServerPlugin(env: Record<string, string>): Plugin {
                   </div>
                 `,
               })
+            } else if (type === 'event_submission') {
+              const { name, venue, date, priceMin, priceMax, contactEmail, instagramLink } = payload || {}
+              emailsToSend.push({
+                to: ADMIN_EMAIL,
+                subject: `⏳ New Event Pending Review: ${name} @ ${venue}`,
+                html: `
+                  <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; padding: 24px; border-radius: 12px;">
+                    <h2 style="color: #7A1F2E; margin-top: 0;">New Event Submitted for Approval</h2>
+                    <p><strong>Event:</strong> ${name}</p>
+                    <p><strong>Venue:</strong> ${venue || '—'}</p>
+                    <p><strong>Date:</strong> ${date || '—'}</p>
+                    <p><strong>Price:</strong> ₹${priceMin} – ₹${priceMax}</p>
+                    <p><strong>Contact Email:</strong> ${contactEmail || '—'}</p>
+                    <p><strong>Instagram:</strong> ${instagramLink || '—'}</p>
+                  </div>
+                `,
+              })
+            } else if (type === 'event_approved') {
+              const { eventName, organiserEmail, date, venue } = payload || {}
+              if (organiserEmail) {
+                emailsToSend.push({
+                  to: organiserEmail,
+                  subject: `🎉 Your Event is Approved & Live on Pass No Jugaad: ${eventName}`,
+                  html: `
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; padding: 24px; border-radius: 12px;">
+                      <h2 style="color: #2D7A4F; margin-top: 0;">Event Approved & Live!</h2>
+                      <p>Hi, your event <strong>${eventName}</strong> has been approved and is now live on Pass No Jugaad.</p>
+                      <p>${date ? `Date: ${date}` : ''} ${venue ? `| Venue: ${venue}` : ''}</p>
+                    </div>
+                  `,
+                })
+              }
+            } else if (type === 'event_rejected') {
+              const { eventName, organiserEmail, reason } = payload || {}
+              if (organiserEmail) {
+                emailsToSend.push({
+                  to: organiserEmail,
+                  subject: `Update regarding your event listing: ${eventName}`,
+                  html: `
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; padding: 24px; border-radius: 12px;">
+                      <h2 style="color: #7A1F2E; margin-top: 0;">Event Listing Update</h2>
+                      <p>Your event <strong>${eventName}</strong> could not be approved at this time.</p>
+                      ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+                    </div>
+                  `,
+                })
+              }
             } else if (type === 'user_signup') {
               const { name, email } = payload || {}
               emailsToSend.push({

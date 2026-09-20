@@ -259,6 +259,70 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // ─── 5. Event Approved Notification to Organiser ───────────────
+    else if (type === 'event_approved') {
+      const { eventName, organiserEmail, date, venue } = payload;
+      if (organiserEmail) {
+        emailsToSend.push({
+          to: organiserEmail,
+          subject: `🎉 Your Event is Approved & Live on Pass No Jugaad: ${eventName}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; border-radius: 12px; overflow: hidden; border: 1px solid rgba(26,22,18,0.1);">
+              <div style="background: #2D7A4F; padding: 24px; color: #FAF7F2;">
+                <h1 style="margin: 0; font-size: 22px; font-family: Georgia, serif;">Event Approved & Published!</h1>
+                <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.9;">Your event is now live for attendees to discover and request passes.</p>
+              </div>
+              <div style="padding: 24px; color: #1A1612;">
+                <h2 style="margin: 0 0 10px; font-size: 20px; color: #1A1612;">🎪 ${eventName}</h2>
+                <p style="margin: 0 0 16px; font-size: 14px; color: #6B5B52;">${date ? `📅 ${date}` : ''} ${venue ? `· 📍 ${venue}` : ''}</p>
+                <div style="background: #ffffff; padding: 18px; border-radius: 8px; border: 1px solid rgba(26,22,18,0.08); margin-bottom: 20px;">
+                  <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #1A1612;">
+                    Your event has passed review by our curation team. Pass seekers in Ahmedabad can now view your listing and submit pass requests.
+                  </p>
+                </div>
+                <p style="font-size: 13px; color: #6B5B52; line-height: 1.5;">
+                  Manage your incoming pass requests in the <a href="https://passnojugaad.in" style="color: #C1440E; font-weight: bold;">Organiser Dashboard</a>.
+                </p>
+              </div>
+            </div>
+          `,
+        });
+      }
+    }
+
+    // ─── 6. Event Rejected Notification to Organiser ───────────────
+    else if (type === 'event_rejected') {
+      const { eventName, organiserEmail, reason } = payload;
+      if (organiserEmail) {
+        emailsToSend.push({
+          to: organiserEmail,
+          subject: `Update regarding your event listing: ${eventName}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #FAF7F2; border-radius: 12px; overflow: hidden; border: 1px solid rgba(26,22,18,0.1);">
+              <div style="background: #7A1F2E; padding: 24px; color: #FAF7F2;">
+                <h1 style="margin: 0; font-size: 20px; font-family: Georgia, serif;">Event Listing Status Update</h1>
+              </div>
+              <div style="padding: 24px; color: #1A1612;">
+                <h2 style="margin: 0 0 10px; font-size: 18px; color: #1A1612;">🎪 ${eventName}</h2>
+                <p style="font-size: 14px; line-height: 1.6; color: #6B5B52; margin: 0 0 16px;">
+                  Thank you for submitting your event to Pass No Jugaad. Our curation team reviewed your listing, and unfortunately it could not be approved at this time.
+                </p>
+                ${reason ? `
+                  <div style="background: #ffffff; padding: 16px; border-radius: 8px; border-left: 4px solid #7A1F2E; margin-bottom: 20px;">
+                    <div style="font-size: 12px; font-weight: bold; color: #7A1F2E; text-transform: uppercase; margin-bottom: 4px;">Reason from curation team:</div>
+                    <div style="font-size: 14px; color: #1A1612;">${reason}</div>
+                  </div>
+                ` : ''}
+                <p style="font-size: 13px; color: #6B5B52; line-height: 1.5;">
+                  If you have updated details or questions, reply to <a href="mailto:passnojugaadd@gmail.com" style="color: #C1440E;">passnojugaadd@gmail.com</a> or resubmit via the Organiser Form.
+                </p>
+              </div>
+            </div>
+          `,
+        });
+      }
+    }
+
     // Dispatch Emails via Nodemailer SMTP
     if (SMTP_PASS) {
       for (const email of emailsToSend) {

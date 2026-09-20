@@ -101,26 +101,49 @@ import { sendNotification } from './notifications';
 
 export async function submitEvent(fields: {
   name: string; venue: string; date: string; time: string;
-  price_min: number; price_max: number; type_tags: string[];
-  artist: string; description: string; instagram_link: string; contact_email: string;
+  price_min?: number; price_max?: number; price?: number;
+  image_url?: string; type_tags?: string[];
+  artist?: string; description: string; instagram_link?: string; contact_email: string;
 }): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null }; // demo: succeed silently
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not signed in' };
+
+  const priceMin = fields.price_min ?? fields.price ?? 0;
+  const priceMax = fields.price_max ?? fields.price ?? priceMin;
+
   const { error } = await supabase.from('events').insert({
-    ...fields,
+    name: fields.name,
+    venue: fields.venue,
+    date: fields.date,
+    time: fields.time,
+    price_min: priceMin,
+    price_max: priceMax,
+    image_url: fields.image_url || null,
+    type_tags: fields.type_tags || [],
+    artist: fields.artist || null,
+    description: fields.description || '',
+    instagram_link: fields.instagram_link || null,
+    contact_email: fields.contact_email || user.email,
     organiser_id: user.id,
     status: 'pending_review',
   });
 
   if (!error) {
+    // Auto-update role to organiser if needed
+    try {
+      await supabase.from('profiles').update({ role: 'organiser' }).eq('id', user.id).neq('role', 'super_admin');
+    } catch {
+      // ignore
+    }
+
     // Send email notification to Super Admin
     sendNotification('event_submission', {
       name: fields.name,
       venue: fields.venue,
       date: fields.date,
-      priceMin: fields.price_min,
-      priceMax: fields.price_max,
+      priceMin,
+      priceMax,
       contactEmail: fields.contact_email || user.email,
       instagramLink: fields.instagram_link,
     }).catch(console.error);
@@ -132,18 +155,57 @@ export async function submitEvent(fields: {
 export async function approveEvent(id: string): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
   const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: eventData } = await supabase.from('events').select('*').eq('id', id).maybeSingle();
+
   const { error } = await supabase.from('events').update({
     status: 'approved', reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString(),
   }).eq('id', id);
+
+  if (!error && eventData) {
+    let organiserEmail = eventData.contact_email;
+    if (!organiserEmail && eventData.organiser_id) {
+      const { data: prof } = await supabase.from('profiles').select('email').eq('id', eventData.organiser_id).maybeSingle();
+      organiserEmail = prof?.email;
+    }
+    if (organiserEmail) {
+      sendNotification('event_approved', {
+        eventName: eventData.name,
+        organiserEmail,
+        date: eventData.date,
+        venue: eventData.venue,
+      }).catch(console.error);
+    }
+  }
+
   return { error: error?.message ?? null };
 }
 
 export async function rejectEvent(id: string, reason: string): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
   const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: eventData } = await supabase.from('events').select('*').eq('id', id).maybeSingle();
+
   const { error } = await supabase.from('events').update({
     status: 'rejected', rejection_reason: reason, reviewed_by: user?.id ?? null, reviewed_at: new Date().toISOString(),
   }).eq('id', id);
+
+  if (!error && eventData) {
+    let organiserEmail = eventData.contact_email;
+    if (!organiserEmail && eventData.organiser_id) {
+      const { data: prof } = await supabase.from('profiles').select('email').eq('id', eventData.organiser_id).maybeSingle();
+      organiserEmail = prof?.email;
+    }
+    if (organiserEmail) {
+      sendNotification('event_rejected', {
+        eventName: eventData.name,
+        organiserEmail,
+        reason,
+      }).catch(console.error);
+    }
+  }
+
   return { error: error?.message ?? null };
 }
 

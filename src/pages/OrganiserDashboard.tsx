@@ -42,8 +42,24 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
   useEffect(() => { getMyEvents().then(setMyEvents); }, []);
 
   const handleSave = async (id: string, fd: FormData) => {
-    await updateEvent(id, { name: fd.get('name') as string, venue: fd.get('venue') as string, description: fd.get('description') as string });
-    setMyEvents(prev => prev.map(e => e.id === id ? { ...e, name: fd.get('name') as string, venue: fd.get('venue') as string } : e));
+    const priceVal = Number(fd.get('price') || 0);
+    await updateEvent(id, {
+      name: fd.get('name') as string,
+      venue: fd.get('venue') as string,
+      date: fd.get('date') as string,
+      price_min: priceVal,
+      price_max: priceVal,
+      description: fd.get('description') as string,
+    });
+    setMyEvents(prev => prev.map(e => e.id === id ? {
+      ...e,
+      name: fd.get('name') as string,
+      venue: fd.get('venue') as string,
+      date: fd.get('date') as string,
+      price_min: priceVal,
+      price_max: priceVal,
+      description: fd.get('description') as string,
+    } : e));
     setEditing(null);
   };
 
@@ -56,27 +72,33 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
         {myEvents.map(ev => {
           const evStyle = EVENT_STATUS_STYLE[ev.status];
           const mockMatch = EVENTS.find(e => e.id === ev.id);
+          const bgImg = ev.image_url || ev.image || mockMatch?.image;
+          const pMin = ev.price_min || 0;
+          const pMax = ev.price_max || pMin;
+          const priceStr = pMin === pMax && pMin > 0 ? `₹${pMin.toLocaleString('en-IN')}` : pMin > 0 ? `₹${pMin.toLocaleString('en-IN')}–₹${pMax.toLocaleString('en-IN')}` : '—';
+
           return (
             <div key={ev.id} className="card-light overflow-hidden">
-              {mockMatch?.image && (
-                <div className="relative h-[120px] bg-stone-100 overflow-hidden">
-                  <img src={mockMatch.image} alt={ev.name} className="w-full h-full object-cover" style={{ opacity: 0.8 }} />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,22,18,0.65) 0%, transparent 55%)' }} />
-                  <div className="absolute bottom-3 left-4">
-                    <span className="rounded-full px-2.5 py-1 mr-2" style={{ fontSize: 11, fontWeight: 600, color: evStyle.color, background: evStyle.bg }}>
-                      {ev.status === 'approved' ? 'Live' : ev.status === 'pending_review' ? 'Pending review' : 'Rejected'}
-                    </span>
-                    <span className="font-serif text-white" style={{ fontSize: 18, fontWeight: 500 }}>{ev.name}</span>
+              {bgImg ? (
+                <div className="relative h-[140px] bg-stone-100 overflow-hidden">
+                  <img src={bgImg} alt={ev.name} className="w-full h-full object-cover" style={{ opacity: 0.85 }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(26,22,18,0.75) 0%, transparent 60%)' }} />
+                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
+                    <div>
+                      <span className="rounded-full px-2.5 py-0.5 text-xs mr-2 font-bold" style={{ color: evStyle.color, background: 'rgba(255,255,255,0.9)' }}>
+                        {ev.status === 'approved' ? 'Live' : ev.status === 'pending_review' ? 'Pending review' : 'Rejected'}
+                      </span>
+                      <span className="font-serif text-white font-medium text-lg">{ev.name}</span>
+                    </div>
                   </div>
                 </div>
-              )}
-              {!mockMatch?.image && (
+              ) : (
                 <div className="p-4 pb-0">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="rounded-full px-2.5 py-1" style={{ fontSize: 11, fontWeight: 600, color: evStyle.color, background: evStyle.bg }}>
+                    <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ color: evStyle.color, background: evStyle.bg }}>
                       {ev.status === 'approved' ? 'Live' : ev.status === 'pending_review' ? 'Pending review' : 'Rejected'}
                     </span>
-                    <span className="font-serif" style={{ fontSize: 17, fontWeight: 500 }}>{ev.name}</span>
+                    <span className="font-serif font-medium text-lg">{ev.name}</span>
                   </div>
                 </div>
               )}
@@ -86,7 +108,7 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
                   {[
                     { l: 'Date', v: ev.date ?? '—' },
                     { l: 'Venue', v: ev.venue ?? '—' },
-                    { l: 'Price', v: ev.price_min ? `₹${ev.price_min}–₹${ev.price_max}` : '—' },
+                    { l: 'Ticket Price', v: priceStr },
                   ].map(d => (
                     <div key={d.l}>
                       <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 2 }}>{d.l}</div>
@@ -110,6 +132,10 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
                         <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Date</label>
                         <input name="date" defaultValue={ev.date ?? ''} />
                       </div>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Ticket price (₹)</label>
+                      <input name="price" type="number" defaultValue={ev.price_min ?? ''} />
                     </div>
                     <div>
                       <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Description</label>
@@ -156,11 +182,11 @@ function RequestsTab() {
   const [filterEvent, setFilterEvent] = useState('all');
 
   const eventNames = ['all', ...Array.from(new Set(requests.map(r => r.event_name)))];
-  const statuses = ['all', ...Object.keys(REQUEST_STATUS_LABEL)];
+  const statuses = ['all', 'request_received', 'in_process', 'offer_available', 'completed', 'closed'];
 
   const filtered = requests.filter(r =>
     (filterEvent === 'all' || r.event_name === filterEvent) &&
-    (filterStatus === 'all' || r.status === filterStatus)
+    (filterStatus === 'all' || r.status === filterStatus || (filterStatus === 'in_process' && r.status === 'looking_for_options'))
   );
 
   const updateStatus = async (id: string, status: string) => {
@@ -176,7 +202,7 @@ function RequestsTab() {
   return (
     <div>
       <div className="eyebrow mb-1">Scoped to your events</div>
-      <div className="font-serif mb-4" style={{ fontSize: 22, fontWeight: 500 }}>Pass Requests</div>
+      <div className="font-serif mb-4" style={{ fontSize: 22, fontWeight: 500 }}>Pass Requests & Tickets</div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-5">
@@ -212,33 +238,58 @@ function RequestsTab() {
             <div key={req.id} className="card-light p-4">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1612' }}>{req.buyer_name}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#1A1612' }}>{req.buyer_name || 'Pass Seeker'}</div>
                   <div style={{ fontSize: 12, color: '#9A8B82' }}>
-                    {req.event_name} · {req.quantity} passes · {fmt(req.budget_min ?? 0)}–{fmt(req.budget_max ?? 0)}
+                    {req.event_name} · <strong>{req.quantity} passes</strong> · {fmt(req.budget_min ?? 0)}–{fmt(req.budget_max ?? 0)}
                   </div>
+                  {req.priority_note && (
+                    <div style={{ fontSize: 12, color: '#7A1F2E', marginTop: 2 }}>Note: {req.priority_note}</div>
+                  )}
                   <div style={{ fontSize: 11, color: '#9A8B82', marginTop: 2 }}>{relTime(req.created_at)}</div>
                 </div>
                 <StatusBadge status={req.status} />
               </div>
 
-              {STATUS_NEXT[req.status]?.length > 0 && (
-                <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: '1px solid rgba(26,22,18,0.07)' }}>
-                  {STATUS_NEXT[req.status].map(next => (
-                    <button
-                      key={next}
-                      onClick={() => updateStatus(req.id, next)}
-                      className="btn-outline px-3 py-1.5 text-xs flex-1"
-                      style={next === 'closed' ? { color: '#9A8B82', borderColor: 'rgba(154,139,130,0.3)' } : {}}
-                    >
-                      → {REQUEST_STATUS_LABEL[next]}
-                    </button>
-                  ))}
+              {/* Status updater dropdown & quick actions */}
+              <div className="mt-3 pt-3 flex flex-wrap items-center justify-between gap-2" style={{ borderTop: '1px solid rgba(26,22,18,0.07)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-stone-500">Update Status:</span>
+                  <select
+                    value={req.status === 'looking_for_options' ? 'in_process' : req.status}
+                    onChange={(e) => updateStatus(req.id, e.target.value)}
+                    className="text-xs font-semibold p-1.5 rounded border border-stone-300 bg-white"
+                  >
+                    <option value="request_received">Request Received</option>
+                    <option value="in_process">In Process</option>
+                    <option value="offer_available">Offer Available</option>
+                    <option value="completed">Completed</option>
+                    <option value="closed">Closed</option>
+                  </select>
                 </div>
-              )}
+
+                <div className="flex gap-1.5">
+                  {req.status !== 'in_process' && req.status !== 'looking_for_options' && req.status !== 'completed' && (
+                    <button
+                      onClick={() => updateStatus(req.id, 'in_process')}
+                      className="px-2.5 py-1 text-xs rounded font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
+                    >
+                      In Process
+                    </button>
+                  )}
+                  {req.status !== 'completed' && (
+                    <button
+                      onClick={() => updateStatus(req.id, 'completed')}
+                      className="px-2.5 py-1 text-xs rounded font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+                    >
+                      ✓ Completed
+                    </button>
+                  )}
+                </div>
+              </div>
 
               <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(26,22,18,0.05)' }}>
                 <a href={`mailto:${req.buyer_email}`} style={{ fontSize: 12, color: '#C1440E' }}>
-                  Email {(req.buyer_name ?? 'buyer').split(' ')[0]} →
+                  Email {(req.buyer_name ?? 'buyer').split(' ')[0]} ({req.buyer_email || '—'}) →
                 </a>
               </div>
             </div>

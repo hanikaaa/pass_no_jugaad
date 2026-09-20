@@ -11,7 +11,8 @@ export const PENDING_EVENTS: any[] = [];
 // ─── Status labels / styles ───────────────────────────────────
 export const REQUEST_STATUS_LABEL: Record<string, string> = {
   request_received:    'Request received',
-  looking_for_options: 'Looking for options',
+  in_process:          'In Process',
+  looking_for_options: 'In Process',
   match_found:         'Match found',
   offer_available:     'Offer available',
   completed:           'Completed',
@@ -20,6 +21,7 @@ export const REQUEST_STATUS_LABEL: Record<string, string> = {
 
 export const REQUEST_STATUS_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   request_received:    { color: '#6B5B52', bg: 'rgba(107,91,82,0.08)',  border: 'rgba(107,91,82,0.2)' },
+  in_process:          { color: '#C1440E', bg: 'rgba(193,68,14,0.07)', border: 'rgba(193,68,14,0.2)' },
   looking_for_options: { color: '#C1440E', bg: 'rgba(193,68,14,0.07)', border: 'rgba(193,68,14,0.2)' },
   match_found:         { color: '#7A1F2E', bg: 'rgba(122,31,46,0.07)', border: 'rgba(122,31,46,0.2)' },
   offer_available:     { color: '#2D7A4F', bg: 'rgba(45,122,79,0.07)', border: 'rgba(45,122,79,0.2)' },

@@ -280,43 +280,54 @@ function PendingTab({ onRefresh }: { onRefresh: () => void }) {
       )}
 
       <div className="space-y-4">
-        {items.map(ev => (
-          <div key={ev.id} className="card-light p-5">
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <div style={{ fontSize: 17, fontWeight: 600, color: '#1A1612', marginBottom: 2 }}>{ev.name}</div>
-                <div style={{ fontSize: 13, color: '#9A8B82' }}>
-                  {ev.organiser || 'Organiser'} · <a href={`mailto:${ev.email || ev.contact_email}`} style={{ color: '#C1440E' }}>{ev.email || ev.contact_email}</a>
+        {items.map(ev => {
+          const pMin = ev.price_min || 0;
+          const pMax = ev.price_max || pMin;
+          const priceStr = pMin === pMax && pMin > 0 ? `₹${pMin.toLocaleString('en-IN')}` : pMin > 0 ? `₹${pMin.toLocaleString('en-IN')}–₹${pMax.toLocaleString('en-IN')}` : (ev.price ? `₹${ev.price}` : 'TBA');
+          const imgUrl = ev.image_url || ev.image;
+
+          return (
+            <div key={ev.id} className="card-light p-5">
+              {imgUrl && (
+                <div className="relative h-40 rounded-lg overflow-hidden mb-4 bg-stone-100">
+                  <img src={imgUrl} alt={ev.name} className="w-full h-full object-cover" />
                 </div>
-              </div>
-              <EventStatusBadge status="pending_review" />
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              {[
-                { l: 'Date', v: ev.date || 'TBA' },
-                { l: 'Venue', v: ev.venue || 'TBA' },
-                { l: 'Price Range', v: ev.price || (ev.price_min ? `₹${ev.price_min}–₹${ev.price_max}` : 'TBA') },
-                { l: 'Submitted', v: relTime(ev.submitted_at || ev.created_at) },
-              ].map(d => (
-                <div key={d.l} className="rounded-md p-3" style={{ background: '#FAF7F2', border: '1px solid rgba(26,22,18,0.07)' }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 3 }}>{d.l}</div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#1A1612' }}>{d.v}</div>
+              )}
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <div style={{ fontSize: 17, fontWeight: 600, color: '#1A1612', marginBottom: 2 }}>{ev.name}</div>
+                  <div style={{ fontSize: 13, color: '#9A8B82' }}>
+                    {ev.organiser || ev.profiles?.name || 'Organiser'} · <a href={`mailto:${ev.email || ev.contact_email || ev.profiles?.email}`} style={{ color: '#C1440E' }}>{ev.email || ev.contact_email || ev.profiles?.email}</a>
+                  </div>
                 </div>
-              ))}
-            </div>
-
-            {ev.type_tags?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {ev.type_tags.map((t: string) => <span key={t} className="chip" style={{ padding: '2px 10px', fontSize: 11 }}>{t}</span>)}
+                <EventStatusBadge status="pending_review" />
               </div>
-            )}
 
-            {ev.description && (
-              <p style={{ fontSize: 13, color: '#6B5B52', marginBottom: 12, lineHeight: 1.5 }}>
-                {ev.description}
-              </p>
-            )}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {[
+                  { l: 'Date', v: ev.date || 'TBA' },
+                  { l: 'Venue', v: ev.venue || 'TBA' },
+                  { l: 'Ticket Price', v: priceStr },
+                  { l: 'Submitted', v: relTime(ev.submitted_at || ev.created_at) },
+                ].map(d => (
+                  <div key={d.l} className="rounded-md p-3" style={{ background: '#FAF7F2', border: '1px solid rgba(26,22,18,0.07)' }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 3 }}>{d.l}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#1A1612' }}>{d.v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {ev.type_tags?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {ev.type_tags.map((t: string) => <span key={t} className="chip" style={{ padding: '2px 10px', fontSize: 11 }}>{t}</span>)}
+                </div>
+              )}
+
+              {ev.description && (
+                <p style={{ fontSize: 13, color: '#6B5B52', marginBottom: 12, lineHeight: 1.5 }}>
+                  {ev.description}
+                </p>
+              )}
 
             {rejecting === ev.id ? (
               <div className="space-y-2 mt-3 pt-3 border-t">
@@ -344,8 +355,9 @@ function PendingTab({ onRefresh }: { onRefresh: () => void }) {
                 </button>
               </div>
             )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -364,8 +376,8 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
   const [formVenue, setFormVenue] = useState('');
   const [formDate, setFormDate] = useState('');
   const [formTime, setFormTime] = useState('');
-  const [formPriceMin, setFormPriceMin] = useState('800');
-  const [formPriceMax, setFormPriceMax] = useState('1500');
+  const [formPrice, setFormPrice] = useState('1000');
+  const [formImageUrl, setFormImageUrl] = useState('');
   const [formArtist, setFormArtist] = useState('');
   const [formTags, setFormTags] = useState('Garba, Artist Night');
   const [formDesc, setFormDesc] = useState('');
@@ -373,12 +385,19 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
   const loadData = () => {
     if (!SUPABASE_CONFIGURED) return;
     getAllEvents().then(data => {
-      setAllEvents((data ?? []).map((e: any) => ({
-        id: e.id, name: e.name, dateShort: e.date, venue: e.venue,
-        priceRange: e.price_min ? `₹${e.price_min}–₹${e.price_max}` : '—',
-        price_min: e.price_min, price_max: e.price_max,
-        demand: 'MEDIUM', type_tags: e.type_tags ?? [], status: e.status, artist: e.artist, description: e.description
-      })));
+      setAllEvents((data ?? []).map((e: any) => {
+        const pMin = e.price_min || 0;
+        const pMax = e.price_max || pMin;
+        const priceFormatted = pMin === pMax && pMin > 0 ? `₹${pMin.toLocaleString('en-IN')}` : pMin > 0 ? `₹${pMin.toLocaleString('en-IN')}–₹${pMax.toLocaleString('en-IN')}` : '—';
+
+        return {
+          id: e.id, name: e.name, dateShort: e.date, venue: e.venue,
+          priceRange: priceFormatted,
+          price_min: pMin, price_max: pMax,
+          image_url: e.image_url || e.image || '',
+          demand: 'MEDIUM', type_tags: e.type_tags ?? [], status: e.status, artist: e.artist, description: e.description
+        };
+      }));
     });
   };
 
@@ -388,27 +407,29 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
   const openAddModal = () => {
     setEditingEvent(null);
     setFormName(''); setFormVenue(''); setFormDate('12 OCT 2026'); setFormTime('7:00 PM onwards');
-    setFormPriceMin('800'); setFormPriceMax('1500'); setFormArtist(''); setFormTags('Garba, Artist Night'); setFormDesc('');
+    setFormPrice('1000'); setFormImageUrl(''); setFormArtist(''); setFormTags('Garba, Artist Night'); setFormDesc('');
     setModalOpen(true);
   };
 
   const openEditModal = (ev: any) => {
     setEditingEvent(ev);
     setFormName(ev.name); setFormVenue(ev.venue || ''); setFormDate(ev.dateShort || ''); setFormTime(ev.time || '7:00 PM onwards');
-    setFormPriceMin(String(ev.price_min || 800)); setFormPriceMax(String(ev.price_max || 1500));
+    setFormPrice(String(ev.price_min || 1000)); setFormImageUrl(ev.image_url || '');
     setFormArtist(ev.artist || ''); setFormTags(ev.type_tags?.join(', ') || ''); setFormDesc(ev.description || '');
     setModalOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const priceVal = parseInt(formPrice) || 0;
     const eventPayload = {
       name: formName,
       venue: formVenue,
       date: formDate,
       time: formTime,
-      price_min: parseInt(formPriceMin) || 0,
-      price_max: parseInt(formPriceMax) || 0,
+      price_min: priceVal,
+      price_max: priceVal,
+      image_url: formImageUrl || null,
       artist: formArtist || null,
       type_tags: formTags.split(',').map(t => t.trim()).filter(Boolean),
       description: formDesc || null,
@@ -476,17 +497,24 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
       <div className="space-y-3">
         {filtered.map(ev => (
           <div key={ev.id} className="card-light p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1612' }}>{ev.name}</span>
-                <EventStatusBadge status={ev.status} />
-                {ev.artist && <span className="chip text-[10px] py-0.5 px-2 bg-amber-100 text-amber-900 font-semibold">{ev.artist}</span>}
-              </div>
-              <div style={{ fontSize: 12, color: '#9A8B82' }}>{ev.dateShort} · {ev.venue} · {ev.priceRange}</div>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {ev.type_tags?.slice(0, 3).map((t: string) => (
-                  <span key={t} className="chip text-[10px] py-0.5 px-2">{t}</span>
-                ))}
+            <div className="flex items-center gap-3.5 flex-1 min-w-0">
+              {ev.image_url ? (
+                <img src={ev.image_url} alt={ev.name} className="w-14 h-14 rounded-md object-cover flex-shrink-0 bg-stone-200" />
+              ) : (
+                <div className="w-14 h-14 rounded-md bg-stone-200 flex items-center justify-center flex-shrink-0 text-lg">🎪</div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1612' }}>{ev.name}</span>
+                  <EventStatusBadge status={ev.status} />
+                  {ev.artist && <span className="chip text-[10px] py-0.5 px-2 bg-amber-100 text-amber-900 font-semibold">{ev.artist}</span>}
+                </div>
+                <div style={{ fontSize: 12, color: '#9A8B82' }}>{ev.dateShort} · {ev.venue} · {ev.priceRange}</div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {ev.type_tags?.slice(0, 3).map((t: string) => (
+                    <span key={t} className="chip text-[10px] py-0.5 px-2">{t}</span>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -524,15 +552,13 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
                   <input value={formTime} onChange={e => setFormTime(e.target.value)} placeholder="7:00 PM onwards" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="font-bold text-stone-700 block mb-1">Min Price (₹)</label>
-                  <input type="number" value={formPriceMin} onChange={e => setFormPriceMin(e.target.value)} placeholder="800" />
-                </div>
-                <div>
-                  <label className="font-bold text-stone-700 block mb-1">Max Price (₹)</label>
-                  <input type="number" value={formPriceMax} onChange={e => setFormPriceMax(e.target.value)} placeholder="1500" />
-                </div>
+              <div>
+                <label className="font-bold text-stone-700 block mb-1">Ticket Price (₹) *</label>
+                <input type="number" required value={formPrice} onChange={e => setFormPrice(e.target.value)} placeholder="1000" />
+              </div>
+              <div>
+                <label className="font-bold text-stone-700 block mb-1">Banner Image URL</label>
+                <input value={formImageUrl} onChange={e => setFormImageUrl(e.target.value)} placeholder="https://... or data:image..." />
               </div>
               <div>
                 <label className="font-bold text-stone-700 block mb-1">Venue / Location</label>

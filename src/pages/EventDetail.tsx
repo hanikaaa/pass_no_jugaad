@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { type NavProps, EVENTS } from '../data/events';
+import { useState, useEffect } from 'react';
+import { type NavProps, EVENTS, type Event } from '../data/events';
+import { getEventById, getApprovedEvents } from '../lib/api';
 
 interface Props extends NavProps {
   eventId: string | null;
@@ -19,9 +20,83 @@ const DEMAND_LABEL: Record<string, string> = {
 };
 
 export default function EventDetail({ navigate, eventId }: Props) {
-  const event = EVENTS.find((e) => e.id === eventId) || EVENTS[0];
+  const [event, setEvent] = useState<Event | null>(() => {
+    return EVENTS.find((e) => e.id === eventId) || null;
+  });
+  const [loading, setLoading] = useState(!event);
   const [qty, setQty] = useState(2);
   const [bookmarked, setBookmarked] = useState(false);
+
+  useEffect(() => {
+    if (!eventId) {
+      if (EVENTS.length > 0) setEvent(EVENTS[0]);
+      setLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    getEventById(eventId).then((dbEv) => {
+      if (!isMounted) return;
+      if (dbEv) {
+        const priceMin = dbEv.price_min || 800;
+        const priceMax = dbEv.price_max || priceMin;
+        const priceFormatted = priceMin === priceMax ? `₹${priceMin.toLocaleString('en-IN')}` : `₹${priceMin.toLocaleString('en-IN')}–₹${priceMax.toLocaleString('en-IN')}`;
+        const dateStr = dbEv.date || '12 OCT 2026';
+
+        setEvent({
+          id: dbEv.id,
+          name: dbEv.name,
+          date: dateStr,
+          dateShort: dateStr.split(' ').slice(0, 2).join(' '),
+          venue: dbEv.venue || 'Ahmedabad',
+          location: dbEv.venue || 'Ahmedabad',
+          time: dbEv.time || '7:00 PM onwards',
+          priceRange: priceFormatted,
+          priceMin,
+          priceMax,
+          type: dbEv.type_tags && dbEv.type_tags.length ? dbEv.type_tags : ['Garba'],
+          demand: 'HIGH',
+          availability: 'Available',
+          image: dbEv.image_url || dbEv.image || 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
+          artist: dbEv.artist || undefined,
+          description: dbEv.description || 'Join the vibrant Navratri celebration with traditional music, dance, and festive energy in Ahmedabad.',
+        });
+      } else {
+        const staticMatch = EVENTS.find((e) => e.id === eventId);
+        if (staticMatch) setEvent(staticMatch);
+      }
+      setLoading(false);
+    }).catch(() => {
+      if (isMounted) setLoading(false);
+    });
+
+    return () => { isMounted = false; };
+  }, [eventId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center py-20 text-stone-500">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-stone-300 border-t-amber-800 rounded-full animate-spin" />
+          <span className="text-sm">Loading event details...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="px-5 py-12 text-center">
+        <h2 className="font-serif text-2xl mb-2">Event Not Found</h2>
+        <p className="text-stone-500 text-sm mb-6">The requested event could not be found or has ended.</p>
+        <button onClick={() => navigate('events')} className="btn-primary py-2.5 px-6 text-sm">
+          Browse All Events →
+        </button>
+      </div>
+    );
+  }
+
+  const dateParts = event.dateShort ? event.dateShort.split(' ') : ['12', 'OCT'];
 
   return (
     <div className="pb-24" style={{ color: '#1A1612' }}>
@@ -56,9 +131,9 @@ export default function EventDetail({ navigate, eventId }: Props) {
 
         {/* Date badge */}
         <div className="absolute bottom-4 left-4">
-          <div className="rounded font-sans font-bold text-white text-center px-3 py-2" style={{ background: '#C1440E' }}>
-            <div style={{ fontSize: 26, lineHeight: 1 }}>{event.dateShort.split(' ')[0]}</div>
-            <div style={{ fontSize: 11, letterSpacing: '0.08em' }}>{event.dateShort.split(' ')[1]}</div>
+          <div className="rounded font-sans font-bold text-white text-center px-3 py-2 shadow" style={{ background: '#C1440E' }}>
+            <div style={{ fontSize: 22, lineHeight: 1 }}>{dateParts[0] || '12'}</div>
+            <div style={{ fontSize: 11, letterSpacing: '0.08em' }}>{dateParts.slice(1).join(' ') || 'OCT'}</div>
           </div>
         </div>
       </div>
