@@ -9,6 +9,7 @@ interface Props extends NavProps {
 interface FormData {
   name: string;
   email: string;
+  phone: string;
   dates: string[];
   quantity: number;
   budgetMin: number;
@@ -38,6 +39,7 @@ export default function FindJugaad({ navigate, prefill }: Props) {
   const [form, setForm] = useState<FormData>({
     name: '',
     email: '',
+    phone: '',
     dates: prefill?.dates || [],
     quantity: prefill?.quantity || 2,
     budgetMin: 500,
@@ -67,6 +69,7 @@ export default function FindJugaad({ navigate, prefill }: Props) {
       artist_preference: form.artist,
       specific_event: form.specificEvent,
       readiness: (form.readiness || 'maybe') as 'ready' | 'exploring' | 'maybe',
+      buyer_phone: form.phone,
     });
     navigate('jugaad-success');
   };
@@ -89,14 +92,20 @@ export default function FindJugaad({ navigate, prefill }: Props) {
       <form onSubmit={handleSubmit} className="space-y-7">
         {/* Name */}
         <div>
-          <label style={{ display: 'block', marginBottom: 6 }}>Your name</label>
-          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="First name" />
+          <label style={{ display: 'block', marginBottom: 6 }}>Your name *</label>
+          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your full name" />
         </div>
 
-        {/* Email */}
-        <div>
-          <label style={{ display: 'block', marginBottom: 6 }}>Email address</label>
-          <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
+        {/* Email & Phone */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label style={{ display: 'block', marginBottom: 6 }}>Email address *</label>
+            <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 6 }}>Phone number *</label>
+            <input required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" />
+          </div>
         </div>
 
         {/* Dates */}

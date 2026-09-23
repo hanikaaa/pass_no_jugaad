@@ -13,6 +13,7 @@ export default function RequestPass({ navigate, eventId }: Props) {
   const [budgetMax, setBudgetMax] = useState(2500);
   const [priority, setPriority] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
 
   const PRIORITIES = [
@@ -28,7 +29,8 @@ export default function RequestPass({ navigate, eventId }: Props) {
       quantity: qty,
       budget_min: budgetMin,
       budget_max: budgetMax,
-      priority_note: priority,
+      priority_note: message ? `${priority} · Note: ${message}` : priority,
+      buyer_phone: phone,
     });
     navigate('request-success');
   };
@@ -110,10 +112,16 @@ export default function RequestPass({ navigate, eventId }: Props) {
           </div>
         </div>
 
-        {/* Email */}
-        <div>
-          <label style={{ display: 'block', marginBottom: 6 }}>Email address</label>
-          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+        {/* Contact info: Email & Phone */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label style={{ display: 'block', marginBottom: 6 }}>Email address *</label>
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 6 }}>Phone Number *</label>
+            <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 98765 43210" />
+          </div>
         </div>
 
         {/* Message */}

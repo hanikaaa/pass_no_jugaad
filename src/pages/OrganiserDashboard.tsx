@@ -242,6 +242,10 @@ function RequestsTab() {
                   <div style={{ fontSize: 12, color: '#9A8B82' }}>
                     {req.event_name} · <strong>{req.quantity} passes</strong> · {fmt(req.budget_min ?? 0)}–{fmt(req.budget_max ?? 0)}
                   </div>
+                  <div style={{ fontSize: 12, color: '#6B5B52', marginTop: 2 }}>
+                    {req.buyer_email && <span className="mr-2">📧 {req.buyer_email}</span>}
+                    {req.buyer_phone && <span>📞 {req.buyer_phone}</span>}
+                  </div>
                   {req.priority_note && (
                     <div style={{ fontSize: 12, color: '#7A1F2E', marginTop: 2 }}>Note: {req.priority_note}</div>
                   )}
@@ -255,12 +259,12 @@ function RequestsTab() {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-stone-500">Update Status:</span>
                   <select
-                    value={req.status === 'looking_for_options' ? 'in_process' : req.status}
+                    value={req.status}
                     onChange={(e) => updateStatus(req.id, e.target.value)}
                     className="text-xs font-semibold p-1.5 rounded border border-stone-300 bg-white"
                   >
                     <option value="request_received">Request Received</option>
-                    <option value="in_process">In Process</option>
+                    <option value="looking_for_options">Looking For Options</option>
                     <option value="offer_available">Offer Available</option>
                     <option value="completed">Completed</option>
                     <option value="closed">Closed</option>
@@ -268,9 +272,9 @@ function RequestsTab() {
                 </div>
 
                 <div className="flex gap-1.5">
-                  {req.status !== 'in_process' && req.status !== 'looking_for_options' && req.status !== 'completed' && (
+                  {req.status !== 'looking_for_options' && req.status !== 'completed' && (
                     <button
-                      onClick={() => updateStatus(req.id, 'in_process')}
+                      onClick={() => updateStatus(req.id, 'looking_for_options')}
                       className="px-2.5 py-1 text-xs rounded font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
                     >
                       In Process
@@ -287,10 +291,17 @@ function RequestsTab() {
                 </div>
               </div>
 
-              <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(26,22,18,0.05)' }}>
-                <a href={`mailto:${req.buyer_email}`} style={{ fontSize: 12, color: '#C1440E' }}>
-                  Email {(req.buyer_name ?? 'buyer').split(' ')[0]} ({req.buyer_email || '—'}) →
-                </a>
+              <div className="mt-2 pt-2 flex items-center gap-3" style={{ borderTop: '1px solid rgba(26,22,18,0.05)' }}>
+                {req.buyer_email && (
+                  <a href={`mailto:${req.buyer_email}`} style={{ fontSize: 12, color: '#C1440E' }}>
+                    Email {(req.buyer_name ?? 'buyer').split(' ')[0]} ({req.buyer_email}) →
+                  </a>
+                )}
+                {req.buyer_phone && (
+                  <a href={`tel:${req.buyer_phone}`} style={{ fontSize: 12, color: '#2D7A4F' }}>
+                    Call ({req.buyer_phone}) →
+                  </a>
+                )}
               </div>
             </div>
           ))}

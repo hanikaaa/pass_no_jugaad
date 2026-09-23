@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { type NavProps, EVENTS, type Event } from '../data/events';
-import { getEventById, getApprovedEvents } from '../lib/api';
+import { type NavProps, EVENTS, type Event, normalizeDateShort } from '../data/events';
+import { getEventById } from '../lib/api';
 
 interface Props extends NavProps {
   eventId: string | null;
@@ -13,7 +13,7 @@ const AVAIL_COLOR: Record<string, string> = {
 };
 
 const DEMAND_LABEL: Record<string, string> = {
-  LOW: 'Low demand',
+  LOW: 'Verified Event',
   MEDIUM: 'Moderate interest',
   HIGH: 'High demand',
   'VERY HIGH': 'Very high demand — act fast',
@@ -47,7 +47,7 @@ export default function EventDetail({ navigate, eventId }: Props) {
           id: dbEv.id,
           name: dbEv.name,
           date: dateStr,
-          dateShort: dateStr.split(' ').slice(0, 2).join(' '),
+          dateShort: normalizeDateShort(dateStr),
           venue: dbEv.venue || 'Ahmedabad',
           location: dbEv.venue || 'Ahmedabad',
           time: dbEv.time || '7:00 PM onwards',
@@ -59,7 +59,14 @@ export default function EventDetail({ navigate, eventId }: Props) {
           availability: 'Available',
           image: dbEv.image_url || dbEv.image || 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
           artist: dbEv.artist || undefined,
+          artistImage: dbEv.artist_image_url || undefined,
           description: dbEv.description || 'Join the vibrant Navratri celebration with traditional music, dance, and festive energy in Ahmedabad.',
+          contactEmail: dbEv.contact_email || undefined,
+          contactPhone: dbEv.contact_phone || undefined,
+          jugaadDrop: !!dbEv.jugaad_drop,
+          originalPrice: dbEv.original_price || undefined,
+          dropPrice: dbEv.drop_price || undefined,
+          dropNumber: dbEv.drop_number || undefined,
         });
       } else {
         const staticMatch = EVENTS.find((e) => e.id === eventId);
@@ -129,24 +136,36 @@ export default function EventDetail({ navigate, eventId }: Props) {
           </div>
         </div>
 
-        {/* Date badge */}
-        <div className="absolute bottom-4 left-4">
+        {/* Date badge & Drop banner */}
+        <div className="absolute bottom-4 left-4 flex items-center gap-2">
           <div className="rounded font-sans font-bold text-white text-center px-3 py-2 shadow" style={{ background: '#C1440E' }}>
             <div style={{ fontSize: 22, lineHeight: 1 }}>{dateParts[0] || '12'}</div>
             <div style={{ fontSize: 11, letterSpacing: '0.08em' }}>{dateParts.slice(1).join(' ') || 'OCT'}</div>
           </div>
+          {event.jugaadDrop && (
+            <div className="rounded font-sans font-bold text-white text-xs px-3 py-2 shadow bg-amber-600 flex items-center gap-1.5">
+              <span>⚡ JUGAAD DROP LIVE</span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Content */}
       <div className="px-5 pt-6">
-        {/* Tags */}
-        <div className="flex gap-2 flex-wrap mb-4">
+        {/* Tags & Artist Avatar */}
+        <div className="flex gap-2 flex-wrap items-center mb-4">
           {event.type.map((t) => (
             <span key={t} className="chip" style={{ padding: '4px 10px', fontSize: 12 }}>{t}</span>
           ))}
           {event.artist && (
-            <span className="chip active" style={{ padding: '4px 10px', fontSize: 12 }}>{event.artist}</span>
+            <span className="inline-flex items-center gap-1.5 chip active" style={{ padding: '4px 12px', fontSize: 12 }}>
+              {event.artistImage ? (
+                <img src={event.artistImage} alt={event.artist} className="w-5 h-5 rounded-full object-cover border border-amber-900/30" />
+              ) : (
+                <span>🎤</span>
+              )}
+              <span>{event.artist}</span>
+            </span>
           )}
         </div>
 
@@ -175,31 +194,61 @@ export default function EventDetail({ navigate, eventId }: Props) {
           <p style={{ fontSize: 14, lineHeight: 1.7, color: '#6B5B52' }}>{event.description}</p>
         </div>
 
-        {/* Price + Availability */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="card-light p-4">
-            <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 4 }}>Price</div>
-            <div className="font-serif" style={{ fontSize: 20, fontWeight: 500, color: '#C1440E' }}>{event.priceRange}</div>
-          </div>
-          <div className="card-light p-4">
-            <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 4 }}>Availability</div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: AVAIL_COLOR[event.availability] ?? '#9A8B82' }}>{event.availability}</div>
-          </div>
-        </div>
-
-        {/* Demand */}
-        <div className="card-light p-4 mb-6" style={{ borderColor: 'rgba(193,68,14,0.2)', background: 'rgba(193,68,14,0.04)' }}>
-          <div className="flex items-center justify-between">
+        {/* Featured Artist Banner if image present */}
+        {event.artist && event.artistImage && (
+          <div className="card-light p-4 mb-5 flex items-center gap-4 border border-amber-200/60 bg-amber-50/40">
+            <img src={event.artistImage} alt={event.artist} className="w-14 h-14 rounded-full object-cover shadow-sm border-2 border-white" />
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 4 }}>Demand</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#C1440E' }}>{DEMAND_LABEL[event.demand] ?? event.demand}</div>
-            </div>
-            <div className="text-right">
-              <div className="font-serif" style={{ fontSize: 32, fontWeight: 500, color: '#1A1612' }}>200+</div>
-              <div style={{ fontSize: 10, color: '#9A8B82', textTransform: 'uppercase', letterSpacing: '0.08em' }}>interested</div>
+              <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#C1440E' }}>Featured Headliner</div>
+              <div className="font-serif text-lg font-medium text-stone-900">{event.artist}</div>
+              <div style={{ fontSize: 12, color: '#6B5B52' }}>Live performance at {event.venue}</div>
             </div>
           </div>
-          <p style={{ fontSize: 11, color: '#9A8B82', marginTop: 8 }}>* Demo data — community demand signal</p>
+        )}
+
+        {/* Price + Availability / Jugaad Drop Price */}
+        {event.jugaadDrop && event.dropPrice ? (
+          <div className="card-light p-4 mb-5 border-2 border-amber-600/30 bg-amber-50/50">
+            <div className="flex items-center justify-between mb-1">
+              <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#C1440E' }}>⚡ Exclusive Jugaad Drop</div>
+              {event.originalPrice && (
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-700 text-white">
+                  Save {Math.round(((event.originalPrice - event.dropPrice) / event.originalPrice) * 100)}%
+                </span>
+              )}
+            </div>
+            <div className="flex items-baseline gap-3">
+              <div className="font-serif text-3xl font-bold text-amber-900">₹{event.dropPrice.toLocaleString('en-IN')}</div>
+              {event.originalPrice && (
+                <div className="text-stone-400 text-lg line-through">₹{event.originalPrice.toLocaleString('en-IN')}</div>
+              )}
+              <span className="ml-auto text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                Verified Deal
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="card-light p-4">
+              <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 4 }}>Price</div>
+              <div className="font-serif" style={{ fontSize: 20, fontWeight: 500, color: '#C1440E' }}>{event.priceRange}</div>
+            </div>
+            <div className="card-light p-4">
+              <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 4 }}>Availability</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: AVAIL_COLOR[event.availability] ?? '#9A8B82' }}>{event.availability}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Clean Event Status Banner */}
+        <div className="card-light p-4 mb-6 flex items-center justify-between" style={{ borderColor: 'rgba(193,68,14,0.2)', background: 'rgba(193,68,14,0.04)' }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#9A8B82', marginBottom: 2 }}>Platform Status</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#C1440E' }}>Direct Organiser Matchmaking</div>
+          </div>
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-stone-200 text-stone-700">
+            ✓ Verified Pass Source
+          </span>
         </div>
 
         {/* Quantity */}
@@ -223,9 +272,21 @@ export default function EventDetail({ navigate, eventId }: Props) {
         {/* CTAs */}
         <div className="space-y-3">
           <button onClick={() => navigate('request-pass', { eventId: event.id })} className="btn-primary w-full py-4" style={{ fontSize: 16 }}>
-            Request Passes →
+            {event.jugaadDrop ? 'Grab This Drop Passes →' : 'Request Passes →'}
           </button>
-          <button className="btn-outline w-full py-3.5 text-sm">Share event</button>
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({ title: event.name, url: window.location.href }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert('Event link copied to clipboard!');
+              }
+            }}
+            className="btn-outline w-full py-3.5 text-sm"
+          >
+            Share event
+          </button>
         </div>
       </div>
     </div>

@@ -12,12 +12,13 @@ import {
 import { SUPABASE_CONFIGURED, type Profile, type DBEvent, type DBPassRequest, type DBJugaadSignal } from '../lib/supabase';
 
 
-type AdminTab = 'overview' | 'pending' | 'events' | 'requests' | 'signals' | 'users' | 'organisers';
+type AdminTab = 'overview' | 'pending' | 'events' | 'drops' | 'requests' | 'signals' | 'users' | 'organisers';
 
 const TABS: { key: AdminTab; label: string; icon: string }[] = [
   { key: 'overview',   label: 'Overview', icon: '📊' },
   { key: 'pending',    label: 'Pending Review', icon: '⏳' },
   { key: 'events',     label: 'All Events', icon: '🎪' },
+  { key: 'drops',      label: 'Jugaad Drops', icon: '⚡' },
   { key: 'requests',   label: 'Pass Requests', icon: '📋' },
   { key: 'signals',    label: 'Radar Signals', icon: '📡' },
   { key: 'users',      label: 'Users & Roles', icon: '👥' },
@@ -84,10 +85,10 @@ function OverviewTab({
           <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: '#1A1612' }}>
-              System Status: {SUPABASE_CONFIGURED ? 'Live Supabase Connected' : 'Simulated Demo Mode'}
+              System Status: {SUPABASE_CONFIGURED ? 'Live Database Connected' : 'Simulated Active Mode'}
             </div>
             <div style={{ fontSize: 12, color: '#6B5B52' }}>
-              PostgreSQL DB • Realtime RLS Active • All services operating normally
+              PostgreSQL DB • Realtime Pipeline Active • Live notifications active
             </div>
           </div>
         </div>
@@ -205,9 +206,10 @@ function OverviewTab({
               <div key={sig.id} className="p-3 rounded-lg flex items-center justify-between"
                 style={{ background: '#FAF7F2', border: '1px solid rgba(26,22,18,0.06)' }}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1612' }}>{sig.buyer_name || sig.buyer_email || 'Anonymous Buyer'}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1612' }}>{sig.buyer_name || sig.buyer_email || 'Pass Seeker'}</div>
                   <div style={{ fontSize: 11, color: '#9A8B82', marginTop: 1 }}>
                     {sig.preferred_dates?.join(', ') || 'Any date'} · {sig.num_passes} passes · {fmt(sig.budget_min)}–{fmt(sig.budget_max)}
+                    {sig.buyer_phone && <span className="ml-2 text-emerald-800 font-semibold">📞 {sig.buyer_phone}</span>}
                   </div>
                 </div>
                 <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{
@@ -285,23 +287,42 @@ function PendingTab({ onRefresh }: { onRefresh: () => void }) {
           const pMax = ev.price_max || pMin;
           const priceStr = pMin === pMax && pMin > 0 ? `₹${pMin.toLocaleString('en-IN')}` : pMin > 0 ? `₹${pMin.toLocaleString('en-IN')}–₹${pMax.toLocaleString('en-IN')}` : (ev.price ? `₹${ev.price}` : 'TBA');
           const imgUrl = ev.image_url || ev.image;
+          const artistImg = ev.artist_image_url;
 
           return (
             <div key={ev.id} className="card-light p-5">
               {imgUrl && (
-                <div className="relative h-40 rounded-lg overflow-hidden mb-4 bg-stone-100">
+                <div className="relative h-44 rounded-lg overflow-hidden mb-4 bg-stone-100">
                   <img src={imgUrl} alt={ev.name} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 600, color: '#1A1612', marginBottom: 2 }}>{ev.name}</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: '#1A1612', marginBottom: 2 }}>{ev.name}</div>
                   <div style={{ fontSize: 13, color: '#9A8B82' }}>
                     {ev.organiser || ev.profiles?.name || 'Organiser'} · <a href={`mailto:${ev.email || ev.contact_email || ev.profiles?.email}`} style={{ color: '#C1440E' }}>{ev.email || ev.contact_email || ev.profiles?.email}</a>
+                    {ev.contact_phone && (
+                      <span className="ml-2 font-semibold text-emerald-800">· 📞 <a href={`tel:${ev.contact_phone}`}>{ev.contact_phone}</a></span>
+                    )}
                   </div>
                 </div>
                 <EventStatusBadge status="pending_review" />
               </div>
+
+              {/* Artist Card if provided */}
+              {ev.artist && (
+                <div className="p-3 rounded-lg mb-3 flex items-center gap-3 bg-amber-50/70 border border-amber-200">
+                  {artistImg ? (
+                    <img src={artistImg} alt={ev.artist} className="w-10 h-10 rounded-full object-cover border border-amber-900/30" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-amber-200 flex items-center justify-center font-bold text-amber-900">🎤</div>
+                  )}
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-amber-900">Featured Artist / DJ</div>
+                    <div className="text-sm font-bold text-stone-900">{ev.artist}</div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 {[
@@ -332,7 +353,7 @@ function PendingTab({ onRefresh }: { onRefresh: () => void }) {
             {rejecting === ev.id ? (
               <div className="space-y-2 mt-3 pt-3 border-t">
                 <textarea
-                  placeholder="Reason for rejection (optional feedback for organiser)…"
+                  placeholder="Reason for rejection (feedback will be emailed to organiser)…"
                   rows={2}
                   value={reason}
                   onChange={e => setReason(e.target.value)}
@@ -363,7 +384,7 @@ function PendingTab({ onRefresh }: { onRefresh: () => void }) {
   );
 }
 
-// ─── 3. All Events Tab (with Add / Edit / Delete) ─────────────
+// ─── 3. All Events Tab (with Add / Edit / Delete matching Organiser Form) ─
 function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate']; onRefresh: () => void }) {
   const [search, setSearch] = useState('');
   const [allEvents, setAllEvents] = useState<any[]>([]);
@@ -374,13 +395,24 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
   // Form fields
   const [formName, setFormName] = useState('');
   const [formVenue, setFormVenue] = useState('');
-  const [formDate, setFormDate] = useState('');
-  const [formTime, setFormTime] = useState('');
+  const [formDate, setFormDate] = useState('12 OCT 2026');
+  const [formTime, setFormTime] = useState('7:00 PM onwards');
   const [formPrice, setFormPrice] = useState('1000');
-  const [formImageUrl, setFormImageUrl] = useState('');
+  const [formBannerUrl, setFormBannerUrl] = useState('');
+  const [formArtistUrl, setFormArtistUrl] = useState('');
   const [formArtist, setFormArtist] = useState('');
   const [formTags, setFormTags] = useState('Garba, Artist Night');
   const [formDesc, setFormDesc] = useState('');
+  const [formOrgName, setFormOrgName] = useState('');
+  const [formContactEmail, setFormContactEmail] = useState('');
+  const [formContactPhone, setFormContactPhone] = useState('');
+  const [formInstagram, setFormInstagram] = useState('');
+  const [formIsDrop, setFormIsDrop] = useState(false);
+  const [formDropPrice, setFormDropPrice] = useState('');
+  const [formOriginalPrice, setFormOriginalPrice] = useState('');
+
+  const bannerFileRef = React.useRef<HTMLInputElement>(null);
+  const artistFileRef = React.useRef<HTMLInputElement>(null);
 
   const loadData = () => {
     if (!SUPABASE_CONFIGURED) return;
@@ -395,44 +427,82 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
           priceRange: priceFormatted,
           price_min: pMin, price_max: pMax,
           image_url: e.image_url || e.image || '',
+          artist_image_url: e.artist_image_url || '',
+          contact_email: e.contact_email || '',
+          contact_phone: e.contact_phone || '',
+          jugaad_drop: e.jugaad_drop,
+          original_price: e.original_price,
+          drop_price: e.drop_price,
           demand: 'MEDIUM', type_tags: e.type_tags ?? [], status: e.status, artist: e.artist, description: e.description
         };
       }));
     });
   };
 
-
   useEffect(() => { loadData(); }, []);
 
   const openAddModal = () => {
     setEditingEvent(null);
     setFormName(''); setFormVenue(''); setFormDate('12 OCT 2026'); setFormTime('7:00 PM onwards');
-    setFormPrice('1000'); setFormImageUrl(''); setFormArtist(''); setFormTags('Garba, Artist Night'); setFormDesc('');
+    setFormPrice('1000'); setFormBannerUrl(''); setFormArtistUrl(''); setFormArtist(''); setFormTags('Garba, Artist Night'); setFormDesc('');
+    setFormOrgName(''); setFormContactEmail('passnojugaadd@gmail.com'); setFormContactPhone(''); setFormInstagram('');
+    setFormIsDrop(false); setFormDropPrice(''); setFormOriginalPrice('1500');
     setModalOpen(true);
   };
 
   const openEditModal = (ev: any) => {
     setEditingEvent(ev);
     setFormName(ev.name); setFormVenue(ev.venue || ''); setFormDate(ev.dateShort || ''); setFormTime(ev.time || '7:00 PM onwards');
-    setFormPrice(String(ev.price_min || 1000)); setFormImageUrl(ev.image_url || '');
+    setFormPrice(String(ev.price_min || 1000)); setFormBannerUrl(ev.image_url || ''); setFormArtistUrl(ev.artist_image_url || '');
     setFormArtist(ev.artist || ''); setFormTags(ev.type_tags?.join(', ') || ''); setFormDesc(ev.description || '');
+    setFormOrgName(''); setFormContactEmail(ev.contact_email || ''); setFormContactPhone(ev.contact_phone || '');
+    setFormInstagram(ev.instagram_link || '');
+    setFormIsDrop(!!ev.jugaad_drop);
+    setFormDropPrice(ev.drop_price ? String(ev.drop_price) : '');
+    setFormOriginalPrice(ev.original_price ? String(ev.original_price) : String(ev.price_min || 1500));
     setModalOpen(true);
+  };
+
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setFormBannerUrl(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleArtistUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setFormArtistUrl(ev.target?.result as string);
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const priceVal = parseInt(formPrice) || 0;
-    const eventPayload = {
+    const dropPriceVal = parseInt(formDropPrice) || priceVal;
+    const origPriceVal = parseInt(formOriginalPrice) || priceVal;
+
+    const eventPayload: any = {
       name: formName,
       venue: formVenue,
       date: formDate,
       time: formTime,
       price_min: priceVal,
       price_max: priceVal,
-      image_url: formImageUrl || null,
+      image_url: formBannerUrl || null,
+      artist_image_url: formArtistUrl || null,
       artist: formArtist || null,
       type_tags: formTags.split(',').map(t => t.trim()).filter(Boolean),
       description: formDesc || null,
+      contact_email: formContactEmail || null,
+      contact_phone: formContactPhone || null,
+      instagram_link: formInstagram || null,
+      jugaad_drop: formIsDrop,
+      drop_price: formIsDrop ? dropPriceVal : null,
+      original_price: formIsDrop ? origPriceVal : null,
     };
 
     if (editingEvent) {
@@ -507,9 +577,18 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1612' }}>{ev.name}</span>
                   <EventStatusBadge status={ev.status} />
-                  {ev.artist && <span className="chip text-[10px] py-0.5 px-2 bg-amber-100 text-amber-900 font-semibold">{ev.artist}</span>}
+                  {ev.jugaad_drop && <span className="chip text-[10px] py-0.5 px-2 bg-red-100 text-red-900 font-bold">⚡ Jugaad Drop</span>}
+                  {ev.artist && (
+                    <span className="chip text-[10px] py-0.5 px-2 bg-amber-100 text-amber-900 font-semibold inline-flex items-center gap-1">
+                      {ev.artist_image_url && <img src={ev.artist_image_url} alt="" className="w-3 h-3 rounded-full" />}
+                      {ev.artist}
+                    </span>
+                  )}
                 </div>
-                <div style={{ fontSize: 12, color: '#9A8B82' }}>{ev.dateShort} · {ev.venue} · {ev.priceRange}</div>
+                <div style={{ fontSize: 12, color: '#9A8B82' }}>
+                  {ev.dateShort} · {ev.venue} · {ev.priceRange}
+                  {ev.contact_phone && <span> · 📞 {ev.contact_phone}</span>}
+                </div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {ev.type_tags?.slice(0, 3).map((t: string) => (
                     <span key={t} className="chip text-[10px] py-0.5 px-2">{t}</span>
@@ -526,60 +605,155 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
         ))}
       </div>
 
-      {/* Add / Edit Event Modal */}
+      {/* Add / Edit Event Modal (Matching Organiser Form UI) */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(26,22,18,0.5)', backdropFilter: 'blur(4px)' }}>
-          <div className="w-full max-w-lg card-light p-6 max-h-[90vh] overflow-y-auto" style={{ background: '#FAF7F2' }}>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-serif" style={{ fontSize: 20, fontWeight: 600 }}>
-                {editingEvent ? 'Edit Event' : 'Create New Event'}
-              </h2>
-              <button onClick={() => setModalOpen(false)} className="text-stone-400 hover:text-stone-700 text-lg">✕</button>
+          <div className="w-full max-w-xl card-light p-6 max-h-[90vh] overflow-y-auto" style={{ background: '#FAF7F2' }}>
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-stone-200">
+              <div>
+                <div className="eyebrow text-[10px]">Super Admin Event Publisher</div>
+                <h2 className="font-serif text-xl font-bold">
+                  {editingEvent ? 'Edit Event Listing' : 'Create New Event Listing'}
+                </h2>
+              </div>
+              <button onClick={() => setModalOpen(false)} className="text-stone-400 hover:text-stone-700 text-xl font-bold">✕</button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-3.5 text-xs">
-              <div>
-                <label className="font-bold text-stone-700 block mb-1">Event Name *</label>
-                <input required value={formName} onChange={e => setFormName(e.target.value)} placeholder="e.g. SBR Grand Garba 2026" />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="font-bold text-stone-700 block mb-1">Date</label>
-                  <input value={formDate} onChange={e => setFormDate(e.target.value)} placeholder="12 OCT 2026" />
+            <form onSubmit={handleSave} className="space-y-4 text-xs">
+              {/* Section 1: Organiser Details */}
+              <div className="card-light p-3.5 space-y-3 bg-white">
+                <div className="font-bold text-stone-700 uppercase tracking-wider text-[10px]">1. Organiser / Contact Details</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="font-semibold block mb-1">Organiser Name / Brand</label>
+                    <input value={formOrgName} onChange={e => setFormOrgName(e.target.value)} placeholder="e.g. Pass No Jugaad Curations" />
+                  </div>
+                  <div>
+                    <label className="font-semibold block mb-1">Contact Email *</label>
+                    <input type="email" required value={formContactEmail} onChange={e => setFormContactEmail(e.target.value)} placeholder="organiser@email.com" />
+                  </div>
                 </div>
                 <div>
-                  <label className="font-bold text-stone-700 block mb-1">Time</label>
-                  <input value={formTime} onChange={e => setFormTime(e.target.value)} placeholder="7:00 PM onwards" />
+                  <label className="font-semibold block mb-1">Contact Phone Number *</label>
+                  <input type="tel" value={formContactPhone} onChange={e => setFormContactPhone(e.target.value)} placeholder="+91 98765 43210" />
                 </div>
-              </div>
-              <div>
-                <label className="font-bold text-stone-700 block mb-1">Ticket Price (₹) *</label>
-                <input type="number" required value={formPrice} onChange={e => setFormPrice(e.target.value)} placeholder="1000" />
-              </div>
-              <div>
-                <label className="font-bold text-stone-700 block mb-1">Banner Image URL</label>
-                <input value={formImageUrl} onChange={e => setFormImageUrl(e.target.value)} placeholder="https://... or data:image..." />
-              </div>
-              <div>
-                <label className="font-bold text-stone-700 block mb-1">Venue / Location</label>
-                <input value={formVenue} onChange={e => setFormVenue(e.target.value)} placeholder="Sindhu Bhavan Road, Ahmedabad" />
-              </div>
-              <div>
-                <label className="font-bold text-stone-700 block mb-1">Featured Artist</label>
-                <input value={formArtist} onChange={e => setFormArtist(e.target.value)} placeholder="e.g. DJ Chetas, Kinjal Dave" />
-              </div>
-              <div>
-                <label className="font-bold text-stone-700 block mb-1">Tags (comma separated)</label>
-                <input value={formTags} onChange={e => setFormTags(e.target.value)} placeholder="Garba, Artist Night, Premium" />
-              </div>
-              <div>
-                <label className="font-bold text-stone-700 block mb-1">Description</label>
-                <textarea rows={3} value={formDesc} onChange={e => setFormDesc(e.target.value)} placeholder="Event details, vibe, pass guidance…" />
               </div>
 
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setModalOpen(false)} className="btn-outline flex-1 py-2.5">Cancel</button>
-                <button type="submit" className="btn-primary flex-1 py-2.5">Save & Publish Live</button>
+              {/* Section 2: Banner Image */}
+              <div className="card-light p-3.5 space-y-2 bg-white">
+                <div className="font-bold text-stone-700 uppercase tracking-wider text-[10px]">2. Event Banner Image</div>
+                <input ref={bannerFileRef} type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
+                {formBannerUrl ? (
+                  <div className="relative rounded-lg overflow-hidden h-36 bg-stone-100">
+                    <img src={formBannerUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                    <button type="button" onClick={() => setFormBannerUrl('')} className="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">Remove</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 items-center">
+                    <button type="button" onClick={() => bannerFileRef.current?.click()} className="btn-outline py-2 px-3 text-xs flex-1">
+                      📁 Upload Banner Image (JPG/PNG)
+                    </button>
+                    <input value={formBannerUrl} onChange={e => setFormBannerUrl(e.target.value)} placeholder="Or paste image URL" className="flex-1" />
+                  </div>
+                )}
+              </div>
+
+              {/* Section 3: Artist Photo */}
+              <div className="card-light p-3.5 space-y-2 bg-white">
+                <div className="font-bold text-stone-700 uppercase tracking-wider text-[10px]">3. Featured Artist / Performer Photo</div>
+                <input ref={artistFileRef} type="file" accept="image/*" className="hidden" onChange={handleArtistUpload} />
+                {formArtistUrl ? (
+                  <div className="flex items-center gap-3 p-2 rounded bg-amber-50 border border-amber-200">
+                    <img src={formArtistUrl} alt="Artist Preview" className="w-12 h-12 rounded-full object-cover border" />
+                    <div className="flex-1">
+                      <div className="font-bold text-stone-900">{formArtist || 'Artist Photo'}</div>
+                      <div className="text-[10px] text-stone-500">Photo attached</div>
+                    </div>
+                    <button type="button" onClick={() => setFormArtistUrl('')} className="text-red-700 text-xs font-semibold px-2 py-1">Remove</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 items-center">
+                    <button type="button" onClick={() => artistFileRef.current?.click()} className="btn-outline py-2 px-3 text-xs flex-1">
+                      🎤 Upload Artist Photo (Avatar)
+                    </button>
+                    <input value={formArtistUrl} onChange={e => setFormArtistUrl(e.target.value)} placeholder="Or paste artist image URL" className="flex-1" />
+                  </div>
+                )}
+              </div>
+
+              {/* Section 4: Event Core Info */}
+              <div className="card-light p-3.5 space-y-3 bg-white">
+                <div className="font-bold text-stone-700 uppercase tracking-wider text-[10px]">4. Event Information</div>
+                <div>
+                  <label className="font-semibold block mb-1">Event Name *</label>
+                  <input required value={formName} onChange={e => setFormName(e.target.value)} placeholder="e.g. SBR Grand Garba 2026" />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">Venue / Location *</label>
+                  <input required value={formVenue} onChange={e => setFormVenue(e.target.value)} placeholder="Sindhu Bhavan Road, Ahmedabad" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="font-semibold block mb-1">Date (Any custom date) *</label>
+                    <input required value={formDate} onChange={e => setFormDate(e.target.value)} placeholder="e.g. 7th October 2026, 12 OCT" />
+                  </div>
+                  <div>
+                    <label className="font-semibold block mb-1">Time</label>
+                    <input value={formTime} onChange={e => setFormTime(e.target.value)} placeholder="7:00 PM onwards" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="font-semibold block mb-1">Ticket Price (₹) *</label>
+                    <input type="number" required value={formPrice} onChange={e => setFormPrice(e.target.value)} placeholder="1000" />
+                  </div>
+                  <div>
+                    <label className="font-semibold block mb-1">Featured Artist Name</label>
+                    <input value={formArtist} onChange={e => setFormArtist(e.target.value)} placeholder="DJ Chetas, Kinjal Dave" />
+                  </div>
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">Tags (comma separated)</label>
+                  <input value={formTags} onChange={e => setFormTags(e.target.value)} placeholder="Garba, Artist Night, Premium" />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">Description</label>
+                  <textarea rows={3} value={formDesc} onChange={e => setFormDesc(e.target.value)} placeholder="Describe the vibe, passes, details…" />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">Instagram Link</label>
+                  <input value={formInstagram} onChange={e => setFormInstagram(e.target.value)} placeholder="https://instagram.com/..." />
+                </div>
+              </div>
+
+              {/* Section 5: Jugaad Drop Feature */}
+              <div className="card-light p-3.5 space-y-3 bg-amber-50/50 border border-amber-200">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-amber-900 uppercase tracking-wider text-[10px]">⚡ Jugaad Flash Drop Option</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer font-bold text-amber-900">
+                    <input type="checkbox" checked={formIsDrop} onChange={e => setFormIsDrop(e.target.checked)} className="rounded" />
+                    <span>Enable as Jugaad Drop</span>
+                  </label>
+                </div>
+                {formIsDrop && (
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <div>
+                      <label className="font-semibold block mb-1 text-stone-700">Original Price (₹)</label>
+                      <input type="number" value={formOriginalPrice} onChange={e => setFormOriginalPrice(e.target.value)} placeholder="1500" />
+                    </div>
+                    <div>
+                      <label className="font-semibold block mb-1 text-stone-700">Drop Price (Discounted ₹) *</label>
+                      <input type="number" value={formDropPrice} onChange={e => setFormDropPrice(e.target.value)} placeholder="999" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-stone-200">
+                <button type="button" onClick={() => setModalOpen(false)} className="btn-outline flex-1 py-3">Cancel</button>
+                <button type="submit" className="btn-primary flex-1 py-3 text-sm font-bold">
+                  {editingEvent ? 'Save & Update Event' : '✓ Save & Publish Live'}
+                </button>
               </div>
             </form>
           </div>
@@ -589,7 +763,187 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
   );
 }
 
-// ─── 4. Pass Requests CRM Tab (with Match & Offer details) ───
+// ─── 3.5 Dedicated Jugaad Drops Tab in Admin ──────────────────
+function JugaadDropsTab({ onRefresh }: { onRefresh: () => void }) {
+  const [events, setEvents] = useState<any[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState('');
+  const [origPrice, setOrigPrice] = useState('1500');
+  const [dropPrice, setDropPrice] = useState('999');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const loadEvents = () => {
+    if (!SUPABASE_CONFIGURED) return;
+    getAllEvents().then(data => setEvents(data ?? []));
+  };
+
+  useEffect(() => { loadEvents(); }, []);
+
+  const activeDrops = events.filter(e => e.jugaad_drop);
+
+  const handleCreateDrop = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEventId) return;
+    setSaving(true);
+    const orig = parseInt(origPrice) || 1500;
+    const drop = parseInt(dropPrice) || 999;
+
+    await updateEventByAdmin(selectedEventId, {
+      jugaad_drop: true,
+      original_price: orig,
+      drop_price: drop,
+      drop_number: activeDrops.length + 1,
+    });
+
+    setSaving(false);
+    setModalOpen(false);
+    loadEvents();
+    onRefresh();
+  };
+
+  const handleRemoveDrop = async (id: string) => {
+    if (!confirm('Remove Jugaad Drop status from this event?')) return;
+    await updateEventByAdmin(id, {
+      jugaad_drop: false,
+      drop_price: null,
+      original_price: null,
+    });
+    loadEvents();
+    onRefresh();
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <div className="eyebrow mb-1">⚡ Flash Allocations</div>
+          <div className="font-serif" style={{ fontSize: 22, fontWeight: 500 }}>Jugaad Drops Manager</div>
+        </div>
+        <button onClick={() => setModalOpen(true)} className="btn-primary py-2 px-3 text-xs font-semibold">
+          + Create New Jugaad Drop
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+        <div className="card-light p-3 text-center">
+          <div className="font-serif text-2xl font-bold text-amber-900">{activeDrops.length}</div>
+          <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Active Drops Live</div>
+        </div>
+        <div className="card-light p-3 text-center">
+          <div className="font-serif text-2xl font-bold text-emerald-800">
+            {activeDrops.length ? `₹${Math.round(activeDrops.reduce((acc, d) => acc + (d.drop_price || 0), 0) / activeDrops.length)}` : '—'}
+          </div>
+          <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Avg Drop Price</div>
+        </div>
+        <div className="card-light p-3 text-center col-span-2 sm:col-span-1">
+          <div className="font-serif text-2xl font-bold text-stone-900">{events.length}</div>
+          <div className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">Total Eligible Events</div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {activeDrops.map(ev => {
+          const savings = ev.original_price && ev.drop_price && ev.original_price > ev.drop_price
+            ? Math.round(((ev.original_price - ev.drop_price) / ev.original_price) * 100)
+            : null;
+
+          return (
+            <div key={ev.id} className="card-light p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-2 border-amber-600/20 bg-amber-50/30">
+              <div className="flex items-center gap-3">
+                {ev.image_url ? (
+                  <img src={ev.image_url} alt="" className="w-14 h-14 rounded-md object-cover" />
+                ) : (
+                  <div className="w-14 h-14 rounded-md bg-stone-200 flex items-center justify-center text-xl">⚡</div>
+                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-base text-stone-900">{ev.name}</span>
+                    <span className="chip text-[10px] py-0.5 px-2 bg-amber-100 text-amber-900 font-bold">⚡ Active Drop</span>
+                    {savings && <span className="chip text-[10px] py-0.5 px-2 bg-emerald-100 text-emerald-900 font-bold">Save {savings}%</span>}
+                  </div>
+                  <div className="text-xs text-stone-600 mt-0.5">
+                    {ev.date} · {ev.venue} · <strong>Drop Price: ₹{ev.drop_price}</strong> (Original: ₹{ev.original_price})
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleRemoveDrop(ev.id)} className="btn-outline px-3 py-1.5 text-xs text-red-800 hover:bg-red-50">
+                  Deactivate Drop
+                </button>
+              </div>
+            </div>
+          );
+        })}
+
+        {activeDrops.length === 0 && (
+          <div className="card-light p-8 text-center">
+            <div className="text-3xl mb-2">⚡</div>
+            <div className="font-serif text-lg font-semibold text-stone-800">No Active Jugaad Drops</div>
+            <p className="text-xs text-stone-500 mt-1 mb-4">Click "+ Create New Jugaad Drop" to discount an approved event and feature it on the Drops page.</p>
+            <button onClick={() => setModalOpen(true)} className="btn-primary py-2 px-4 text-xs font-semibold">
+              Create First Drop →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(26,22,18,0.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full max-w-md card-light p-6" style={{ background: '#FAF7F2' }}>
+            <div className="flex justify-between items-center mb-3 pb-2 border-b">
+              <h2 className="font-serif text-lg font-bold">⚡ Create a Jugaad Drop</h2>
+              <button onClick={() => setModalOpen(false)} className="text-stone-400 text-lg font-bold">✕</button>
+            </div>
+            <form onSubmit={handleCreateDrop} className="space-y-3.5 text-xs">
+              <div>
+                <label className="font-bold block mb-1 text-stone-700">Select Event to Discount *</label>
+                <select required value={selectedEventId} onChange={e => {
+                  setSelectedEventId(e.target.value);
+                  const ev = events.find(x => x.id === e.target.value);
+                  if (ev) {
+                    setOrigPrice(String(ev.price_min || 1500));
+                    setDropPrice(String(Math.round((ev.price_min || 1500) * 0.75)));
+                  }
+                }} className="w-full p-2.5 rounded border border-stone-300">
+                  <option value="">-- Choose an event --</option>
+                  {events.map(ev => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.name} ({ev.date} - ₹{ev.price_min || 1000})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-bold block mb-1 text-stone-700">Original Price (₹) *</label>
+                  <input type="number" required value={origPrice} onChange={e => setOrigPrice(e.target.value)} placeholder="1500" />
+                </div>
+                <div>
+                  <label className="font-bold block mb-1 text-stone-700">Drop / Discount Price (₹) *</label>
+                  <input type="number" required value={dropPrice} onChange={e => setDropPrice(e.target.value)} placeholder="999" />
+                </div>
+              </div>
+              {parseInt(origPrice) > parseInt(dropPrice) && (
+                <div className="p-2.5 rounded bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-semibold">
+                  ✓ Buyers save {Math.round(((parseInt(origPrice) - parseInt(dropPrice)) / parseInt(origPrice)) * 100)}% on this flash drop!
+                </div>
+              )}
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setModalOpen(false)} className="btn-outline flex-1 py-2">Cancel</button>
+                <button type="submit" disabled={saving || !selectedEventId} className="btn-primary flex-1 py-2 font-bold">
+                  {saving ? 'Publishing...' : 'Publish Drop Live ⚡'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── 4. Pass Requests CRM Tab ────────────────────────────────
 function RequestsTab({ onRefresh }: { onRefresh: () => void }) {
   const [requests, setRequests] = useState<any[]>([]);
   const [filterEvent, setFilterEvent] = useState('all');
@@ -657,6 +1011,7 @@ function RequestsTab({ onRefresh }: { onRefresh: () => void }) {
                 <div style={{ fontSize: 15, fontWeight: 600, color: '#1A1612' }}>{req.buyer_name || 'Buyer'}</div>
                 <div style={{ fontSize: 12, color: '#6B5B52' }}>
                   {req.buyer_email && <span className="mr-2">📧 {req.buyer_email}</span>}
+                  {req.buyer_phone && <span className="mr-2">📞 {req.buyer_phone}</span>}
                   <span>Event: <strong>{req.event_name || 'Event'}</strong></span>
                 </div>
                 <div style={{ fontSize: 12, color: '#9A8B82', marginTop: 2 }}>
@@ -753,8 +1108,8 @@ function SignalsTab() {
   const ready = signals.filter(s => s.readiness === 'ready').length;
 
   const exportCSV = () => {
-    const headers = 'ID,Buyer,Email,Dates,Passes,Min Budget,Max Budget,Readiness,Artist\n';
-    const rows = signals.map(s => `"${s.id}","${s.buyer_name || ''}","${s.buyer_email || ''}","${(s.preferred_dates || []).join(';')}","${s.num_passes}","${s.budget_min}","${s.budget_max}","${s.readiness}","${s.artist_preference || ''}"`).join('\n');
+    const headers = 'ID,Buyer,Email,Phone,Dates,Passes,Min Budget,Max Budget,Readiness,Artist\n';
+    const rows = signals.map(s => `"${s.id}","${s.buyer_name || ''}","${s.buyer_email || ''}","${s.buyer_phone || ''}","${(s.preferred_dates || []).join(';')}","${s.num_passes}","${s.budget_min}","${s.budget_max}","${s.readiness}","${s.artist_preference || ''}"`).join('\n');
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -795,7 +1150,9 @@ function SignalsTab() {
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1612' }}>{sig.buyer_name || 'Buyer'}</div>
-                <div style={{ fontSize: 12, color: '#9A8B82' }}>{sig.buyer_email || '—'}</div>
+                <div style={{ fontSize: 12, color: '#9A8B82' }}>
+                  {sig.buyer_email || '—'} {sig.buyer_phone ? `· 📞 ${sig.buyer_phone}` : ''}
+                </div>
               </div>
               <span className="rounded-full px-2.5 py-1 text-xs font-bold" style={{
                 color: sig.readiness === 'ready' ? '#2D7A4F' : sig.readiness === 'exploring' ? '#C1440E' : '#9A8B82',
@@ -1109,6 +1466,7 @@ export default function AdminDashboard({ navigate }: NavProps) {
         {tab === 'overview'   && <OverviewTab events={events} requests={requests} signals={signals} users={users} pendingCount={pendingCount} setTab={setTab} onSeedDatabase={fetchGlobalData} />}
         {tab === 'pending'    && <PendingTab onRefresh={fetchGlobalData} />}
         {tab === 'events'     && <AllEventsTab navigate={navigate} onRefresh={fetchGlobalData} />}
+        {tab === 'drops'      && <JugaadDropsTab onRefresh={fetchGlobalData} />}
         {tab === 'requests'   && <RequestsTab onRefresh={fetchGlobalData} />}
         {tab === 'signals'    && <SignalsTab />}
         {tab === 'users'      && <UsersTab onRefresh={fetchGlobalData} />}

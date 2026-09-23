@@ -31,11 +31,17 @@ export interface DBEvent {
   price_max: number | null;
   image_url?: string | null;
   image?: string | null;
+  artist_image_url?: string | null;
   type_tags: string[] | null;
   artist: string | null;
   description: string | null;
   instagram_link: string | null;
   contact_email: string | null;
+  contact_phone?: string | null;
+  jugaad_drop?: boolean | null;
+  original_price?: number | null;
+  drop_price?: number | null;
+  drop_number?: number | null;
   status: 'pending_review' | 'approved' | 'rejected';
   rejection_reason: string | null;
   reviewed_by: string | null;
@@ -52,6 +58,7 @@ export interface DBPassRequest {
   budget_min: number | null;
   budget_max: number | null;
   priority_note: string | null;
+  buyer_phone?: string | null;
   status: 'request_received' | 'looking_for_options' | 'match_found' | 'offer_available' | 'completed' | 'closed';
   offer_details: string | null;
   created_at: string;
@@ -72,6 +79,7 @@ export interface DBJugaadSignal {
   artist_preference: string | null;
   specific_event: string | null;
   readiness: 'ready' | 'exploring' | 'maybe';
+  buyer_phone?: string | null;
   created_at: string;
   buyer_name?: string;
   buyer_email?: string;

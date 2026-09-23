@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { type NavProps, EVENTS, DEMAND_LABEL, type Event } from '../data/events';
+import { type NavProps, EVENTS, DEMAND_LABEL, type Event, normalizeDateShort } from '../data/events';
 import { getApprovedEvents } from '../lib/api';
 import EventCard from '../components/EventCard';
 
@@ -46,7 +46,7 @@ export default function EventsPage({ navigate }: NavProps) {
             id: e.id,
             name: e.name,
             date: dateStr,
-            dateShort: dateStr.split(' ').slice(0, 2).join(' '),
+            dateShort: normalizeDateShort(dateStr),
             venue: e.venue || 'Ahmedabad',
             location: e.venue || 'Ahmedabad',
             time: e.time || '7:00 PM onwards',
@@ -58,8 +58,13 @@ export default function EventsPage({ navigate }: NavProps) {
             availability: 'Available',
             image: e.image_url || e.image || 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
             artist: e.artist || undefined,
+            artistImage: e.artist_image_url || undefined,
             description: e.description || '',
             featured: idx < 3,
+            jugaadDrop: !!e.jugaad_drop,
+            originalPrice: e.original_price || undefined,
+            dropPrice: e.drop_price || undefined,
+            dropNumber: e.drop_number || undefined,
           };
         });
         setEventsList(mapped);

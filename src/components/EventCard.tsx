@@ -48,19 +48,34 @@ export default function EventCard({ event, navigate }: Props) {
         </button>
 
         {event.jugaadDrop && (
-          <div className="absolute bottom-3 left-3">
-            <span className="font-sans font-semibold text-[10px] px-2 py-0.5 rounded text-white" style={{ background: '#C1440E', letterSpacing: '0.06em' }}>
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+            <span className="font-sans font-semibold text-[10px] px-2 py-0.5 rounded text-white shadow" style={{ background: '#C1440E', letterSpacing: '0.06em' }}>
               ⚡ Jugaad Drop
             </span>
+            {event.originalPrice && event.dropPrice && event.originalPrice > event.dropPrice && (
+              <span className="font-sans font-bold text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white shadow">
+                Save {Math.round(((event.originalPrice - event.dropPrice) / event.originalPrice) * 100)}%
+              </span>
+            )}
           </div>
         )}
       </div>
 
       <div className="p-4">
-        <div className="flex gap-1 mb-2 flex-wrap">
+        <div className="flex gap-1.5 mb-2 flex-wrap items-center">
           {event.type.slice(0, 2).map((t) => (
             <span key={t} className="chip" style={{ padding: '2px 8px', fontSize: 11 }}>{t}</span>
           ))}
+          {event.artist && (
+            <span className="inline-flex items-center gap-1 chip active" style={{ padding: '2px 8px', fontSize: 11 }}>
+              {event.artistImage ? (
+                <img src={event.artistImage} alt={event.artist} className="w-3.5 h-3.5 rounded-full object-cover" />
+              ) : (
+                <span>🎤</span>
+              )}
+              {event.artist}
+            </span>
+          )}
         </div>
 
         <div className="font-serif mb-1 leading-snug" style={{ fontSize: 18, fontWeight: 500, color: '#1A1612' }}>
@@ -76,16 +91,31 @@ export default function EventCard({ event, navigate }: Props) {
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="font-sans font-semibold" style={{ color: '#C1440E', fontSize: 15 }}>
-            {event.priceRange}
-          </span>
+          <div>
+            {event.jugaadDrop && event.dropPrice ? (
+              <div className="flex items-baseline gap-2">
+                <span className="font-sans font-bold" style={{ color: '#C1440E', fontSize: 17 }}>
+                  ₹{event.dropPrice.toLocaleString('en-IN')}
+                </span>
+                {event.originalPrice && (
+                  <span style={{ fontSize: 12, color: '#9A8B82', textDecoration: 'line-through' }}>
+                    ₹{event.originalPrice.toLocaleString('en-IN')}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="font-sans font-semibold" style={{ color: '#C1440E', fontSize: 15 }}>
+                {event.priceRange}
+              </span>
+            )}
+          </div>
           <span style={{ fontSize: 12, fontWeight: 600, color: AVAIL_STYLE[event.availability]?.color ?? '#9A8B82' }}>
             {event.availability}
           </span>
         </div>
 
         <div className="flex items-center justify-between mt-2.5 pt-2.5" style={{ borderTop: '1px solid rgba(26,22,18,0.07)' }}>
-          <span style={{ fontSize: 12, color: '#9A8B82' }}>{DEMAND_LABEL[event.demand]}</span>
+          <span style={{ fontSize: 12, color: '#9A8B82' }}>{DEMAND_LABEL[event.demand] || 'Verified Event'}</span>
           <button
             className="btn-primary"
             style={{ padding: '6px 14px', fontSize: 12 }}

@@ -61,6 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         eventName,
         buyerName,
         buyerEmail,
+        buyerPhone,
         quantity,
         budgetMin,
         budgetMax,
@@ -84,6 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
                   <tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Buyer:</strong></td><td style="padding: 6px 0;">${buyerName}</td></tr>
                   <tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Email:</strong></td><td style="padding: 6px 0;"><a href="mailto:${buyerEmail}" style="color: #C1440E;">${buyerEmail}</a></td></tr>
+                  ${buyerPhone ? `<tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Phone:</strong></td><td style="padding: 6px 0;"><a href="tel:${buyerPhone}" style="color: #2D7A4F; font-weight: bold;">${buyerPhone}</a></td></tr>` : ''}
                   <tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Pass Quantity:</strong></td><td style="padding: 6px 0;"><strong>${quantity} Passes</strong></td></tr>
                   <tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Budget:</strong></td><td style="padding: 6px 0;">₹${budgetMin} – ₹${budgetMax} per pass</td></tr>
                   ${priorityNote ? `<tr><td style="padding: 6px 0; color: #6B5B52;"><strong>Buyer Note:</strong></td><td style="padding: 6px 0; color: #7A1F2E;">${priorityNote}</td></tr>` : ''}
@@ -120,6 +122,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     <li><strong>Event:</strong> ${eventName}</li>
                     <li><strong>Passes requested:</strong> ${quantity}</li>
                     <li><strong>Target Budget:</strong> ₹${budgetMin} – ₹${budgetMax}</li>
+                    ${buyerPhone ? `<li><strong>Phone:</strong> ${buyerPhone}</li>` : ''}
                     ${priorityNote ? `<li><strong>Your note:</strong> ${priorityNote}</li>` : ''}
                   </ul>
                 </div>
@@ -146,6 +149,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               <p style="font-size: 14px; color: #1A1612;">A buyer is actively looking for passes to your event <strong>${eventName}</strong>.</p>
               <div style="background: #fff; padding: 16px; border-radius: 8px; margin: 16px 0;">
                 <p style="margin: 4px 0; font-size: 13px;"><strong>Buyer Name:</strong> ${buyerName}</p>
+                ${buyerPhone ? `<p style="margin: 4px 0; font-size: 13px;"><strong>Buyer Phone:</strong> ${buyerPhone}</p>` : ''}
                 <p style="margin: 4px 0; font-size: 13px;"><strong>Quantity:</strong> ${quantity} passes</p>
                 <p style="margin: 4px 0; font-size: 13px;"><strong>Willing Budget:</strong> ₹${budgetMin} – ₹${budgetMax}</p>
               </div>
@@ -161,6 +165,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const {
         buyerName,
         buyerEmail,
+        buyerPhone,
         preferredDates,
         numPasses,
         budgetMin,
@@ -179,6 +184,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             <h2 style="color: #C1440E; margin-top: 0;">New Radar Signal Logged</h2>
             <table style="width: 100%; font-size: 14px;">
               <tr><td><strong>Buyer:</strong></td><td>${buyerName} (${buyerEmail})</td></tr>
+              ${buyerPhone ? `<tr><td><strong>Phone:</strong></td><td><a href="tel:${buyerPhone}" style="color: #2D7A4F; font-weight: bold;">${buyerPhone}</a></td></tr>` : ''}
               <tr><td><strong>Dates:</strong></td><td>${preferredDates?.join(', ') || 'Any'}</td></tr>
               <tr><td><strong>Passes:</strong></td><td>${numPasses}</td></tr>
               <tr><td><strong>Budget:</strong></td><td>₹${budgetMin} – ₹${budgetMax}</td></tr>
@@ -215,6 +221,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         priceMin,
         priceMax,
         contactEmail,
+        contactPhone,
+        artist,
+        hasArtistImage,
         instagramLink,
       } = payload;
 
@@ -228,7 +237,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             <p><strong>Venue:</strong> ${venue}</p>
             <p><strong>Date:</strong> ${date}</p>
             <p><strong>Price:</strong> ₹${priceMin} – ₹${priceMax}</p>
+            ${artist ? `<p><strong>Featured Artist:</strong> ${artist} ${hasArtistImage ? '(Photo attached)' : ''}</p>` : ''}
             <p><strong>Contact Email:</strong> <a href="mailto:${contactEmail}">${contactEmail}</a></p>
+            ${contactPhone ? `<p><strong>Contact Phone:</strong> <a href="tel:${contactPhone}">${contactPhone}</a></p>` : ''}
             <p><strong>Instagram:</strong> ${instagramLink || '—'}</p>
             <p><a href="https://passnojugaad.in" style="display: inline-block; padding: 10px 18px; background: #C1440E; color: #fff; text-decoration: none; border-radius: 6px;">Open Super Admin Dashboard</a></p>
           </div>

@@ -108,11 +108,17 @@ export async function submitEvent(fields: {
   price_min?: number;
   price_max?: number;
   image_url?: string;
+  artist_image_url?: string;
   type_tags?: string[];
   artist?: string;
   description: string;
   instagram_link?: string;
   contact_email: string;
+  contact_phone?: string;
+  jugaad_drop?: boolean;
+  original_price?: number;
+  drop_price?: number;
+  drop_number?: number;
 }): Promise<{ data?: DBEvent | null; error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
   const { data: { user } } = await supabase.auth.getUser();
@@ -150,29 +156,53 @@ export async function submitEvent(fields: {
     description: fields.description || '',
     instagram_link: fields.instagram_link || null,
     contact_email: fields.contact_email || user?.email || '',
+    contact_phone: fields.contact_phone || null,
     status: 'pending_review',
   };
 
   if (organiserId) {
     insertPayload.organiser_id = organiserId;
   }
-
   if (fields.image_url) {
     insertPayload.image_url = fields.image_url;
   }
+  if (fields.artist_image_url) {
+    insertPayload.artist_image_url = fields.artist_image_url;
+  }
+  if (fields.jugaad_drop !== undefined) {
+    insertPayload.jugaad_drop = fields.jugaad_drop;
+    insertPayload.original_price = fields.original_price ?? null;
+    insertPayload.drop_price = fields.drop_price ?? null;
+    insertPayload.drop_number = fields.drop_number ?? null;
+  }
 
-  // Attempt 1: Insert with image_url
+  // Attempt 1: Full insert
   let { data, error } = await supabase
     .from('events')
     .insert(insertPayload)
     .select()
     .maybeSingle();
 
-  // Attempt 2: If failed because of missing column (e.g. image_url), retry without image_url
-  if (error && error.message && (error.message.includes('image_url') || error.message.includes('column'))) {
-    console.warn('Retrying event insert without image_url due to schema:', error.message);
-    delete insertPayload.image_url;
-    const retry = await supabase.from('events').insert(insertPayload).select().maybeSingle();
+  // Attempt 2: If failed because of extra columns, retry with core fields
+  if (error && error.message && error.message.includes('column')) {
+    console.warn('Retrying event insert with minimal fields due to schema:', error.message);
+    const corePayload = {
+      name: fields.name,
+      venue: fields.venue,
+      date: fields.date,
+      time: fields.time || '7:00 PM onwards',
+      price_min: priceMin,
+      price_max: priceMax,
+      type_tags: fields.type_tags || ['Garba'],
+      artist: fields.artist || null,
+      description: fields.description || '',
+      instagram_link: fields.instagram_link || null,
+      contact_email: fields.contact_email || user?.email || '',
+      status: 'pending_review',
+      ...(organiserId ? { organiser_id: organiserId } : {}),
+      ...(fields.image_url ? { image_url: fields.image_url } : {}),
+    };
+    const retry = await supabase.from('events').insert(corePayload).select().maybeSingle();
     data = retry.data;
     error = retry.error;
   }
@@ -195,7 +225,10 @@ export async function submitEvent(fields: {
       priceMin,
       priceMax,
       contactEmail: fields.contact_email || user?.email || '',
+      contactPhone: fields.contact_phone || '',
       instagramLink: fields.instagram_link,
+      artist: fields.artist,
+      hasArtistImage: !!fields.artist_image_url,
     }).catch(console.error);
 
     return { data: data ?? null, error: null };
@@ -318,6 +351,7 @@ export async function submitPassRequest(data: {
   event_id: string; quantity: number;
   budget_min: number; budget_max: number;
   priority_note: string;
+  buyer_phone?: string;
 }): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
   const { data: { user } } = await supabase.auth.getUser();
@@ -326,10 +360,38 @@ export async function submitPassRequest(data: {
   // Fetch event details and buyer profile for email notifications
   const [eventRes, profileRes] = await Promise.all([
     supabase.from('events').select('name, contact_email, organiser_id').eq('id', data.event_id).maybeSingle(),
-    supabase.from('profiles').select('name, email').eq('id', user.id).maybeSingle(),
+    supabase.from('profiles').select('name, email, phone').eq('id', user.id).maybeSingle(),
   ]);
 
-  const { error } = await supabase.from('pass_requests').insert({ ...data, buyer_id: user.id });
+  const buyerPhone = data.buyer_phone || profileRes.data?.phone || '';
+
+  // Update profile phone if provided
+  if (data.buyer_phone) {
+    try {
+      await supabase.from('profiles').update({ phone: data.buyer_phone }).eq('id', user.id);
+    } catch {
+      // ignore
+    }
+  }
+
+  const payload: any = {
+    event_id: data.event_id,
+    quantity: data.quantity,
+    budget_min: data.budget_min,
+    budget_max: data.budget_max,
+    priority_note: data.priority_note,
+    buyer_id: user.id,
+  };
+  if (data.buyer_phone) {
+    payload.buyer_phone = data.buyer_phone;
+  }
+
+  let { error } = await supabase.from('pass_requests').insert(payload);
+  if (error && error.message && error.message.includes('buyer_phone')) {
+    delete payload.buyer_phone;
+    const retry = await supabase.from('pass_requests').insert(payload);
+    error = retry.error;
+  }
 
   if (!error) {
     // Send email notification to Super Admin, Buyer, and Organiser
@@ -337,6 +399,7 @@ export async function submitPassRequest(data: {
       eventName: eventRes.data?.name || 'Navratri Event',
       buyerName: profileRes.data?.name || user.email?.split('@')[0] || 'Pass Seeker',
       buyerEmail: profileRes.data?.email || user.email || '',
+      buyerPhone,
       quantity: data.quantity,
       budgetMin: data.budget_min,
       budgetMax: data.budget_max,
@@ -376,7 +439,7 @@ export async function getRequestsForMyEvents(): Promise<DBPassRequest[]> {
     const [eventsRes, reqsRes, profilesRes] = await Promise.all([
       supabase.from('events').select('id, name, organiser_id').eq('organiser_id', user.id),
       supabase.from('pass_requests').select('*').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, name, email'),
+      supabase.from('profiles').select('id, name, email, phone'),
     ]);
     const myEventIds = new Set((eventsRes.data ?? []).map((e: any) => e.id));
     const myEventsMap = new Map((eventsRes.data ?? []).map((e: any) => [e.id, e.name]));
@@ -391,6 +454,7 @@ export async function getRequestsForMyEvents(): Promise<DBPassRequest[]> {
           event_name: myEventsMap.get(r.event_id) || 'Event',
           buyer_name: prof?.name,
           buyer_email: prof?.email,
+          buyer_phone: r.buyer_phone || prof?.phone,
         };
       });
   } catch (err) {
@@ -405,7 +469,7 @@ export async function getAllPassRequests(): Promise<DBPassRequest[]> {
     const [reqsRes, eventsRes, profilesRes] = await Promise.all([
       supabase.from('pass_requests').select('*').order('created_at', { ascending: false }),
       supabase.from('events').select('id, name'),
-      supabase.from('profiles').select('id, name, email'),
+      supabase.from('profiles').select('id, name, email, phone'),
     ]);
     const eventsMap = new Map((eventsRes.data ?? []).map((e: any) => [e.id, e.name]));
     const profilesMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]));
@@ -417,6 +481,7 @@ export async function getAllPassRequests(): Promise<DBPassRequest[]> {
         event_name: eventsMap.get(r.event_id) || 'Navratri Event',
         buyer_name: prof?.name,
         buyer_email: prof?.email,
+        buyer_phone: r.buyer_phone || prof?.phone,
       };
     });
   } catch (err) {
@@ -444,19 +509,36 @@ export async function submitJugaadSignal(data: {
   budget_min: number; budget_max: number;
   event_types: string[]; artist_preference: string;
   specific_event: string; readiness: 'ready' | 'exploring' | 'maybe';
+  buyer_phone?: string;
 }): Promise<{ error: string | null }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null };
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not signed in' };
 
-  const profileRes = await supabase.from('profiles').select('name, email').eq('id', user.id).maybeSingle();
+  const profileRes = await supabase.from('profiles').select('name, email, phone').eq('id', user.id).maybeSingle();
+  const buyerPhone = data.buyer_phone || profileRes.data?.phone || '';
 
-  const { error } = await supabase.from('jugaad_signals').insert({ ...data, buyer_id: user.id });
+  if (data.buyer_phone) {
+    try {
+      await supabase.from('profiles').update({ phone: data.buyer_phone }).eq('id', user.id);
+    } catch {
+      // ignore
+    }
+  }
+
+  const payload: any = { ...data, buyer_id: user.id };
+  let { error } = await supabase.from('jugaad_signals').insert(payload);
+  if (error && error.message && error.message.includes('buyer_phone')) {
+    delete payload.buyer_phone;
+    const retry = await supabase.from('jugaad_signals').insert(payload);
+    error = retry.error;
+  }
 
   if (!error) {
     sendNotification('jugaad_signal', {
       buyerName: profileRes.data?.name || user.email?.split('@')[0] || 'Pass Seeker',
       buyerEmail: profileRes.data?.email || user.email || '',
+      buyerPhone,
       preferredDates: data.preferred_dates,
       numPasses: data.num_passes,
       budgetMin: data.budget_min,
@@ -470,7 +552,6 @@ export async function submitJugaadSignal(data: {
 
   return { error: error?.message ?? null };
 }
-
 
 export async function getMySignals(): Promise<DBJugaadSignal[]> {
   if (!SUPABASE_CONFIGURED || !supabase) return [];

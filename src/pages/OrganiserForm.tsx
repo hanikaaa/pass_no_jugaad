@@ -10,6 +10,11 @@ export default function OrganiserForm({ navigate }: NavProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [artistImagePreview, setArtistImagePreview] = useState<string | null>(null);
+  const [artistImageName, setArtistImageName] = useState<string | null>(null);
+  const artistFileInputRef = useRef<HTMLInputElement>(null);
+
   const formRef = useRef<HTMLFormElement>(null);
 
   const [submitting, setSubmitting] = useState(false);
@@ -24,6 +29,15 @@ export default function OrganiserForm({ navigate }: NavProps) {
     setImageName(file.name);
     const reader = new FileReader();
     reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleArtistImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setArtistImageName(file.name);
+    const reader = new FileReader();
+    reader.onload = (ev) => setArtistImagePreview(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
 
@@ -45,11 +59,13 @@ export default function OrganiserForm({ navigate }: NavProps) {
       price_min: ticketPrice,
       price_max: ticketPrice,
       image_url: imagePreview || undefined,
+      artist_image_url: artistImagePreview || undefined,
       type_tags: ['Garba'],
       artist: fd.get('artist') as string,
       description: fd.get('description') as string,
       instagram_link: fd.get('instagram_link') as string,
       contact_email: fd.get('contact_email') as string,
+      contact_phone: fd.get('contact_phone') as string,
     });
 
     setSubmitting(false);
@@ -109,22 +125,28 @@ export default function OrganiserForm({ navigate }: NavProps) {
         <div className="card-light p-4 space-y-4">
           <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9A8B82' }}>Your details</div>
           <div>
-            <label style={{ display: 'block', marginBottom: 6 }}>Organiser name</label>
-            <input name="organiser_name" required placeholder="Your name" />
+            <label style={{ display: 'block', marginBottom: 6 }}>Organiser name *</label>
+            <input name="organiser_name" required placeholder="Your full name" />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: 6 }}>Brand / Organisation</label>
+            <label style={{ display: 'block', marginBottom: 6 }}>Brand / Organisation *</label>
             <input name="org_name" required placeholder="Company or brand name" />
           </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: 6 }}>Email</label>
-            <input name="contact_email" required type="email" placeholder="your@email.com" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label style={{ display: 'block', marginBottom: 6 }}>Email *</label>
+              <input name="contact_email" required type="email" placeholder="your@email.com" />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 6 }}>Phone Number *</label>
+              <input name="contact_phone" required type="tel" placeholder="+91 98765 43210" />
+            </div>
           </div>
         </div>
 
-        {/* ── Event image ────────────────────── */}
+        {/* ── Event Banner image ────────────────────── */}
         <div>
-          <label style={{ display: 'block', marginBottom: 6 }}>Event image</label>
+          <label style={{ display: 'block', marginBottom: 6 }}>Event banner image</label>
           <p style={{ fontSize: 12, color: '#9A8B82', marginBottom: 10 }}>Recommended: 1200 × 675px (16:9), JPG or PNG, under 5 MB. This is the banner shown on the event listing.</p>
 
           <input
@@ -162,8 +184,53 @@ export default function OrganiserForm({ navigate }: NavProps) {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <span style={{ fontSize: 13, fontWeight: 500 }}>Upload event image</span>
+              <span style={{ fontSize: 13, fontWeight: 500 }}>Upload event banner</span>
               <span style={{ fontSize: 11 }}>JPG, PNG or WebP · max 5 MB</span>
+            </button>
+          )}
+        </div>
+
+        {/* ── Artist / DJ image ────────────────────── */}
+        <div>
+          <label style={{ display: 'block', marginBottom: 6 }}>Artist / Performer image</label>
+          <p style={{ fontSize: 12, color: '#9A8B82', marginBottom: 10 }}>Photo of the featured artist or DJ (shown on Calendar & Event card badges).</p>
+
+          <input
+            ref={artistFileInputRef}
+            type="file"
+            name="artist_image"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: 'none' }}
+            onChange={handleArtistImageChange}
+          />
+
+          {artistImagePreview ? (
+            <div className="relative rounded-lg overflow-hidden flex items-center p-3 gap-3" style={{ background: '#FAF7F2', border: '1px solid rgba(26,22,18,0.15)' }}>
+              <img src={artistImagePreview} alt="Artist Preview" className="w-16 h-16 rounded-full object-cover border border-amber-800/20" />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#1A1612' }}>Artist photo selected</div>
+                <div style={{ fontSize: 11, color: '#9A8B82', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{artistImageName}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setArtistImagePreview(null); setArtistImageName(null); if (artistFileInputRef.current) artistFileInputRef.current.value = ''; }}
+                style={{ fontSize: 11, color: '#7A1F2E', background: 'rgba(122,31,46,0.08)', border: 'none', borderRadius: 4, padding: '4px 10px', cursor: 'pointer' }}
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => artistFileInputRef.current?.click()}
+              className="w-full rounded-lg flex items-center justify-center gap-3 p-4 transition-colors"
+              style={{ border: '1.5px dashed rgba(26,22,18,0.2)', background: '#FAF7F2', color: '#9A8B82', cursor: 'pointer' }}
+            >
+              <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-bold">🎤</div>
+              <div className="text-left">
+                <span className="block text-xs font-semibold text-stone-700">Upload artist photo</span>
+                <span className="block text-[11px] text-stone-500">Avatar / profile image of the artist</span>
+              </div>
             </button>
           )}
         </div>
@@ -172,17 +239,17 @@ export default function OrganiserForm({ navigate }: NavProps) {
         <div className="card-light p-4 space-y-4">
           <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9A8B82' }}>Event details</div>
           <div>
-            <label style={{ display: 'block', marginBottom: 6 }}>Event name</label>
-            <input name="name" required placeholder="Name of your event" />
+            <label style={{ display: 'block', marginBottom: 6 }}>Event name *</label>
+            <input name="name" required placeholder="Name of your event (e.g. SBR Grand Garba 2026)" />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: 6 }}>Venue</label>
-            <input name="venue" required placeholder="Where is it happening?" />
+            <label style={{ display: 'block', marginBottom: 6 }}>Venue / Location *</label>
+            <input name="venue" required placeholder="Where is it happening? (e.g. Sindhu Bhavan Road, Ahmedabad)" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label style={{ display: 'block', marginBottom: 6 }}>Event date</label>
-              <input name="date" required placeholder="e.g. 8th October, 15 OCT 2026" />
+              <label style={{ display: 'block', marginBottom: 6 }}>Event date (Any custom date) *</label>
+              <input name="date" required placeholder="e.g. 7th October, 12 OCT 2026" />
             </div>
             <div>
               <label style={{ display: 'block', marginBottom: 6 }}>Time</label>
@@ -195,8 +262,8 @@ export default function OrganiserForm({ navigate }: NavProps) {
             <p style={{ fontSize: 11, color: '#9A8B82', marginTop: 4 }}>Enter the pass/ticket price per person.</p>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: 6 }}>Artist / DJ</label>
-            <input name="artist" placeholder="Who is performing?" />
+            <label style={{ display: 'block', marginBottom: 6 }}>Featured Artist / DJ</label>
+            <input name="artist" placeholder="Who is performing? (e.g. DJ Chetas, Kinjal Dave)" />
           </div>
         </div>
 
