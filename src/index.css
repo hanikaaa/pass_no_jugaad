@@ -106,7 +106,7 @@ body {
 .btn-ghost:hover { opacity: 0.7; }
 
 /* ─── Form inputs ────────────────────────────────────────────── */
-input, textarea, select {
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea, select {
   background: #fff;
   border: 1.5px solid var(--border-med);
   border-radius: 4px;
@@ -118,12 +118,31 @@ input, textarea, select {
   outline: none;
   transition: border-color 0.15s;
   -webkit-appearance: none;
+  appearance: none;
 }
-input::placeholder, textarea::placeholder { color: var(--lighter); }
-input:focus, textarea:focus, select:focus {
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"])::placeholder, textarea::placeholder { color: var(--lighter); }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus, textarea:focus, select:focus {
   border-color: var(--vermillion);
   box-shadow: 0 0 0 3px rgba(193,68,14,0.08);
 }
+
+input[type="checkbox"], input[type="radio"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  accent-color: var(--vermillion) !important;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-appearance: auto !important;
+  appearance: auto !important;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+}
+
 select option { background: #fff; color: var(--charcoal); }
 label {
   font-size: 12px;

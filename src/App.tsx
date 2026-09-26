@@ -37,16 +37,45 @@ const HIDE_FOOTER_ON: Page[] = [
 
 const AUTH_GATED: Page[] = ['request-pass', 'my-requests', 'find-jugaad', 'organiser-form', 'organiser-dashboard', 'admin-dashboard'];
 
+function getInitialRoute(): { page: Page; eventId: string | null } {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get('page') as Page | null;
+    const evId = params.get('eventId');
+    if (p) {
+      return { page: p, eventId: evId || null };
+    }
+    if (evId) {
+      return { page: 'event-detail', eventId: evId };
+    }
+  } catch {
+    // fallback
+  }
+  return { page: 'home', eventId: null };
+}
+
 export default function App() {
-  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('pnj-seen'));
-  const [page, setPage] = useState<Page>('home');
-  const [eventId, setEventId] = useState<string | null>(null);
+  const initialRoute = getInitialRoute();
+  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('pnj-seen') && initialRoute.page === 'home');
+  const [page, setPage] = useState<Page>(initialRoute.page);
+  const [eventId, setEventId] = useState<string | null>(initialRoute.eventId);
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [pendingNav, setPendingNav] = useState<{ page: Page; opts?: { eventId?: string } } | null>(null);
   const [demoRole, setDemoRole] = useState<UserRole>('buyer');
   const [profile, setProfile] = useState<Profile | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Popstate listener for browser back/forward and deep link navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = getInitialRoute();
+      setPage(route.page);
+      setEventId(route.eventId);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Real auth session listener (only when Supabase is configured)
   useEffect(() => {
@@ -90,10 +119,31 @@ export default function App() {
     }
 
     setPage(p);
-    if (opts?.eventId) setEventId(opts.eventId);
+    const targetEvId = opts?.eventId !== undefined ? opts.eventId : (p === 'event-detail' || p === 'request-pass' ? eventId : null);
+    if (opts?.eventId !== undefined) setEventId(opts.eventId);
+
+    // Sync URL for deep links and sharing
+    try {
+      const url = new URL(window.location.href);
+      if (p === 'home') {
+        url.searchParams.delete('page');
+        url.searchParams.delete('eventId');
+      } else {
+        url.searchParams.set('page', p);
+        if (targetEvId) {
+          url.searchParams.set('eventId', targetEvId);
+        } else {
+          url.searchParams.delete('eventId');
+        }
+      }
+      window.history.pushState({ page: p, eventId: targetEvId }, '', url.toString());
+    } catch {
+      // ignore
+    }
+
     setMenuOpen(false);
     setTimeout(() => scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' }), 0);
-  }, [isLoggedIn, activeRole]);
+  }, [isLoggedIn, activeRole, eventId]);
 
   const handleAuthSuccess = () => {
     setAuthOpen(false);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { type NavProps, EVENTS, type Event } from '../data/events';
+import { type NavProps, EVENTS, type Event, normalizeDateShort } from '../data/events';
 import { getApprovedEvents, getAllSignals } from '../lib/api';
 import EventCard from '../components/EventCard';
 import heroSrc from '@/assets/hero.png';
@@ -22,25 +22,42 @@ export default function Home({ navigate }: NavProps) {
       const sigs = dbSignals || [];
 
       if (evts.length > 0) {
-        const mapped: Event[] = evts.slice(0, 3).map((e, idx) => ({
-          id: e.id,
-          name: e.name,
-          date: e.date || '12 OCT 2026',
-          dateShort: e.date ? e.date.replace(' 2026', '') : '12 OCT',
-          venue: e.venue || 'Ahmedabad',
-          location: e.venue || 'Ahmedabad',
-          time: e.time || '7:00 PM onwards',
-          priceRange: e.price_min ? `₹${e.price_min}–₹${e.price_max}` : '₹800–₹1,500',
-          priceMin: e.price_min || 800,
-          priceMax: e.price_max || 1500,
-          type: e.type_tags || ['Garba'],
-          demand: idx === 0 ? 'VERY HIGH' : 'HIGH',
-          availability: 'Available',
-          image: 'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
-          artist: e.artist || undefined,
-          description: e.description || '',
-          featured: true,
-        }));
+        const mapped: Event[] = evts.slice(0, 3).map((e, idx) => {
+          const pMin = e.price_min || 800;
+          const pMax = e.price_max || pMin;
+          const priceFormatted =
+            pMin === pMax
+              ? `₹${pMin.toLocaleString('en-IN')}`
+              : `₹${pMin.toLocaleString('en-IN')}–₹${pMax.toLocaleString('en-IN')}`;
+          const dateStr = e.date || '12 OCT 2026';
+
+          return {
+            id: e.id,
+            name: e.name,
+            date: dateStr,
+            dateShort: normalizeDateShort(dateStr),
+            venue: e.venue || 'Ahmedabad',
+            location: e.venue || 'Ahmedabad',
+            time: e.time || '7:00 PM onwards',
+            priceRange: priceFormatted,
+            priceMin: pMin,
+            priceMax: pMax,
+            type: e.type_tags && e.type_tags.length ? e.type_tags : ['Garba'],
+            demand: idx === 0 ? 'VERY HIGH' : 'HIGH',
+            availability: 'Available',
+            image:
+              e.image_url ||
+              e.image ||
+              'https://images.unsplash.com/photo-1786452156548-9a60189a9876?w=800&h=500&fit=crop&auto=format',
+            artist: e.artist || undefined,
+            artistImage: e.artist_image_url || undefined,
+            description: e.description || '',
+            featured: true,
+            jugaadDrop: !!e.jugaad_drop,
+            dropPrice: e.drop_price || undefined,
+            originalPrice: e.original_price || undefined,
+          };
+        });
         setFeaturedEvents(mapped);
       }
 

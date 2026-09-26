@@ -25,7 +25,6 @@ export default function EventDetail({ navigate, eventId }: Props) {
   });
   const [loading, setLoading] = useState(!event);
   const [qty, setQty] = useState(2);
-  const [bookmarked, setBookmarked] = useState(false);
 
   useEffect(() => {
     if (!eventId) {
@@ -116,24 +115,35 @@ export default function EventDetail({ navigate, eventId }: Props) {
         <div className="absolute flex items-center justify-between px-4 left-0 right-0" style={{ top: 'calc(60px + 12px)' }}>
           <button
             onClick={() => navigate('events')}
-            className="w-9 h-9 flex items-center justify-center rounded-full"
-            style={{ background: 'rgba(250,247,242,0.9)', backdropFilter: 'blur(8px)' }}
+            className="w-9 h-9 flex items-center justify-center rounded-full shadow-md"
+            style={{ background: 'rgba(250,247,242,0.95)', backdropFilter: 'blur(8px)' }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1612" strokeWidth="2.5">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setBookmarked(!bookmarked)}
-              className="w-9 h-9 flex items-center justify-center rounded-full"
-              style={{ background: 'rgba(250,247,242,0.9)', backdropFilter: 'blur(8px)' }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill={bookmarked ? '#C1440E' : 'none'} stroke={bookmarked ? '#C1440E' : '#1A1612'} strokeWidth="2">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/?page=event-detail&eventId=${event.id}`;
+              if (navigator.share) {
+                navigator.share({ title: `${event.name} | Pass No Jugaad`, text: `Check out ${event.name} on Pass No Jugaad!`, url }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(url);
+                alert('Direct event link copied to clipboard!');
+              }
+            }}
+            className="w-9 h-9 flex items-center justify-center rounded-full shadow-md"
+            style={{ background: 'rgba(250,247,242,0.95)', backdropFilter: 'blur(8px)' }}
+            title="Share event"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A1612" strokeWidth="2">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+          </button>
         </div>
 
         {/* Date badge & Drop banner */}
@@ -271,21 +281,26 @@ export default function EventDetail({ navigate, eventId }: Props) {
 
         {/* CTAs */}
         <div className="space-y-3">
-          <button onClick={() => navigate('request-pass', { eventId: event.id })} className="btn-primary w-full py-4" style={{ fontSize: 16 }}>
+          <button onClick={() => navigate('request-pass', { eventId: event.id })} className="btn-primary w-full py-4 text-base font-bold">
             {event.jugaadDrop ? 'Grab This Drop Passes →' : 'Request Passes →'}
           </button>
           <button
             onClick={() => {
+              const url = `${window.location.origin}/?page=event-detail&eventId=${event.id}`;
               if (navigator.share) {
-                navigator.share({ title: event.name, url: window.location.href }).catch(() => {});
+                navigator.share({
+                  title: `${event.name} | Pass No Jugaad`,
+                  text: `Check out ${event.name} on Pass No Jugaad — Navratri 2026!`,
+                  url,
+                }).catch(() => {});
               } else {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Event link copied to clipboard!');
+                navigator.clipboard.writeText(url);
+                alert('Direct event link copied to clipboard!');
               }
             }}
-            className="btn-outline w-full py-3.5 text-sm"
+            className="btn-outline w-full py-3.5 text-sm font-semibold flex items-center justify-center gap-2"
           >
-            Share event
+            <span>🔗</span> Share Event Link
           </button>
         </div>
       </div>

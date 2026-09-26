@@ -12,8 +12,6 @@ const AVAIL_STYLE: Record<string, { color: string }> = {
 };
 
 export default function EventCard({ event, navigate }: Props) {
-  const [bookmarked, setBookmarked] = useState(false);
-
   return (
     <div
       className="card-light overflow-hidden cursor-pointer"
@@ -30,22 +28,12 @@ export default function EventCard({ event, navigate }: Props) {
 
         <div className="absolute top-3 left-3">
           <div
-            className="font-sans font-bold leading-none px-2.5 py-1 rounded text-white"
+            className="font-sans font-bold leading-none px-2.5 py-1 rounded text-white shadow-sm"
             style={{ background: '#C1440E', fontSize: 11, letterSpacing: '0.08em' }}
           >
             {event.dateShort}
           </div>
         </div>
-
-        <button
-          onClick={(e) => { e.stopPropagation(); setBookmarked(!bookmarked); }}
-          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full transition-all"
-          style={{ background: 'rgba(250,247,242,0.9)', backdropFilter: 'blur(8px)' }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill={bookmarked ? '#C1440E' : 'none'} stroke={bookmarked ? '#C1440E' : '#1A1612'} strokeWidth="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-          </svg>
-        </button>
 
         {event.jugaadDrop && (
           <div className="absolute bottom-3 left-3 flex items-center gap-1.5">

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { type NavProps } from '../data/events';
 import { submitEvent } from '../lib/api';
+import OrganiserTermsModal from '../components/OrganiserTermsModal';
 
 const NEEDS = ['Audience', 'Promotion', 'Pass Distribution', 'Exclusive Offer', 'Referral Sales', 'Other'];
 
@@ -14,6 +15,9 @@ export default function OrganiserForm({ navigate }: NavProps) {
   const [artistImagePreview, setArtistImagePreview] = useState<string | null>(null);
   const [artistImageName, setArtistImageName] = useState<string | null>(null);
   const artistFileInputRef = useRef<HTMLInputElement>(null);
+
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -45,6 +49,10 @@ export default function OrganiserForm({ navigate }: NavProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!termsAccepted) {
+      setErrorMsg('Please read and agree to the Organiser Terms & Conditions before submitting.');
+      return;
+    }
     setSubmitting(true);
     setErrorMsg(null);
     const fd = new FormData(formRef.current!);
@@ -302,13 +310,50 @@ export default function OrganiserForm({ navigate }: NavProps) {
           </div>
         </div>
 
+        {/* ── Terms & Conditions Checkbox & Link ───────────────── */}
+        <div
+          onClick={() => {
+            setTermsAccepted(!termsAccepted);
+            if (errorMsg) setErrorMsg(null);
+          }}
+          className={`card-light p-4 rounded-xl cursor-pointer transition-all border select-none ${
+            termsAccepted ? 'bg-amber-50/80 border-amber-600 shadow-sm' : 'bg-stone-50 border-stone-300 hover:border-stone-400'
+          }`}
+        >
+          <div className="flex items-start gap-3.5">
+            <div
+              className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5 transition-all border ${
+                termsAccepted ? 'bg-amber-800 border-amber-800 text-white shadow-sm scale-105' : 'bg-white border-stone-400 text-transparent'
+              }`}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div className="text-xs text-stone-800 leading-relaxed flex-1">
+              I have read, understood and agree to the{' '}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTermsModalOpen(true);
+                }}
+                className="font-bold text-amber-900 underline hover:text-amber-700 cursor-pointer inline"
+              >
+                Organiser Terms & Conditions (17 Clauses)
+              </button>
+              . I confirm that all submitted event details, artist line-up, and pass information are authentic and enforceable. *
+            </div>
+          </div>
+        </div>
+
         {errorMsg && (
           <div className="p-3 rounded-lg text-xs" style={{ background: 'rgba(193,68,14,0.1)', border: '1px solid rgba(193,68,14,0.3)', color: '#C1440E' }}>
             ⚠️ {errorMsg}
           </div>
         )}
 
-        <button type="submit" disabled={submitting} className="btn-primary w-full py-4 text-base">
+        <button type="submit" disabled={submitting} className="btn-primary w-full py-4 text-base font-bold">
           {submitting ? 'Submitting Event...' : 'Submit Event →'}
         </button>
 
@@ -316,6 +361,13 @@ export default function OrganiserForm({ navigate }: NavProps) {
           We review all submissions before they go live. You'll hear from us within 24 hours.
         </p>
       </form>
+
+      {/* Organiser Terms & Conditions Modal */}
+      <OrganiserTermsModal
+        isOpen={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+        onAccept={() => setTermsAccepted(true)}
+      />
     </div>
   );
 }
