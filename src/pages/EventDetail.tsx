@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { type NavProps, EVENTS, type Event, normalizeDateShort } from '../data/events';
-import { getEventById } from '../lib/api';
+import { getEventById, submitPassRequest, getCurrentProfile } from '../lib/api';
+import { SUPABASE_CONFIGURED } from '../lib/supabase';
 
 interface Props extends NavProps {
   eventId: string | null;
@@ -25,6 +26,8 @@ export default function EventDetail({ navigate, eventId }: Props) {
   });
   const [loading, setLoading] = useState(!event);
   const [qty, setQty] = useState(2);
+  const [submitting, setSubmitting] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!eventId) {
@@ -101,6 +104,56 @@ export default function EventDetail({ navigate, eventId }: Props) {
       </div>
     );
   }
+
+  const handleRequestPasses = async () => {
+    if (!event || submitting) return;
+    setRequestError(null);
+
+    // If not authenticated in Supabase mode, save pending request and redirect to login
+    const profile = await getCurrentProfile();
+    if (!profile && SUPABASE_CONFIGURED) {
+      try {
+        sessionStorage.setItem(
+          'pending_pass_request',
+          JSON.stringify({
+            eventId: event.id,
+            quantity: qty,
+          })
+        );
+      } catch {
+        // ignore
+      }
+      navigate('login');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const minPrice = event.jugaadDrop && event.dropPrice ? event.dropPrice : (event.priceMin || 800);
+      const maxPrice = event.jugaadDrop && event.dropPrice ? event.dropPrice : (event.priceMax || event.priceMin || 800);
+      const note = event.jugaadDrop ? 'Jugaad Drop direct pass request' : 'Direct event pass request';
+
+      const res = await submitPassRequest({
+        event_id: event.id,
+        quantity: qty,
+        budget_min: minPrice,
+        budget_max: maxPrice,
+        priority_note: note,
+      });
+
+      if (res.error) {
+        setRequestError(res.error);
+        setSubmitting(false);
+        return;
+      }
+
+      // Success -> navigate directly to RequestSuccess confirmation
+      navigate('request-success');
+    } catch (err: any) {
+      setRequestError(err?.message || 'Failed to submit request');
+      setSubmitting(false);
+    }
+  };
 
   const dateParts = event.dateShort ? event.dateShort.split(' ') : ['12', 'OCT'];
 
@@ -279,10 +332,28 @@ export default function EventDetail({ navigate, eventId }: Props) {
           </div>
         </div>
 
+        {/* Error message */}
+        {requestError && (
+          <div className="p-3 mb-4 rounded-lg text-xs" style={{ background: 'rgba(193,68,14,0.1)', border: '1px solid rgba(193,68,14,0.3)', color: '#C1440E' }}>
+            ⚠️ {requestError}
+          </div>
+        )}
+
         {/* CTAs */}
         <div className="space-y-3">
-          <button onClick={() => navigate('request-pass', { eventId: event.id })} className="btn-primary w-full py-4 text-base font-bold">
-            {event.jugaadDrop ? 'Grab This Drop Passes →' : 'Request Passes →'}
+          <button
+            onClick={handleRequestPasses}
+            disabled={submitting}
+            className="btn-primary w-full py-4 text-base font-bold disabled:opacity-75"
+          >
+            {submitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Submitting Request...
+              </span>
+            ) : (
+              event.jugaadDrop ? 'Grab This Drop Passes →' : 'Request Passes →'
+            )}
           </button>
           <button
             onClick={() => {

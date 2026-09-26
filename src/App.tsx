@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { type Page, type UserRole } from './data/events';
 import { supabase, SUPABASE_CONFIGURED, type Profile } from './lib/supabase';
-import { getCurrentProfile, signOut } from './lib/api';
+import { getCurrentProfile, signOut, getEventById, submitPassRequest } from './lib/api';
 
 import IntroAnimation from './components/IntroAnimation';
 import Header from './components/Header';
@@ -145,8 +145,38 @@ export default function App() {
     setTimeout(() => scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' }), 0);
   }, [isLoggedIn, activeRole, eventId]);
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = async () => {
     setAuthOpen(false);
+
+    // Check if there was a pending pass request from EventDetail
+    try {
+      const pendingRequest = sessionStorage.getItem('pending_pass_request');
+      if (pendingRequest) {
+        sessionStorage.removeItem('pending_pass_request');
+        const parsed = JSON.parse(pendingRequest);
+        if (parsed?.eventId) {
+          const ev = await getEventById(parsed.eventId);
+          const minPrice = ev?.jugaad_drop && ev?.drop_price ? ev.drop_price : (ev?.price_min || 800);
+          const maxPrice = ev?.jugaad_drop && ev?.drop_price ? ev.drop_price : (ev?.price_max || ev?.price_min || 800);
+          const note = ev?.jugaad_drop ? 'Jugaad Drop direct pass request' : 'Direct event pass request';
+
+          await submitPassRequest({
+            event_id: parsed.eventId,
+            quantity: parsed.quantity || 2,
+            budget_min: minPrice,
+            budget_max: maxPrice,
+            priority_note: note,
+          });
+
+          setPendingNav(null);
+          navigate('request-success');
+          return;
+        }
+      }
+    } catch (e) {
+      console.error('Error auto-submitting pending pass request on auth:', e);
+    }
+
     if (pendingNav) {
       const { page: p, opts } = pendingNav;
       setPage(p);
