@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type NavProps, EVENTS, type Event, normalizeDateShort } from '../data/events';
-import { submitPassRequest, getEventById } from '../lib/api';
+import { submitPassRequest, getEventById, getCurrentProfile } from '../lib/api';
 
 interface Props extends NavProps {
   eventId: string | null;
@@ -28,6 +28,16 @@ export default function RequestPass({ navigate, eventId }: Props) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    getCurrentProfile().then((p) => {
+      if (p) {
+        if (p.name) setName(p.name);
+        if (p.email) setEmail(p.email);
+        if (p.phone) setPhone(p.phone);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (!eventId) {

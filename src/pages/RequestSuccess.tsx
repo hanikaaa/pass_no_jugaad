@@ -14,36 +14,35 @@ export default function RequestSuccess({ navigate }: NavProps) {
           </svg>
         </div>
 
-        <div className="eyebrow mb-3" style={{ color: '#2D7A4F' }}>Request submitted</div>
-        <h1 className="font-serif leading-tight mb-4" style={{ fontSize: 'clamp(32px, 9vw, 48px)', fontWeight: 500 }}>
-          {"We've got it."}
+        <div className="eyebrow mb-2" style={{ color: '#2D7A4F' }}>✓ Request Confirmed</div>
+        <h1 className="font-serif leading-tight mb-3" style={{ fontSize: 'clamp(32px, 8vw, 44px)', fontWeight: 600 }}>
+          Your request is sent!
         </h1>
-        <p style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.7, maxWidth: 300, margin: '0 auto 24px' }}>
-          {"Your request is in. We'll review it and get back to you with options."}
+        <p className="text-sm text-stone-600 font-medium mb-6 max-w-sm mx-auto leading-relaxed">
+          You will hear from us soon! Our team is actively matching your request with genuine organiser allocations.
         </p>
 
         <div className="card-light p-5 mb-6 text-left max-w-xs mx-auto">
           <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9A8B82', marginBottom: 12 }}>Next steps</div>
           {[
-            'We review your request.',
-            "If a match is found, we reach out to you.",
-            'You confirm and get your pass.',
+            'We review your request details.',
+            'Once verified, you will receive pass confirmation & pick-up details.',
+            'Track your live status in your Buyer Dashboard anytime.',
           ].map((step, i) => (
             <div key={i} className="flex items-start gap-3 mb-2.5">
-              <span className="font-serif flex-shrink-0" style={{ fontSize: 16, fontWeight: 500, color: '#C1440E', minWidth: 20 }}>{String(i + 1).padStart(2, '0')}</span>
-              <span style={{ fontSize: 14, color: '#6B5B52', lineHeight: 1.55 }}>{step}</span>
+              <span className="font-serif flex-shrink-0" style={{ fontSize: 16, fontWeight: 600, color: '#C1440E', minWidth: 20 }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ fontSize: 13, color: '#6B5B52', lineHeight: 1.5 }}>{step}</span>
             </div>
           ))}
         </div>
 
         <div className="space-y-3 max-w-xs mx-auto w-full">
-          <button onClick={() => navigate('events')} className="btn-primary w-full py-3.5">Browse more events →</button>
-          <a href="https://www.instagram.com/pass_no_jugaad_?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="btn-outline w-full py-3.5 flex items-center justify-center gap-2 text-sm">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
-            </svg>
-            Follow on Instagram
-          </a>
+          <button onClick={() => navigate('my-requests')} className="btn-primary w-full py-3.5 text-sm font-bold">
+            View My Requests (Dashboard) →
+          </button>
+          <button onClick={() => navigate('events')} className="btn-outline w-full py-3.5 text-sm font-semibold">
+            Browse More Events
+          </button>
         </div>
       </div>
     </div>
