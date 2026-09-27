@@ -43,6 +43,7 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
 
   const handleSave = async (id: string, fd: FormData) => {
     const priceVal = Number(fd.get('price') || 0);
+    const affiliateVal = (fd.get('affiliate_link') as string)?.trim() || null;
     await updateEvent(id, {
       name: fd.get('name') as string,
       venue: fd.get('venue') as string,
@@ -50,6 +51,7 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
       price_min: priceVal,
       price_max: priceVal,
       description: fd.get('description') as string,
+      affiliate_link: affiliateVal,
     });
     setMyEvents(prev => prev.map(e => e.id === id ? {
       ...e,
@@ -59,6 +61,7 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
       price_min: priceVal,
       price_max: priceVal,
       description: fd.get('description') as string,
+      affiliate_link: affiliateVal,
     } : e));
     setEditing(null);
   };
@@ -136,6 +139,10 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
                     <div>
                       <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Ticket price (₹)</label>
                       <input name="price" type="number" defaultValue={ev.price_min ?? ''} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Affiliate / Partner Link (Optional)</label>
+                      <input name="affiliate_link" defaultValue={ev.affiliate_link ?? ''} placeholder="https://..." />
                     </div>
                     <div>
                       <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Description</label>

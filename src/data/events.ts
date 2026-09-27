@@ -18,6 +18,8 @@ export interface Event {
   description: string;
   contactEmail?: string;
   contactPhone?: string;
+  instagramLink?: string;
+  affiliateLink?: string;
   featured?: boolean;
   jugaadDrop?: boolean;
   dropPrice?: number;

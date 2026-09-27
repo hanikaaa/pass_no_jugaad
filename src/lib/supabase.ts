@@ -36,6 +36,7 @@ export interface DBEvent {
   artist: string | null;
   description: string | null;
   instagram_link: string | null;
+  affiliate_link?: string | null;
   contact_email: string | null;
   contact_phone?: string | null;
   jugaad_drop?: boolean | null;
@@ -145,6 +146,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   artist           TEXT,
   description      TEXT,
   instagram_link   TEXT,
+  affiliate_link   TEXT,
   contact_email    TEXT,
   status           TEXT NOT NULL DEFAULT 'pending_review'
     CHECK (status IN ('pending_review','approved','rejected')),

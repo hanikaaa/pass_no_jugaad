@@ -68,6 +68,8 @@ export default function EventDetail({ navigate, eventId }: Props) {
           description: dbEv.description || 'Join the vibrant Navratri celebration with traditional music, dance, and festive energy in Ahmedabad.',
           contactEmail: dbEv.contact_email || undefined,
           contactPhone: dbEv.contact_phone || undefined,
+          instagramLink: dbEv.instagram_link || undefined,
+          affiliateLink: dbEv.affiliate_link || undefined,
           jugaadDrop: !!dbEv.jugaad_drop,
           originalPrice: dbEv.original_price || undefined,
           dropPrice: dbEv.drop_price || undefined,
@@ -132,6 +134,17 @@ export default function EventDetail({ navigate, eventId }: Props) {
       }
 
       setShowPhoneModal(false);
+
+      // If the event has an affiliate link, redirect the user to that link
+      if (event.affiliateLink && event.affiliateLink.trim()) {
+        let targetUrl = event.affiliateLink.trim();
+        if (!/^https?:\/\//i.test(targetUrl)) {
+          targetUrl = 'https://' + targetUrl;
+        }
+        window.location.href = targetUrl;
+        return;
+      }
+
       navigate('request-success');
     } catch (err: any) {
       setRequestError(err?.message || 'Failed to submit request');

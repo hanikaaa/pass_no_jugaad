@@ -192,6 +192,17 @@ export default function App() {
           });
 
           setPendingNav(null);
+
+          // If the event has an affiliate link, redirect to it
+          if (ev?.affiliate_link && ev.affiliate_link.trim()) {
+            let targetUrl = ev.affiliate_link.trim();
+            if (!/^https?:\/\//i.test(targetUrl)) {
+              targetUrl = 'https://' + targetUrl;
+            }
+            window.location.href = targetUrl;
+            return;
+          }
+
           navigate('request-success');
           return;
         }

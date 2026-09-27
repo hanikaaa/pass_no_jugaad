@@ -148,6 +148,7 @@ export async function submitEvent(fields: {
   artist?: string;
   description: string;
   instagram_link?: string;
+  affiliate_link?: string;
   contact_email: string;
   contact_phone?: string;
   jugaad_drop?: boolean;
@@ -190,6 +191,7 @@ export async function submitEvent(fields: {
     artist: fields.artist || null,
     description: fields.description || '',
     instagram_link: fields.instagram_link || null,
+    affiliate_link: fields.affiliate_link || null,
     contact_email: fields.contact_email || user?.email || '',
     contact_phone: fields.contact_phone || null,
     status: 'pending_review',

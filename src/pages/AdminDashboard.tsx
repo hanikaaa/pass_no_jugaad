@@ -407,6 +407,7 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
   const [formContactEmail, setFormContactEmail] = useState('');
   const [formContactPhone, setFormContactPhone] = useState('');
   const [formInstagram, setFormInstagram] = useState('');
+  const [formAffiliateLink, setFormAffiliateLink] = useState('');
   const [formIsDrop, setFormIsDrop] = useState(false);
   const [formDropPrice, setFormDropPrice] = useState('');
   const [formOriginalPrice, setFormOriginalPrice] = useState('');
@@ -430,6 +431,8 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
           artist_image_url: e.artist_image_url || '',
           contact_email: e.contact_email || '',
           contact_phone: e.contact_phone || '',
+          instagram_link: e.instagram_link || '',
+          affiliate_link: e.affiliate_link || '',
           jugaad_drop: e.jugaad_drop,
           original_price: e.original_price,
           drop_price: e.drop_price,
@@ -445,7 +448,7 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
     setEditingEvent(null);
     setFormName(''); setFormVenue(''); setFormDate('12 OCT 2026'); setFormTime('7:00 PM onwards');
     setFormPrice('1000'); setFormBannerUrl(''); setFormArtistUrl(''); setFormArtist(''); setFormTags('Garba, Artist Night'); setFormDesc('');
-    setFormOrgName(''); setFormContactEmail('passnojugaadd@gmail.com'); setFormContactPhone(''); setFormInstagram('');
+    setFormOrgName(''); setFormContactEmail('passnojugaadd@gmail.com'); setFormContactPhone(''); setFormInstagram(''); setFormAffiliateLink('');
     setFormIsDrop(false); setFormDropPrice(''); setFormOriginalPrice('1500');
     setModalOpen(true);
   };
@@ -457,6 +460,7 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
     setFormArtist(ev.artist || ''); setFormTags(ev.type_tags?.join(', ') || ''); setFormDesc(ev.description || '');
     setFormOrgName(''); setFormContactEmail(ev.contact_email || ''); setFormContactPhone(ev.contact_phone || '');
     setFormInstagram(ev.instagram_link || '');
+    setFormAffiliateLink(ev.affiliate_link || '');
     setFormIsDrop(!!ev.jugaad_drop);
     setFormDropPrice(ev.drop_price ? String(ev.drop_price) : '');
     setFormOriginalPrice(ev.original_price ? String(ev.original_price) : String(ev.price_min || 1500));
@@ -500,6 +504,7 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
       contact_email: formContactEmail || null,
       contact_phone: formContactPhone || null,
       instagram_link: formInstagram || null,
+      affiliate_link: formAffiliateLink || null,
       jugaad_drop: formIsDrop,
       drop_price: formIsDrop ? dropPriceVal : null,
       original_price: formIsDrop ? origPriceVal : null,
@@ -723,6 +728,11 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
                 <div>
                   <label className="font-semibold block mb-1">Instagram Link</label>
                   <input value={formInstagram} onChange={e => setFormInstagram(e.target.value)} placeholder="https://instagram.com/..." />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-0.5">Affiliate / Ticketing Link (Optional)</label>
+                  <p className="text-[11px] text-stone-500 mb-1">Buyers requesting passes will be automatically redirected to this URL after their request is registered on Pass No Jugaad.</p>
+                  <input value={formAffiliateLink} onChange={e => setFormAffiliateLink(e.target.value)} placeholder="https://insider.in/... or affiliate partner link" />
                 </div>
               </div>
 

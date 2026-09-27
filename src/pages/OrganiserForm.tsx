@@ -72,6 +72,7 @@ export default function OrganiserForm({ navigate }: NavProps) {
       artist: fd.get('artist') as string,
       description: fd.get('description') as string,
       instagram_link: fd.get('instagram_link') as string,
+      affiliate_link: (fd.get('affiliate_link') as string)?.trim() || undefined,
       contact_email: fd.get('contact_email') as string,
       contact_phone: fd.get('contact_phone') as string,
     });
@@ -295,8 +296,13 @@ export default function OrganiserForm({ navigate }: NavProps) {
             <input name="instagram_link" placeholder="https://instagram.com/yourevent" />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: 6 }}>Event / booking link</label>
-            <input name="booking_link" placeholder="Paste link" />
+            <label style={{ display: 'block', marginBottom: 4 }}>
+              Affiliate link <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9A8B82' }}>— optional</span>
+            </label>
+            <p style={{ fontSize: 12, color: '#9A8B82', marginBottom: 6 }}>
+              If you have an official ticketing or affiliate partner link, buyers will be automatically redirected to this link after their pass request is registered on Pass No Jugaad.
+            </p>
+            <input name="affiliate_link" placeholder="https://insider.in/your-event-link or affiliate URL" />
           </div>
         </div>
 
