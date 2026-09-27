@@ -45,7 +45,33 @@ export const DEMAND_LABEL: Record<string, string> = {
 
 export const NAVRATRI_DATES = [
   '7 OCT', '8 OCT', '9 OCT', '10 OCT', '11 OCT', '12 OCT', '13 OCT', '14 OCT',
-  '15 OCT', '16 OCT', '17 OCT', '18 OCT', '19 OCT', '20 OCT',
+  '15 OCT', '16 OCT', '17 OCT', '18 OCT', '19 OCT', '20 OCT', '21 OCT',
+];
+
+export interface FestivalDateOption {
+  value: string;
+  label: string;
+  dayNumber: number;
+  title: string;
+  fullDateStr: string;
+}
+
+export const FESTIVAL_DATES: FestivalDateOption[] = [
+  { value: '7 OCT', label: '7th Oct 2026', dayNumber: 7, title: 'Day 1 · Pratipada (7 Oct)', fullDateStr: '7 OCT 2026' },
+  { value: '8 OCT', label: '8th Oct 2026', dayNumber: 8, title: 'Day 2 · Dwitiya (8 Oct)', fullDateStr: '8 OCT 2026' },
+  { value: '9 OCT', label: '9th Oct 2026', dayNumber: 9, title: 'Day 3 · Tritiya (9 Oct)', fullDateStr: '9 OCT 2026' },
+  { value: '10 OCT', label: '10th Oct 2026', dayNumber: 10, title: 'Day 4 · Chaturthi (10 Oct)', fullDateStr: '10 OCT 2026' },
+  { value: '11 OCT', label: '11th Oct 2026', dayNumber: 11, title: 'Day 5 · Panchami (11 Oct)', fullDateStr: '11 OCT 2026' },
+  { value: '12 OCT', label: '12th Oct 2026', dayNumber: 12, title: 'Day 6 · Shashthi (12 Oct)', fullDateStr: '12 OCT 2026' },
+  { value: '13 OCT', label: '13th Oct 2026', dayNumber: 13, title: 'Day 7 · Saptami (13 Oct)', fullDateStr: '13 OCT 2026' },
+  { value: '14 OCT', label: '14th Oct 2026', dayNumber: 14, title: 'Day 8 · Maha Ashtami (14 Oct)', fullDateStr: '14 OCT 2026' },
+  { value: '15 OCT', label: '15th Oct 2026', dayNumber: 15, title: 'Day 9 · Maha Navami (15 Oct)', fullDateStr: '15 OCT 2026' },
+  { value: '16 OCT', label: '16th Oct 2026', dayNumber: 16, title: 'Dussehra / Vijayadashami (16 Oct)', fullDateStr: '16 OCT 2026' },
+  { value: '17 OCT', label: '17th Oct 2026', dayNumber: 17, title: 'Post-Navratri Special (17 Oct)', fullDateStr: '17 OCT 2026' },
+  { value: '18 OCT', label: '18th Oct 2026', dayNumber: 18, title: 'Extended Festival (18 Oct)', fullDateStr: '18 OCT 2026' },
+  { value: '19 OCT', label: '19th Oct 2026', dayNumber: 19, title: 'Extended Festival (19 Oct)', fullDateStr: '19 OCT 2026' },
+  { value: '20 OCT', label: '20th Oct 2026', dayNumber: 20, title: 'Eve of Sharad Purnima (20 Oct)', fullDateStr: '20 OCT 2026' },
+  { value: '21 OCT', label: '21st Oct 2026', dayNumber: 21, title: 'Sharad Purnima Mega Night (21 Oct)', fullDateStr: '21 OCT 2026' },
 ];
 
 const MONTH_NAMES: Record<string, string> = {
@@ -63,9 +89,27 @@ const MONTH_NAMES: Record<string, string> = {
   '12': 'DEC', 'DEC': 'DEC', 'DECEMBER': 'DEC',
 };
 
+const MONTH_NUMS: Record<string, number> = {
+  JAN: 1, FEB: 2, MAR: 3, APR: 4, MAY: 5, JUN: 6,
+  JUL: 7, AUG: 8, SEP: 9, OCT: 10, NOV: 11, DEC: 12,
+};
+
 export function normalizeDateShort(rawDate: string | null | undefined): string {
   if (!rawDate) return '12 OCT';
   const clean = rawDate.trim();
+
+  // 0. Format: Range like "7 OCT - 15 OCT 2026", "7th Oct to 15th Oct", "7 - 15 Oct"
+  if (clean.includes('-') || clean.includes('–') || clean.includes('—') || clean.toLowerCase().includes(' to ')) {
+    const rangeMatch = clean.match(/(\d{1,2})(?:st|nd|rd|th)?\s*(?:[A-Za-z]+)?\s*(?:[-–—]|(?:\s+to\s+))\s*(\d{1,2})(?:st|nd|rd|th)?\s*([A-Za-z]+)?/i);
+    if (rangeMatch) {
+      const d1 = parseInt(rangeMatch[1], 10);
+      const d2 = parseInt(rangeMatch[2], 10);
+      const rawMonth = rangeMatch[3] || 'OCT';
+      const m = MONTH_NAMES[rawMonth.toUpperCase()] || rawMonth.toUpperCase().slice(0, 3) || 'OCT';
+      if (d1 === d2) return `${d1} ${m}`;
+      return `${d1}–${d2} ${m}`;
+    }
+  }
 
   // 1. Format: YYYY-MM-DD or YYYY/MM/DD (e.g. 2026-10-07)
   const ymdMatch = clean.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
@@ -115,30 +159,62 @@ export function normalizeDateShort(rawDate: string | null | undefined): string {
 
 export function parseDateForSorting(dStr: string): number {
   const norm = normalizeDateShort(dStr);
-  const parts = norm.split(' ');
-  const day = parseInt(parts[0], 10) || 1;
-  const monthMap: Record<string, number> = {
-    JAN: 1, FEB: 2, MAR: 3, APR: 4, MAY: 5, JUN: 6,
-    JUL: 7, AUG: 8, SEP: 9, OCT: 10, NOV: 11, DEC: 12,
-  };
-  const month = monthMap[parts[1]] || 10;
+  const match = norm.match(/^(\d{1,2})/);
+  const day = match ? parseInt(match[1], 10) : 1;
+  const monthMatch = norm.match(/([A-Z]{3})$/);
+  const monthStr = monthMatch ? monthMatch[1] : 'OCT';
+  const month = MONTH_NUMS[monthStr] || 10;
   return month * 100 + day;
 }
 
 export function isSameDate(eventDate: string | undefined | null, targetDate: string): boolean {
   if (!eventDate || !targetDate) return false;
-  const norm1 = normalizeDateShort(eventDate).toUpperCase();
-  const norm2 = normalizeDateShort(targetDate).toUpperCase();
-  if (norm1 === norm2) return true;
+  const cleanEv = eventDate.trim();
+  const cleanTarget = targetDate.trim();
 
-  const parts1 = norm1.split(' ');
-  const parts2 = norm2.split(' ');
-  const day1 = parseInt(parts1[0], 10);
-  const day2 = parseInt(parts2[0], 10);
-  const m1 = parts1[1] || 'OCT';
-  const m2 = parts2[1] || 'OCT';
+  // Direct normalized match
+  const normTarget = normalizeDateShort(cleanTarget).toUpperCase();
+  const normEv = normalizeDateShort(cleanEv).toUpperCase();
+  if (normEv === normTarget) return true;
 
-  return day1 === day2 && m1 === m2;
+  // Extract day and month of targetDate
+  const targetMatch = normTarget.match(/(\d{1,2})\s*([A-Z]{3})/);
+  if (!targetMatch) return false;
+  const targetDay = parseInt(targetMatch[1], 10);
+  const targetMonth = targetMatch[2] || 'OCT';
+
+  // Check if eventDate is a range (e.g. "7 OCT - 15 OCT 2026", "7–15 OCT", "7th Oct to 15th Oct")
+  if (cleanEv.includes('-') || cleanEv.includes('–') || cleanEv.includes('—') || cleanEv.toLowerCase().includes(' to ')) {
+    const rangeMatch = cleanEv.match(/(\d{1,2})(?:st|nd|rd|th)?\s*(?:[A-Za-z]+)?\s*(?:[-–—]|(?:\s+to\s+))\s*(\d{1,2})(?:st|nd|rd|th)?\s*([A-Za-z]+)?/i);
+    if (rangeMatch) {
+      const startDay = parseInt(rangeMatch[1], 10);
+      const endDay = parseInt(rangeMatch[2], 10);
+      const rawMonth = rangeMatch[3] || 'OCT';
+      const evMonth = MONTH_NAMES[rawMonth.toUpperCase()] || rawMonth.toUpperCase().slice(0, 3) || 'OCT';
+
+      if (evMonth === targetMonth || MONTH_NUMS[evMonth] === MONTH_NUMS[targetMonth]) {
+        if (targetDay >= Math.min(startDay, endDay) && targetDay <= Math.max(startDay, endDay)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  // Check comma-separated dates (e.g. "7 OCT, 8 OCT, 9 OCT")
+  if (cleanEv.includes(',')) {
+    const splitDates = cleanEv.split(',').map((s) => s.trim());
+    return splitDates.some((sd) => isSameDate(sd, targetDate));
+  }
+
+  // Single date comparison
+  const evMatch = normEv.match(/(\d{1,2})\s*([A-Z]{3})/);
+  if (evMatch) {
+    const evDay = parseInt(evMatch[1], 10);
+    const evMonth = evMatch[2] || 'OCT';
+    return evDay === targetDay && evMonth === targetMonth;
+  }
+
+  return false;
 }
 
 export function createEventSlug(name: string): string {

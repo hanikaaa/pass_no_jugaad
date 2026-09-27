@@ -2,12 +2,14 @@ import { useState, useRef } from 'react';
 import { type NavProps } from '../data/events';
 import { submitEvent } from '../lib/api';
 import OrganiserTermsModal from '../components/OrganiserTermsModal';
+import EventDateSelector from '../components/EventDateSelector';
 
 const NEEDS = ['Audience', 'Promotion', 'Pass Distribution', 'Exclusive Offer', 'Referral Sales', 'Other'];
 
 export default function OrganiserForm({ navigate }: NavProps) {
   const [needs, setNeeds] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [eventDate, setEventDate] = useState('7 OCT - 15 OCT 2026');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,7 +63,7 @@ export default function OrganiserForm({ navigate }: NavProps) {
     const res = await submitEvent({
       name: fd.get('name') as string,
       venue: fd.get('venue') as string,
-      date: fd.get('date') as string,
+      date: (fd.get('date') as string) || eventDate || '7 OCT - 15 OCT 2026',
       time: fd.get('time') as string || '7:00 PM onwards',
       price: ticketPrice,
       price_min: ticketPrice,
@@ -255,15 +257,22 @@ export default function OrganiserForm({ navigate }: NavProps) {
             <label style={{ display: 'block', marginBottom: 6 }}>Venue / Location *</label>
             <input name="venue" required placeholder="Where is it happening? (e.g. Sindhu Bhavan Road, Ahmedabad)" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label style={{ display: 'block', marginBottom: 6 }}>Event date (Any custom date) *</label>
-              <input name="date" required placeholder="e.g. 7th October, 12 OCT 2026" />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: 6 }}>Time</label>
-              <input name="time" placeholder="e.g. 7:00 PM onwards" />
-            </div>
+          {/* Event Dates Selector */}
+          <div>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>
+              Event Dates (7th Oct – 21st Oct 2026) *
+            </label>
+            <EventDateSelector
+              value={eventDate}
+              onChange={setEventDate}
+              name="date"
+              required
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: 6 }}>Daily Event Timing</label>
+            <input name="time" placeholder="e.g. 7:00 PM onwards or 8:00 PM – 2:00 AM" />
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: 6 }}>Ticket price (₹) *</label>

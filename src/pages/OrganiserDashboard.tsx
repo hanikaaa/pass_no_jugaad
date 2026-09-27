@@ -7,6 +7,7 @@ import {
 import { getMyEvents, getRequestsForMyEvents, updateRequestStatus, updateEvent } from '../lib/api';
 import { SUPABASE_CONFIGURED } from '../lib/supabase';
 import type { DBEvent, DBPassRequest } from '../lib/supabase';
+import EventDateSelector from '../components/EventDateSelector';
 
 type OrgTab = 'my-events' | 'requests';
 
@@ -32,6 +33,59 @@ function fmt(v: number) { return v >= 1000 ? `₹${(v / 1000).toFixed(v % 1000 =
 function relTime(iso: string) {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   return d === 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d} days ago`;
+}
+
+function OrgEditForm({
+  ev,
+  onSave,
+  onCancel,
+}: {
+  ev: DBEvent;
+  onSave: (fd: FormData) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [date, setDate] = useState(ev.date || '7 OCT - 15 OCT 2026');
+  return (
+    <form
+      className="space-y-3"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        await onSave(new FormData(e.currentTarget));
+      }}
+    >
+      <div>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Event name</label>
+        <input name="name" defaultValue={ev.name} required />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Venue</label>
+        <input name="venue" defaultValue={ev.venue ?? ''} required />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 11, fontWeight: 600 }}>
+          Event Dates (7th Oct – 21st Oct 2026)
+        </label>
+        <EventDateSelector value={date} onChange={setDate} name="date" />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Ticket price (₹)</label>
+        <input name="price" type="number" defaultValue={ev.price_min ?? ''} required />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Affiliate / Partner Link (Optional)</label>
+        <input name="affiliate_link" defaultValue={ev.affiliate_link ?? ''} placeholder="https://..." />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Description</label>
+        <textarea name="description" rows={3} defaultValue={ev.description ?? ''} />
+      </div>
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className="btn-outline flex-1 py-2 text-sm">Cancel</button>
+        <button type="submit" className="btn-primary flex-1 py-2 text-sm">Save changes</button>
+      </div>
+      <p style={{ fontSize: 11, color: '#9A8B82', textAlign: 'center' }}>Edits may re-enter pending review.</p>
+    </form>
+  );
 }
 
 // ─── My Events tab ────────────────────────────────────────────
@@ -121,39 +175,11 @@ function MyEventsTab({ navigate }: { navigate: NavProps['navigate'] }) {
                 </div>
 
                 {editing === ev.id ? (
-                  <form className="space-y-3" onSubmit={async (e) => { e.preventDefault(); await handleSave(ev.id, new FormData(e.currentTarget)); }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Event name</label>
-                      <input name="name" defaultValue={ev.name} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Venue</label>
-                        <input name="venue" defaultValue={ev.venue ?? ''} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Date</label>
-                        <input name="date" defaultValue={ev.date ?? ''} />
-                      </div>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Ticket price (₹)</label>
-                      <input name="price" type="number" defaultValue={ev.price_min ?? ''} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Affiliate / Partner Link (Optional)</label>
-                      <input name="affiliate_link" defaultValue={ev.affiliate_link ?? ''} placeholder="https://..." />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: 4, fontSize: 11 }}>Description</label>
-                      <textarea name="description" rows={3} defaultValue={ev.description ?? ''} />
-                    </div>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => setEditing(null)} className="btn-outline flex-1 py-2 text-sm">Cancel</button>
-                      <button type="submit" className="btn-primary flex-1 py-2 text-sm">Save changes</button>
-                    </div>
-                    <p style={{ fontSize: 11, color: '#9A8B82', textAlign: 'center' }}>Edits may re-enter pending review.</p>
-                  </form>
+                  <OrgEditForm
+                    ev={ev}
+                    onSave={async (formData) => { await handleSave(ev.id, formData); }}
+                    onCancel={() => setEditing(null)}
+                  />
                 ) : (
                   <div className="flex gap-2">
                     <button onClick={() => navigate('event-detail', { eventId: ev.id })} className="btn-outline flex-1 py-2 text-xs">View public page</button>

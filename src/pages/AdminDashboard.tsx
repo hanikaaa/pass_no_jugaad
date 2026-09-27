@@ -10,6 +10,7 @@ import {
   updatePassRequestWithOffer,
 } from '../lib/api';
 import { SUPABASE_CONFIGURED, type Profile, type DBEvent, type DBPassRequest, type DBJugaadSignal } from '../lib/supabase';
+import EventDateSelector from '../components/EventDateSelector';
 
 
 type AdminTab = 'overview' | 'pending' | 'events' | 'drops' | 'requests' | 'signals' | 'users' | 'organisers';
@@ -446,7 +447,7 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
 
   const openAddModal = () => {
     setEditingEvent(null);
-    setFormName(''); setFormVenue(''); setFormDate('12 OCT 2026'); setFormTime('7:00 PM onwards');
+    setFormName(''); setFormVenue(''); setFormDate('7 OCT - 15 OCT 2026'); setFormTime('7:00 PM onwards');
     setFormPrice('1000'); setFormBannerUrl(''); setFormArtistUrl(''); setFormArtist(''); setFormTags('Garba, Artist Night'); setFormDesc('');
     setFormOrgName(''); setFormContactEmail('passnojugaadd@gmail.com'); setFormContactPhone(''); setFormInstagram(''); setFormAffiliateLink('');
     setFormIsDrop(false); setFormDropPrice(''); setFormOriginalPrice('1500');
@@ -455,7 +456,7 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
 
   const openEditModal = (ev: any) => {
     setEditingEvent(ev);
-    setFormName(ev.name); setFormVenue(ev.venue || ''); setFormDate(ev.dateShort || ''); setFormTime(ev.time || '7:00 PM onwards');
+    setFormName(ev.name); setFormVenue(ev.venue || ''); setFormDate(ev.date || ev.dateShort || '7 OCT - 15 OCT 2026'); setFormTime(ev.time || '7:00 PM onwards');
     setFormPrice(String(ev.price_min || 1000)); setFormBannerUrl(ev.image_url || ''); setFormArtistUrl(ev.artist_image_url || '');
     setFormArtist(ev.artist || ''); setFormTags(ev.type_tags?.join(', ') || ''); setFormDesc(ev.description || '');
     setFormOrgName(''); setFormContactEmail(ev.contact_email || ''); setFormContactPhone(ev.contact_phone || '');
@@ -697,15 +698,20 @@ function AllEventsTab({ navigate, onRefresh }: { navigate: NavProps['navigate'];
                   <label className="font-semibold block mb-1">Venue / Location *</label>
                   <input required value={formVenue} onChange={e => setFormVenue(e.target.value)} placeholder="Sindhu Bhavan Road, Ahmedabad" />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="font-semibold block mb-1">Date (Any custom date) *</label>
-                    <input required value={formDate} onChange={e => setFormDate(e.target.value)} placeholder="e.g. 7th October 2026, 12 OCT" />
-                  </div>
-                  <div>
-                    <label className="font-semibold block mb-1">Time</label>
-                    <input value={formTime} onChange={e => setFormTime(e.target.value)} placeholder="7:00 PM onwards" />
-                  </div>
+                {/* Event Dates Selector */}
+                <div>
+                  <label className="font-semibold block mb-1">
+                    Event Dates (7th Oct – 21st Oct 2026) *
+                  </label>
+                  <EventDateSelector
+                    value={formDate}
+                    onChange={setFormDate}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">Event Daily Timing</label>
+                  <input value={formTime} onChange={e => setFormTime(e.target.value)} placeholder="e.g. 7:00 PM onwards or 8:00 PM – 2:00 AM" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>

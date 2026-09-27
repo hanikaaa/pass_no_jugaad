@@ -51,35 +51,61 @@ export default function Radar({ navigate }: NavProps) {
           dateMap[d] = { count: 0, passes: [], budgets: [], types: new Set() };
         });
 
-        // Add events vibes and dates
+        // Add events vibes and dates across all spanned dates
         evts.forEach(e => {
           if (e.date) {
-            const matchedDate = allDates.find(d => isSameDate(e.date, d));
-            const key = matchedDate || normalizeDateShort(e.date);
-            if (!dateMap[key]) {
-              dateMap[key] = { count: 0, passes: [], budgets: [], types: new Set() };
-              allDates.push(key);
+            const matchedDates = allDates.filter(d => isSameDate(e.date, d));
+            if (matchedDates.length > 0) {
+              matchedDates.forEach(key => {
+                if (!dateMap[key]) {
+                  dateMap[key] = { count: 0, passes: [], budgets: [], types: new Set() };
+                  allDates.push(key);
+                }
+                if (e.price_min) dateMap[key].budgets.push(e.price_min);
+                if (e.price_max) dateMap[key].budgets.push(e.price_max);
+                (e.type_tags ?? []).forEach(t => dateMap[key].types.add(t));
+              });
+            } else {
+              const key = normalizeDateShort(e.date);
+              if (!dateMap[key]) {
+                dateMap[key] = { count: 0, passes: [], budgets: [], types: new Set() };
+                allDates.push(key);
+              }
+              if (e.price_min) dateMap[key].budgets.push(e.price_min);
+              if (e.price_max) dateMap[key].budgets.push(e.price_max);
+              (e.type_tags ?? []).forEach(t => dateMap[key].types.add(t));
             }
-            if (e.price_min) dateMap[key].budgets.push(e.price_min);
-            if (e.price_max) dateMap[key].budgets.push(e.price_max);
-            (e.type_tags ?? []).forEach(t => dateMap[key].types.add(t));
           }
         });
 
         // Add real user signals
         sigs.forEach(s => {
           (s.preferred_dates ?? []).forEach(pd => {
-            const matchedDate = allDates.find(d => isSameDate(pd, d));
-            const key = matchedDate || normalizeDateShort(pd);
-            if (!dateMap[key]) {
-              dateMap[key] = { count: 0, passes: [], budgets: [], types: new Set() };
-              allDates.push(key);
+            const matchedDates = allDates.filter(d => isSameDate(pd, d));
+            if (matchedDates.length > 0) {
+              matchedDates.forEach(key => {
+                if (!dateMap[key]) {
+                  dateMap[key] = { count: 0, passes: [], budgets: [], types: new Set() };
+                  allDates.push(key);
+                }
+                dateMap[key].count += s.num_passes || 1;
+                dateMap[key].passes.push(s.num_passes || 1);
+                if (s.budget_min) dateMap[key].budgets.push(s.budget_min);
+                if (s.budget_max) dateMap[key].budgets.push(s.budget_max);
+                (s.event_types ?? []).forEach(t => dateMap[key].types.add(t));
+              });
+            } else {
+              const key = normalizeDateShort(pd);
+              if (!dateMap[key]) {
+                dateMap[key] = { count: 0, passes: [], budgets: [], types: new Set() };
+                allDates.push(key);
+              }
+              dateMap[key].count += s.num_passes || 1;
+              dateMap[key].passes.push(s.num_passes || 1);
+              if (s.budget_min) dateMap[key].budgets.push(s.budget_min);
+              if (s.budget_max) dateMap[key].budgets.push(s.budget_max);
+              (s.event_types ?? []).forEach(t => dateMap[key].types.add(t));
             }
-            dateMap[key].count += s.num_passes || 1;
-            dateMap[key].passes.push(s.num_passes || 1);
-            if (s.budget_min) dateMap[key].budgets.push(s.budget_min);
-            if (s.budget_max) dateMap[key].budgets.push(s.budget_max);
-            (s.event_types ?? []).forEach(t => dateMap[key].types.add(t));
           });
         });
 

@@ -46,8 +46,11 @@ export default function CalendarPage({ navigate }: NavProps) {
 
         setEventsList(mapped);
 
-        // Dynamically build sorted calendar dates containing standard Navratri dates + all event dates
-        const customDates = mapped.map(ev => ev.dateShort).filter(Boolean);
+        // Dynamically build sorted calendar dates containing standard Navratri dates + any custom single dates
+        const customDates = mapped
+          .map(ev => ev.dateShort)
+          .filter(Boolean)
+          .filter(d => !d.includes('–') && !d.includes('-'));
         const combined = Array.from(new Set([...NAVRATRI_DATES, ...customDates]));
         combined.sort((a, b) => parseDateForSorting(a) - parseDateForSorting(b));
         setCalendarDates(combined);

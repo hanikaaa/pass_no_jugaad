@@ -242,7 +242,7 @@ export default function EventDetail({ navigate, eventId }: Props) {
         {/* Date badge & Drop banner */}
         <div className="absolute bottom-4 left-4 flex items-center gap-2">
           <div className="rounded font-sans font-bold text-white text-center px-3 py-2 shadow" style={{ background: '#C1440E' }}>
-            <div style={{ fontSize: 22, lineHeight: 1 }}>{dateParts[0] || '12'}</div>
+            <div style={{ fontSize: dateParts[0] && dateParts[0].length > 4 ? 18 : 22, lineHeight: 1 }}>{dateParts[0] || '12'}</div>
             <div style={{ fontSize: 11, letterSpacing: '0.08em' }}>{dateParts.slice(1).join(' ') || 'OCT'}</div>
           </div>
           {event.jugaadDrop && (

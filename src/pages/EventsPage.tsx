@@ -1,9 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { type NavProps, EVENTS, DEMAND_LABEL, type Event, normalizeDateShort } from '../data/events';
+import { type NavProps, EVENTS, DEMAND_LABEL, type Event, normalizeDateShort, NAVRATRI_DATES, isSameDate } from '../data/events';
 import { getApprovedEvents } from '../lib/api';
 import EventCard from '../components/EventCard';
 
-const DATE_FILTERS = ['10 OCT', '11 OCT', '12 OCT', '13 OCT', '14 OCT', '15 OCT', '16 OCT', '17 OCT', '18 OCT', '19 OCT'];
+const DATE_FILTERS = NAVRATRI_DATES;
 const BUDGET_FILTERS = ['Under ₹1K', '₹1K–₹1.5K', '₹1.5K–₹2.5K', '₹2.5K+'];
 const TYPE_FILTERS = ['Garba', 'Dandiya', 'DJ Night', 'Live Music', 'Bollywood Night', 'Club Night', 'Cultural Event', 'Artist Night', 'Premium'];
 const SORT_OPTIONS = ['Recommended', 'Lowest Price', 'Highest Demand', 'Latest Added'];
@@ -82,7 +82,7 @@ export default function EventsPage({ navigate }: NavProps) {
     let evts = eventsList.filter((e: Event) => {
       const q = filters.search.toLowerCase();
       if (q && !e.name.toLowerCase().includes(q) && !e.venue.toLowerCase().includes(q) && !(e.artist || '').toLowerCase().includes(q)) return false;
-      if (filters.dates.length && !filters.dates.includes(e.dateShort)) return false;
+      if (filters.dates.length && !filters.dates.some((d) => isSameDate(e.date, d) || isSameDate(e.dateShort, d))) return false;
       if (filters.budgets.length && !filters.budgets.some((b) => budgetMatch(e.priceMin, e.priceMax, b))) return false;
       if (filters.types.length && !filters.types.some((t) => e.type.some((et) => et.toLowerCase().includes(t.toLowerCase())))) return false;
       return true;
