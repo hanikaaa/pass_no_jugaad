@@ -139,6 +139,15 @@ export function isSameDate(eventDate: string | undefined | null, targetDate: str
   return day1 === day2 && m1 === m2;
 }
 
+export function createEventSlug(name: string): string {
+  if (!name) return 'event';
+  return name
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/[\s_-]+/g, '-');
+}
+
 export const AVAIL_COLOR: Record<string, string> = {
 
   'Available': '#22c55e',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { type NavProps, EVENTS, type Event, normalizeDateShort } from '../data/events';
-import { getEventById, submitPassRequest, getCurrentProfile } from '../lib/api';
+import { type NavProps, EVENTS, type Event, normalizeDateShort, createEventSlug } from '../data/events';
+import { getEventById, submitPassRequest, getCurrentProfile, updateProfilePhone } from '../lib/api';
 import { SUPABASE_CONFIGURED } from '../lib/supabase';
 
 interface Props extends NavProps {
@@ -28,6 +28,9 @@ export default function EventDetail({ navigate, eventId }: Props) {
   const [qty, setQty] = useState(2);
   const [submitting, setSubmitting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phoneInput, setPhoneInput] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!eventId) {
@@ -105,6 +108,37 @@ export default function EventDetail({ navigate, eventId }: Props) {
     );
   }
 
+  const executePassSubmission = async (buyerPhone?: string) => {
+    if (!event) return;
+    setSubmitting(true);
+    try {
+      const minPrice = event.jugaadDrop && event.dropPrice ? event.dropPrice : (event.priceMin || 800);
+      const maxPrice = event.jugaadDrop && event.dropPrice ? event.dropPrice : (event.priceMax || event.priceMin || 800);
+      const note = event.jugaadDrop ? 'Jugaad Drop direct pass request' : 'Direct event pass request';
+
+      const res = await submitPassRequest({
+        event_id: event.id,
+        quantity: qty,
+        budget_min: minPrice,
+        budget_max: maxPrice,
+        priority_note: note,
+        buyer_phone: buyerPhone,
+      });
+
+      if (res.error) {
+        setRequestError(res.error);
+        setSubmitting(false);
+        return;
+      }
+
+      setShowPhoneModal(false);
+      navigate('request-success');
+    } catch (err: any) {
+      setRequestError(err?.message || 'Failed to submit request');
+      setSubmitting(false);
+    }
+  };
+
   const handleRequestPasses = async () => {
     if (!event || submitting) return;
     setRequestError(null);
@@ -127,32 +161,24 @@ export default function EventDetail({ navigate, eventId }: Props) {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const minPrice = event.jugaadDrop && event.dropPrice ? event.dropPrice : (event.priceMin || 800);
-      const maxPrice = event.jugaadDrop && event.dropPrice ? event.dropPrice : (event.priceMax || event.priceMin || 800);
-      const note = event.jugaadDrop ? 'Jugaad Drop direct pass request' : 'Direct event pass request';
-
-      const res = await submitPassRequest({
-        event_id: event.id,
-        quantity: qty,
-        budget_min: minPrice,
-        budget_max: maxPrice,
-        priority_note: note,
-      });
-
-      if (res.error) {
-        setRequestError(res.error);
-        setSubmitting(false);
-        return;
-      }
-
-      // Success -> navigate directly to RequestSuccess confirmation
-      navigate('request-success');
-    } catch (err: any) {
-      setRequestError(err?.message || 'Failed to submit request');
-      setSubmitting(false);
+    // Check mandatory phone number
+    if (profile && !profile.phone) {
+      setShowPhoneModal(true);
+      return;
     }
+
+    await executePassSubmission(profile?.phone || undefined);
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!phoneInput.trim() || phoneInput.trim().length < 8) {
+      setPhoneError('Please enter a valid phone or WhatsApp number.');
+      return;
+    }
+    setPhoneError(null);
+    updateProfilePhone(phoneInput.trim()).catch(() => {});
+    await executePassSubmission(phoneInput.trim());
   };
 
   const dateParts = event.dateShort ? event.dateShort.split(' ') : ['12', 'OCT'];
@@ -177,12 +203,13 @@ export default function EventDetail({ navigate, eventId }: Props) {
           </button>
           <button
             onClick={() => {
-              const url = `${window.location.origin}/?page=event-detail&eventId=${event.id}`;
+              const slug = createEventSlug(event.name);
+              const url = `${window.location.origin}/e/${slug}`;
               if (navigator.share) {
                 navigator.share({ title: `${event.name} | Pass No Jugaad`, text: `Check out ${event.name} on Pass No Jugaad!`, url }).catch(() => {});
               } else {
                 navigator.clipboard.writeText(url);
-                alert('Direct event link copied to clipboard!');
+                alert('Direct event link copied: ' + url);
               }
             }}
             className="w-9 h-9 flex items-center justify-center rounded-full shadow-md"
@@ -357,7 +384,8 @@ export default function EventDetail({ navigate, eventId }: Props) {
           </button>
           <button
             onClick={() => {
-              const url = `${window.location.origin}/?page=event-detail&eventId=${event.id}`;
+              const slug = createEventSlug(event.name);
+              const url = `${window.location.origin}/e/${slug}`;
               if (navigator.share) {
                 navigator.share({
                   title: `${event.name} | Pass No Jugaad`,
@@ -366,7 +394,7 @@ export default function EventDetail({ navigate, eventId }: Props) {
                 }).catch(() => {});
               } else {
                 navigator.clipboard.writeText(url);
-                alert('Direct event link copied to clipboard!');
+                alert('Direct event link copied: ' + url);
               }
             }}
             className="btn-outline w-full py-3.5 text-sm font-semibold flex items-center justify-center gap-2"
@@ -375,6 +403,55 @@ export default function EventDetail({ navigate, eventId }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Mandatory Phone Number Modal */}
+      {showPhoneModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full border border-stone-200">
+            <div className="text-3xl mb-3">📱</div>
+            <h3 className="font-serif text-xl font-bold mb-1 text-stone-900">Phone Number Required</h3>
+            <p className="text-xs text-stone-600 mb-4 leading-relaxed">
+              Please enter your active WhatsApp / Phone number so the organiser can coordinate pass pickup & verification.
+            </p>
+
+            <form onSubmit={handlePhoneSubmit} className="space-y-4">
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 600 }}>Phone / WhatsApp Number *</label>
+                <input
+                  required
+                  autoFocus
+                  type="tel"
+                  value={phoneInput}
+                  onChange={(e) => { setPhoneInput(e.target.value); setPhoneError(null); }}
+                  placeholder="+91 98765 43210"
+                  className="w-full text-base font-medium"
+                />
+              </div>
+
+              {phoneError && (
+                <div className="text-xs text-red-600 font-medium">⚠️ {phoneError}</div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPhoneModal(false)}
+                  className="btn-outline flex-1 py-3 text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn-primary flex-1 py-3 text-xs font-bold"
+                >
+                  {submitting ? 'Submitting...' : 'Confirm & Request →'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

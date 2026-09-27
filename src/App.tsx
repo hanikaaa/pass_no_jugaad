@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { type Page, type UserRole } from './data/events';
+import { type Page, type UserRole, createEventSlug } from './data/events';
 import { supabase, SUPABASE_CONFIGURED, type Profile } from './lib/supabase';
 import { getCurrentProfile, signOut, getEventById, submitPassRequest } from './lib/api';
 
@@ -37,16 +37,44 @@ const HIDE_FOOTER_ON: Page[] = [
 
 const AUTH_GATED: Page[] = ['request-pass', 'my-requests', 'find-jugaad', 'organiser-form', 'organiser-dashboard', 'admin-dashboard'];
 
+const KNOWN_PAGES: Page[] = [
+  'home', 'find-jugaad', 'jugaad-success', 'radar', 'calendar',
+  'events', 'event-detail', 'request-pass', 'request-success', 'drops', 'gallery',
+  'organisers', 'organiser-form', 'organiser-success', 'my-requests',
+  'about', 'contact', 'admin-dashboard', 'organiser-dashboard', 'login'
+];
+
 function getInitialRoute(): { page: Page; eventId: string | null } {
   try {
+    const rawPath = window.location.pathname.replace(/^\/+|\/+$/g, '');
     const params = new URLSearchParams(window.location.search);
+
     const p = params.get('page') as Page | null;
-    const evId = params.get('eventId');
+    const evId = params.get('eventId') || params.get('e') || params.get('event');
     if (p) {
       return { page: p, eventId: evId || null };
     }
     if (evId) {
       return { page: 'event-detail', eventId: evId };
+    }
+
+    // Check pathname routing (e.g. e/efesto-na-garba or event/efesto-na-garba)
+    if (rawPath) {
+      if (rawPath.startsWith('e/') || rawPath.startsWith('event/')) {
+        const slug = rawPath.split('/')[1];
+        if (slug) {
+          return { page: 'event-detail', eventId: slug };
+        }
+      }
+
+      if (KNOWN_PAGES.includes(rawPath as Page)) {
+        return { page: rawPath as Page, eventId: null };
+      }
+
+      // If it's a single clean slug (e.g. /efesto-na-garba), route to event-detail
+      if (!rawPath.includes('/')) {
+        return { page: 'event-detail', eventId: rawPath };
+      }
     }
   } catch {
     // fallback
@@ -122,21 +150,16 @@ export default function App() {
     const targetEvId = opts?.eventId !== undefined ? opts.eventId : (p === 'event-detail' || p === 'request-pass' ? eventId : null);
     if (opts?.eventId !== undefined) setEventId(opts.eventId);
 
-    // Sync URL for deep links and sharing
+    // Sync URL with clean slug format
     try {
-      const url = new URL(window.location.href);
       if (p === 'home') {
-        url.searchParams.delete('page');
-        url.searchParams.delete('eventId');
+        window.history.pushState({ page: p, eventId: null }, '', '/');
+      } else if (p === 'event-detail' && targetEvId) {
+        const cleanSlug = targetEvId.includes(' ') ? createEventSlug(targetEvId) : targetEvId;
+        window.history.pushState({ page: p, eventId: targetEvId }, '', `/e/${cleanSlug}`);
       } else {
-        url.searchParams.set('page', p);
-        if (targetEvId) {
-          url.searchParams.set('eventId', targetEvId);
-        } else {
-          url.searchParams.delete('eventId');
-        }
+        window.history.pushState({ page: p, eventId: targetEvId }, '', `/${p}`);
       }
-      window.history.pushState({ page: p, eventId: targetEvId }, '', url.toString());
     } catch {
       // ignore
     }

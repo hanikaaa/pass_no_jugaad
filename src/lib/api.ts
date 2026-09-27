@@ -9,12 +9,12 @@ import { supabase, SUPABASE_CONFIGURED, type Profile, type DBEvent, type DBPassR
 
 // ─── Auth ─────────────────────────────────────────────────────
 
-export async function signUp(email: string, password: string, name: string): Promise<{ error: string | null; needsEmailConfirmation?: boolean }> {
+export async function signUp(email: string, password: string, name: string, phone?: string): Promise<{ error: string | null; needsEmailConfirmation?: boolean }> {
   if (!SUPABASE_CONFIGURED || !supabase) return { error: null }; // demo: always succeed
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { name, role: 'buyer' } }
+    options: { data: { name, phone, role: 'buyer' } }
   });
   if (error) return { error: error.message };
 
@@ -30,6 +30,7 @@ export async function signUp(email: string, password: string, name: string): Pro
         id: data.user.id,
         email: data.user.email,
         name,
+        phone: phone || null,
         role: 'buyer'
       });
     } catch {
@@ -37,10 +38,21 @@ export async function signUp(email: string, password: string, name: string): Pro
     }
 
     // Notify Super Admin of new user registration
-    sendNotification('user_signup', { name, email: data.user.email || email });
+    sendNotification('user_signup', { name, email: data.user.email || email, phone });
   }
 
   return { error: null };
+}
+
+export async function updateProfilePhone(phone: string): Promise<void> {
+  if (!SUPABASE_CONFIGURED || !supabase) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  try {
+    await supabase.from('profiles').update({ phone }).eq('id', user.id);
+  } catch (err) {
+    console.error('Failed to update phone:', err);
+  }
 }
 
 export async function signIn(email: string, password: string): Promise<{ error: string | null }> {
@@ -78,7 +90,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     email: user.email || '',
     role: ((user.user_metadata?.role as any) || 'buyer'),
     name: (user.user_metadata?.name as string) || null,
-    phone: null,
+    phone: (user.user_metadata?.phone as string) || null,
     created_at: user.created_at || new Date().toISOString(),
   };
 }
@@ -91,10 +103,33 @@ export async function getApprovedEvents(): Promise<DBEvent[]> {
   return data ?? [];
 }
 
-export async function getEventById(id: string): Promise<DBEvent | null> {
-  if (!SUPABASE_CONFIGURED || !supabase) return null;
-  const { data } = await supabase.from('events').select('*').eq('id', id).single();
-  return data ?? null;
+export async function getEventById(idOrSlug: string): Promise<DBEvent | null> {
+  if (!SUPABASE_CONFIGURED || !supabase || !idOrSlug) return null;
+
+  // 1. Check if UUID format
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+  if (isUUID) {
+    const { data } = await supabase.from('events').select('*').eq('id', idOrSlug).maybeSingle();
+    if (data) return data;
+  }
+
+  // 2. Query all approved events and match by slug or id or name
+  try {
+    const { data: allEvents } = await supabase.from('events').select('*');
+    if (allEvents && allEvents.length > 0) {
+      const slugClean = idOrSlug.toLowerCase().replace(/[^\w-]/g, '');
+      const matched = allEvents.find((e) => {
+        if (e.id === idOrSlug) return true;
+        const evSlug = e.name.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/[\s_-]+/g, '-');
+        return evSlug === slugClean || e.name.toLowerCase() === idOrSlug.toLowerCase();
+      });
+      if (matched) return matched;
+    }
+  } catch (err) {
+    console.error('Error in getEventById slug lookup:', err);
+  }
+
+  return null;
 }
 
 import { sendNotification } from './notifications';

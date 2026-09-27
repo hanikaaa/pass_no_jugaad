@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { type NavProps, NAVRATRI_DATES } from '../data/events';
-import { submitJugaadSignal } from '../lib/api';
+import { submitJugaadSignal, getCurrentProfile } from '../lib/api';
 
 interface Props extends NavProps {
   prefill?: Partial<FormData>;
@@ -50,6 +50,19 @@ export default function FindJugaad({ navigate, prefill }: Props) {
     readiness: '',
     message: '',
   });
+
+  useEffect(() => {
+    getCurrentProfile().then((p) => {
+      if (p) {
+        setForm((f) => ({
+          ...f,
+          name: f.name || p.name || '',
+          email: f.email || p.email || '',
+          phone: f.phone || p.phone || '',
+        }));
+      }
+    });
+  }, []);
 
   const toggleDate = (val: string) => {
     setForm((f) => ({

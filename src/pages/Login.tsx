@@ -13,6 +13,7 @@ interface Props extends NavProps {
 export default function Login({ navigate, onAuthSuccess }: Props) {
   const [mode, setMode] = useState<Mode>('login');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -27,6 +28,11 @@ export default function Login({ navigate, onAuthSuccess }: Props) {
 
     if (mode === 'signup' && password !== confirm) {
       setError('Passwords do not match.');
+      return;
+    }
+
+    if (mode === 'signup' && !phone.trim()) {
+      setError('Phone / WhatsApp number is mandatory.');
       return;
     }
 
@@ -50,7 +56,7 @@ export default function Login({ navigate, onAuthSuccess }: Props) {
     }
 
     if (mode === 'signup') {
-      const res = await signUp(email, password, name);
+      const res = await signUp(email, password, name, phone.trim());
       setLoading(false);
       if (res.error) { setError(res.error); return; }
       if (res.needsEmailConfirmation) {
@@ -137,15 +143,27 @@ export default function Login({ navigate, onAuthSuccess }: Props) {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === 'signup' && (
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500 }}>Your name</label>
-                    <input
-                      required
-                      value={name}
-                      onChange={e => setName(e.target.value)}
-                      placeholder="First name"
-                    />
-                  </div>
+                  <>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500 }}>Your name *</label>
+                      <input
+                        required
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        placeholder="Full name"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500 }}>Phone / WhatsApp Number *</label>
+                      <input
+                        required
+                        type="tel"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        placeholder="+91 98765 43210"
+                      />
+                    </div>
+                  </>
                 )}
 
                 <div>
